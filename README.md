@@ -60,12 +60,15 @@ Se os dois mostrarem um número de versão, está tudo certo.
 ### 2. Baixe o projeto
 
 ```bash
-git clone <URL-DO-REPOSITORIO> saas-mechanic
+git clone https://github.com/vslongo/prumo.git
 ```
 
 ```bash
-cd saas-mechanic
+cd prumo
 ```
+
+> Se o repositório for privado, o Git vai pedir pra você entrar na sua conta do GitHub (abre o navegador).
+> Você precisa ter sido adicionado como colaborador no repositório.
 
 ### 3. Crie o arquivo de configuração do backend
 
