@@ -1,0 +1,266 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Check, Circle, FileText, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useParams } from 'react-router'
+import { formatKm, formatPlate, formatWhen } from '../../../shared/lib/format'
+import { ApiError } from '../../../shared/lib/http'
+import { serviceOrderCancelable, serviceOrderNextStep, serviceOrderStatusLabel, type ServiceOrderStatus } from '../../../shared/lib/status'
+import { BackLink } from '../../../shared/ui/BackLink'
+import { Button } from '../../../shared/ui/Button'
+import { ConfirmDialog } from '../../../shared/ui/ConfirmDialog'
+import { TextField } from '../../../shared/ui/Field'
+import { Card, CardTitle, Detail, ErrorBox, PageHeader, Skeleton } from '../../../shared/ui/States'
+import { ServiceOrderStatusBadge } from '../../../shared/ui/StatusBadge'
+import { useToast } from '../../../shared/ui/Toast'
+import { useUsers } from '../../auth/api'
+import { ItemForm } from '../../items/components/ItemForm'
+import { ItemList, ItemsTotal } from '../../items/components/ItemList'
+import { useServiceTypes } from '../../serviceTypes/api'
+import { vehicleName } from '../../vehicles/api'
+import { serviceOrdersApi, type ServiceOrder } from '../api'
+
+const steps: ServiceOrderStatus[] = ['open', 'in_progress', 'ready', 'delivered', 'closed']
+
+/** Linha do tempo da OS: onde ela está e o que vem depois. */
+function Progress({ status }: { status: ServiceOrderStatus }) {
+  if (status === 'canceled') return null
+  const current = steps.indexOf(status)
+  return (
+    <ol className="mb-4 grid grid-cols-5 gap-1" aria-label="Andamento da OS">
+      {steps.map((s, i) => (
+        <li key={s} className="flex flex-col gap-1.5" aria-current={i === current ? 'step' : undefined}>
+          <span className={`h-1.5 rounded-full ${i <= current ? 'bg-brand' : 'bg-surface-2'}`} />
+          <span className={`text-xs sm:text-[13px] ${i === current ? 'font-semibold text-text' : 'text-muted'}`}>{serviceOrderStatusLabel[s]}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+export function ServiceOrderDetailPage() {
+  const { id = '' } = useParams()
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const users = useUsers()
+  const types = useServiceTypes()
+  const [adding, setAdding] = useState(false)
+  const [confirm, setConfirm] = useState<'cancel' | 'close' | null>(null)
+  const [mileageOut, setMileageOut] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const order = useQuery({ queryKey: ['service-orders', id], queryFn: () => serviceOrdersApi.get(id) })
+
+  const apply = (data: ServiceOrder) => {
+    queryClient.setQueryData(['service-orders', id], data)
+    queryClient.invalidateQueries({ queryKey: ['service-orders', 'list'] })
+    queryClient.invalidateQueries({ queryKey: ['service-orders', 'board'] })
+  }
+  const fail = (e: unknown) => setError(e instanceof ApiError ? (Object.values(e.errors)[0]?.[0] ?? e.message) : 'Não deu para salvar. Tente de novo.')
+
+  const transition = useMutation({
+    mutationFn: (to: ServiceOrderStatus) => serviceOrdersApi.transition(id, to),
+    onMutate: () => setError(null),
+    onSuccess: (data) => {
+      apply(data)
+      setConfirm(null)
+      toast(`OS ${data.number}: ${serviceOrderStatusLabel[data.status].toLowerCase()}.`)
+    },
+    onError: (e) => (setConfirm(null), fail(e)),
+  })
+
+  const markDone = useMutation({
+    mutationFn: (itemId: string) => serviceOrdersApi.markDone(id, itemId),
+    onMutate: () => setError(null),
+    onSuccess: apply,
+    onError: fail,
+  })
+
+  const close = useMutation({
+    mutationFn: (km: number) => serviceOrdersApi.close(id, km),
+    onMutate: () => setError(null),
+    onSuccess: (data) => {
+      apply(data)
+      setConfirm(null)
+      toast(`OS ${data.number} fechada.`)
+    },
+    onError: (e) => (setConfirm(null), fail(e)),
+  })
+
+  if (order.isLoading) {
+    return (
+      <>
+        <Skeleton className="mb-6 h-10 w-64" />
+        <Skeleton className="h-72" />
+      </>
+    )
+  }
+  if (order.isError || !order.data) return <ErrorBox message="Não deu para carregar a OS." onRetry={() => order.refetch()} />
+
+  const o = order.data
+  const items = o.items ?? []
+  const next = serviceOrderNextStep[o.status]
+  const acceptsItems = o.status === 'open' || o.status === 'in_progress'
+  const doneCount = items.filter((i) => i.done_at).length
+  const kmOut = Number(mileageOut)
+  const kmInvalid = mileageOut === '' || (o.mileage_in !== null && kmOut < o.mileage_in)
+
+  return (
+    <>
+      <PageHeader
+        back={<BackLink to="/os" label="OS" />}
+        title={`OS ${o.number}`}
+        subtitle={
+          <span className="flex flex-wrap items-center gap-2">
+            <ServiceOrderStatusBadge status={o.status} />
+            <span className="num font-semibold text-text">{o.vehicle ? formatPlate(o.vehicle.plate) : ''}</span>
+            <span>
+              {vehicleName(o.vehicle)} · {o.customer?.name}
+            </span>
+          </span>
+        }
+      />
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_340px] lg:items-start">
+        <div className="flex flex-col gap-4">
+          <Card>
+            <Progress status={o.status} />
+            <CardTitle
+              action={
+                acceptsItems && !adding ? (
+                  <Button variant="ghost" icon={<Plus size={18} aria-hidden />} onClick={() => setAdding(true)}>
+                    Adicionar item
+                  </Button>
+                ) : null
+              }
+            >
+              Itens{items.length ? <span className="num ml-2 text-base font-normal text-muted">{doneCount} de {items.length} feitos</span> : null}
+            </CardTitle>
+
+            {error ? (
+              <div className="mb-4">
+                <ErrorBox message={error} />
+              </div>
+            ) : null}
+
+            {items.length === 0 && !adding ? <p className="text-muted">Nenhum item ainda. Adicione o que vai ser feito.</p> : null}
+
+            <ItemList
+              items={items}
+              users={users.data ?? []}
+              aside={(item) =>
+                item.done_at ? (
+                  <Check size={20} className="mt-0.5 shrink-0 text-success" aria-label="Feito" />
+                ) : (
+                  <Circle size={20} className="mt-0.5 shrink-0 text-border-strong" aria-label="A fazer" />
+                )
+              }
+              actions={(item) =>
+                item.done_at ? (
+                  <span className="text-sm text-success">
+                    Feito {formatWhen(item.done_at).toLowerCase()}
+                    {item.done_by ? ` por ${users.data?.find((u) => u.id === item.done_by)?.name ?? 'técnico'}` : ''}
+                  </span>
+                ) : acceptsItems ? (
+                  <Button variant="secondary" className="h-10" icon={<Check size={16} aria-hidden />} loading={markDone.isPending && markDone.variables === item.id} onClick={() => markDone.mutate(item.id)}>
+                    Marcar como feito
+                  </Button>
+                ) : null
+              }
+            />
+            {items.length ? <ItemsTotal cents={o.total_cents} /> : null}
+
+            {adding ? (
+              <div className="mt-5 border-t border-border pt-5">
+                <ItemForm
+                  serviceTypes={types.data ?? []}
+                  users={users.data ?? []}
+                  onCancel={() => setAdding(false)}
+                  onSubmit={async (item) => {
+                    apply(await serviceOrdersApi.addItem(id, item))
+                    setAdding(false)
+                    toast('Item adicionado.')
+                  }}
+                />
+              </div>
+            ) : null}
+          </Card>
+        </div>
+
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-8">
+          {o.status !== 'closed' && o.status !== 'canceled' ? (
+            <Card>
+              <CardTitle>Próximo passo</CardTitle>
+              {next ? (
+                <Button full loading={transition.isPending && transition.variables === next.to} onClick={() => transition.mutate(next.to)}>
+                  {next.label}
+                </Button>
+              ) : null}
+              {o.status === 'delivered' ? (
+                <Button full onClick={() => setConfirm('close')} disabled={doneCount < items.length || items.length === 0}>
+                  Fechar OS
+                </Button>
+              ) : null}
+              {o.status === 'delivered' && (doneCount < items.length || items.length === 0) ? (
+                <p className="mt-2 text-sm text-muted">Para fechar, marque todos os itens como feitos.</p>
+              ) : null}
+              {serviceOrderCancelable.includes(o.status) ? (
+                <Button variant="ghost" className="mt-2 w-full text-danger" onClick={() => setConfirm('cancel')}>
+                  Cancelar OS
+                </Button>
+              ) : null}
+            </Card>
+          ) : null}
+
+          <Card>
+            <dl className="grid grid-cols-2 gap-4">
+              <Detail label="Aberta">{formatWhen(o.created_at)}</Detail>
+              <Detail label="Origem">
+                {o.quote_id ? (
+                  <Link to={`/orcamentos/${o.quote_id}`} className="inline-flex items-center gap-1 text-brand hover:underline">
+                    <FileText size={16} aria-hidden /> Orçamento
+                  </Link>
+                ) : (
+                  'Direta'
+                )}
+              </Detail>
+              <Detail label="Km entrada">{formatKm(o.mileage_in)}</Detail>
+              <Detail label="Km saída">{formatKm(o.mileage_out)}</Detail>
+              {o.closed_at ? <Detail label="Fechada">{formatWhen(o.closed_at)}</Detail> : null}
+              {o.canceled_at ? <Detail label="Cancelada">{formatWhen(o.canceled_at)}</Detail> : null}
+            </dl>
+            {o.notes ? <p className="mt-4 border-t border-border pt-4 text-sm whitespace-pre-line">{o.notes}</p> : null}
+          </Card>
+        </aside>
+      </div>
+
+      <ConfirmDialog
+        open={confirm === 'cancel'}
+        title={`Cancelar a OS ${o.number}?`}
+        text="Essa ação não pode ser desfeita."
+        confirmLabel="Cancelar OS"
+        danger
+        loading={transition.isPending}
+        onConfirm={() => transition.mutate('canceled')}
+        onClose={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        open={confirm === 'close'}
+        title={`Fechar a OS ${o.number}`}
+        text="Informe o km na saída do veículo."
+        confirmLabel="Fechar OS"
+        loading={close.isPending}
+        onConfirm={() => !kmInvalid && close.mutate(kmOut)}
+        onClose={() => setConfirm(null)}
+      >
+        <TextField
+          label="Km de saída"
+          inputMode="numeric"
+          value={mileageOut}
+          onChange={(e) => setMileageOut(e.target.value.replace(/\D/g, ''))}
+          error={mileageOut !== '' && kmInvalid ? `Não pode ser menor que o km de entrada (${formatKm(o.mileage_in)}).` : undefined}
+          hint={o.mileage_in !== null ? `Entrada: ${formatKm(o.mileage_in)}` : undefined}
+        />
+      </ConfirmDialog>
+    </>
+  )
+}

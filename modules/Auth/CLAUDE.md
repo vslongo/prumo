@@ -10,7 +10,7 @@ Usuários, papéis e 2FA.
 users
 
 ## API pública (outros módulos só usam isto)
-- Actions: InviteUser, ChangeUserRole, DeactivateUser
+- Actions: pendentes (InviteUser, ChangeUserRole, DeactivateUser). Rotas: POST /api/login, POST /api/logout, GET /api/me
 - Eventos emitidos: UserInvited
 - Eventos ouvidos: TenantCreated
 
@@ -34,3 +34,5 @@ nenhuma
 
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
+- 2026-10-27: login SPA (Sanctum cookie) com rate limit; usuário inativo não entra. `User` sem global scope de tenant (ADR 0001). 2FA do owner pendente.
+- 2026-10-27: ListTenantUsers + GET /api/users (filtro de tenant explícito, ADR 0001); /api/me traz o nome da oficina.

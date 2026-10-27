@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Prumo">
+  <rect width="32" height="32" rx="7" fill="#0e5a4f"/>
+  <rect x="14" y="4.5" width="4" height="5.5" fill="#ffffff"/>
+  <rect x="10.5" y="9.5" width="11" height="3.5" rx="1" fill="#ffffff"/>
+  <path d="M10 14.5H22L16 27.5Z" fill="#ffffff"/>
+  <path d="M13.69 22.5H18.31L16 27.5Z" fill="#e8690c"/>
+</svg>

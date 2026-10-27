@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Providers;
+
+use App\Modules\Customers\Models\Customer;
+use App\Modules\Customers\Policies\CustomerPolicy;
+use App\Modules\Quotes\Events\QuoteApproved;
+use App\Modules\Quotes\Models\Quote;
+use App\Modules\Quotes\Policies\QuotePolicy;
+use App\Modules\ServiceOrders\Listeners\CreateServiceOrderFromApprovedQuote;
+use App\Modules\ServiceOrders\Models\ServiceOrder;
+use App\Modules\ServiceOrders\Policies\ServiceOrderPolicy;
+use App\Modules\ServiceTypes\Models\ServiceType;
+use App\Modules\ServiceTypes\Policies\ServiceTypePolicy;
+use App\Modules\Tenancy\TenantContext;
+use App\Modules\Vehicles\Models\Vehicle;
+use App\Modules\Vehicles\Policies\VehiclePolicy;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
+
+final class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->scoped(TenantContext::class);
+    }
+
+    public function boot(): void
+    {
+        Model::shouldBeStrict(! $this->app->isProduction());
+
+        Gate::policy(Customer::class, CustomerPolicy::class);
+        Gate::policy(Vehicle::class, VehiclePolicy::class);
+        Gate::policy(ServiceType::class, ServiceTypePolicy::class);
+        Gate::policy(Quote::class, QuotePolicy::class);
+        Gate::policy(ServiceOrder::class, ServiceOrderPolicy::class);
+
+        Event::listen(QuoteApproved::class, CreateServiceOrderFromApprovedQuote::class);
+
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip()));
+        RateLimiter::for('public-links', fn (Request $request) => Limit::perMinute(30)->by((string) $request->ip()));
+        // Por link (não por IP): cada pedido cria um registro em media e uma URL de upload.
+        RateLimiter::for('quote-signature', fn (Request $request) => Limit::perHour(10)->by(hash('sha256', (string) $request->route('token'))));
+    }
+}

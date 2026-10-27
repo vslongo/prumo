@@ -10,7 +10,7 @@ OS: centro dos dados (cliente, veículo, itens, valores, técnicos, dados do or�
 service_orders (origin from_quote|direct, quote_id), service_order_items (technician_id, service_type_id, fields jsonb, done_at)
 
 ## API pública (outros módulos só usam isto)
-- Actions: OpenServiceOrder (direta), ConvertApprovedQuoteToServiceOrder, AddItem, MarkItemDone, TransitionServiceOrder, CloseServiceOrder
+- Actions: OpenServiceOrder (direta), ListServiceOrders, ConvertApprovedQuoteToServiceOrder, AddServiceOrderItem, MarkItemDone, TransitionServiceOrder, CloseServiceOrder (interna: NextServiceOrderNumber)
 - Eventos emitidos: ServiceOrderOpened, ServiceOrderStatusChanged, ServiceOrderClosed
 - Eventos ouvidos: QuoteApproved
 
@@ -34,3 +34,6 @@ Messaging (OS pronta), Media (fotos)
 
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
+- 2026-10-27: implementado. Número por tenant com `pg_advisory_xact_lock` + unique (tenant_id, number). Listener em fila `CreateServiceOrderFromApprovedQuote` (QuoteApproved → OS) restaura o tenant; idempotente por `quote_id` unique. Itens só mudam em open|in_progress. `TransitionServiceOrder` não fecha: fechar é `CloseServiceOrder` (delivered, ≥1 item, todos feitos, km saída ≥ km entrada). Histórico do veículo = `GET /api/service-orders?vehicle_id=`. Audit/history da transição: pendente (módulo Audit).
+- 2026-10-27: listener `CreateServiceOrderFromApprovedQuote` é `ShouldQueueAfterCommit`.
+- 2026-10-27: ListServiceOrders aceita `quote_id` (achar a OS gerada por um orçamento) e devolve resumo de cliente/veículo.

@@ -42,7 +42,8 @@ backend/
       # pós-core
       Inspections/ Inventory/ Invoicing/ Reminders/
         Actions/  Data/  Enums/  Events/  Listeners/  Jobs/  Models/  Policies/
-        Http/{Controllers,Requests,Resources}/  routes.php  README.md  CLAUDE.md
+        Http/{Controllers,Requests,Resources}/  routes.php
+  # README.md e CLAUDE.md de cada módulo ficam em modules/<Modulo>/ na raiz do repo
     Shared/ (Traits/BelongsToTenant, ValueObjects/{Money,Plate,Vin}, Support/JsonSchemaValidator)
   database/migrations/  tests/{Feature,Unit,Arch}/
 frontend/src/
@@ -86,7 +87,7 @@ Decisão: **banco único**, `tenant_id` em cada linha + **global scope do Larave
 3. Middleware `ResolveTenant` define o tenant atual a partir do usuário logado (`TenantContext`).
 4. Jobs carregam `tenant_id` e restauram o contexto (`TenantContext::run($tenantId, fn() => ...)`).
 5. Links públicos (aprovação) resolvem o tenant pelo token, nunca por parâmetro da URL.
-6. Exceções sem tenant_id: `tenants`, tabelas de sistema e `service_types` com `tenant_id = null` (tipos padrão, somente leitura pras oficinas). No pós-core, `vehicles` global. Nova exceção exige ADR.
+6. Exceções sem tenant_id: `tenants`, tabelas de sistema e `service_types` com `tenant_id = null` (tipos padrão, somente leitura pras oficinas). No pós-core, `vehicles` global. `users` tem `tenant_id` mas sem global scope (login antes do tenant; ver `docs/adr/0001-users-sem-global-scope-de-tenant.md`). Nova exceção exige ADR.
 7. `withoutGlobalScope(TenantScope::class)` é proibido fora de `Modules/Tenancy` e comandos admin revisados.
 8. Cada módulo tem `TenantIsolationTest`: tenant A nunca lê/escreve dado do tenant B.
 9. (Pós-core, opcional) RLS: `SET app.tenant_id` na conexão + policy `tenant_id = current_setting('app.tenant_id')::uuid`.
@@ -190,7 +191,7 @@ Máquina de estados:
 - Inventar regra de negócio não documentada: pergunte ou crie ADR.
 
 ## 14. Como atualizar docs
-- Mudou comportamento de um módulo → atualize `app/Modules/<Modulo>/README.md` e `CLAUDE.md` no mesmo PR.
+- Mudou comportamento de um módulo → atualize `modules/<Modulo>/README.md` e `CLAUDE.md` no mesmo PR.
 - Decisão de arquitetura → `docs/adr/NNNN-titulo.md` (contexto, decisão, consequências).
 - Novo módulo → copie `modules/_TEMPLATE/` e registre na tabela de módulos abaixo e no `docs/architecture.md`.
 

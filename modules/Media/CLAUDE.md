@@ -10,7 +10,7 @@ Upload de fotos/arquivos direto do navegador pro R2.
 media (owner_type, owner_id, r2_key, status pending|uploaded|failed, size, mime)
 
 ## API pública (outros módulos só usam isto)
-- Actions: RequestUploadUrl, ConfirmUpload, GetSignedReadUrl
+- Actions: RequestUploadUrl, ConfirmUpload, FindLatestOwnerMedia. Pendente: GetSignedReadUrl, endpoints autenticados de foto, job de miniatura, limpeza de pending > 24 h
 - Eventos emitidos: MediaUploaded
 - Eventos ouvidos: –
 
@@ -34,3 +34,5 @@ Cloudflare R2
 
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
+- 2026-10-27: mínimo implementado para a assinatura do orçamento. Disco `r2` (S3, bucket privado). Chave `<owner_type>/<uuid7>.<ext>` sem tenant_id (a URL vai para o cliente final). ConfirmUpload checa existência e tamanho no R2.
+- 2026-10-27: ConfirmUpload confere os bytes iniciais (PNG/JPEG/WebP/PDF) além do tamanho; arquivo inválido é apagado e vira `failed`.

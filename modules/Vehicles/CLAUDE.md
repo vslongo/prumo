@@ -10,7 +10,7 @@ Veículos da oficina; no pós-core vira registro global com histórico.
 vehicles (core: por tenant). Pós-core: vehicles global, tenant_vehicles, vehicle_ownerships, vehicle_history
 
 ## API pública (outros módulos só usam isto)
-- Actions: CreateVehicle, FindVehicleByPlate
+- Actions: CreateVehicle, FindVehicleByPlate, VehicleBelongsToCustomer
 - Eventos emitidos: VehicleCreated
 - Eventos ouvidos: –
 
@@ -34,3 +34,5 @@ nenhuma
 
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
+- 2026-10-27: CreateVehicle/FindVehicleByPlate implementados. Placa normalizada (antiga ou Mercosul) única por tenant entre não deletados (índice parcial).
+- 2026-10-27: ListCustomerVehicles + GET /api/customers/{customerId}/vehicles.

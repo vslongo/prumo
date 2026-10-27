@@ -1,0 +1,30 @@
+# ponytail: ambiente de dev/teste local; produção é Forge (ver CLAUDE.md §2)
+services:
+  app:
+    build: docker/php
+    volumes: [".:/app"]
+    working_dir: /app/backend
+    ports: ["8000:8000"]
+    environment:
+      PHP_CLI_SERVER_WORKERS: 4
+    depends_on: [pgsql, redis]
+    command: php artisan serve --host=0.0.0.0 --port=8000
+  # Processa a fila (ex.: QuoteApproved → gera a OS). Em produção: Horizon.
+  queue:
+    build: docker/php
+    volumes: [".:/app"]
+    working_dir: /app/backend
+    depends_on: [pgsql, redis]
+    command: php artisan queue:work --tries=5
+  pgsql:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: oficina
+      POSTGRES_USER: oficina
+      POSTGRES_PASSWORD: secret
+    ports: ["5433:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data, ./docker/pgsql/init.sql:/docker-entrypoint-initdb.d/init.sql]
+  redis:
+    image: redis:7-alpine
+volumes:
+  pgdata:

@@ -10,7 +10,7 @@ Tipos de serviço com campos específicos definidos por schema JSON.
 service_types (tenant_id null = padrão do sistema)
 
 ## API pública (outros módulos só usam isto)
-- Actions: CreateServiceType, UpdateServiceType, ValidateItemFields
+- Actions: CreateServiceType, UpdateServiceType, ListServiceTypes, ValidateItemFields
 - Eventos emitidos: ServiceTypeUpdated
 - Eventos ouvidos: –
 
@@ -34,3 +34,4 @@ nenhuma
 
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
+- 2026-10-27: implementado. Escopo inclui linhas globais (`includesGlobalRows`). Tipos padrão vêm do `DatabaseSeeder` (troca de óleo, troca de junta, serviço geral). Só owner/admin criam/alteram; padrão é somente leitura. `ValidateItemFields` devolve o snapshot do schema para o item.

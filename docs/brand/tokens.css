@@ -1,0 +1,118 @@
+/* Prumo — design tokens
+ * Fonte da verdade da marca. Importe uma vez no CSS global do app (antes do Tailwind).
+ * Claro em :root, escuro em [data-theme="dark"]. Contrastes validados em BRAND.md (WCAG 2.1).
+ * Google Fonts: IBM Plex Sans + IBM Plex Sans Condensed (ver BRAND.md).
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Superfícies */
+  --color-bg: #f4f3ef;          /* fundo da página, off-white quente */
+  --color-surface: #ffffff;     /* cards, campos, folhas */
+  --color-surface-2: #ebe9e3;   /* faixas, cabeçalho de tabela, hover */
+  --color-border: #d4d1c8;      /* bordas e divisores */
+  --color-border-strong: #8f938e; /* borda de campo (contraste 3:1 sobre surface) */
+
+  /* Texto */
+  --color-text: #1b1f1d;
+  --color-text-muted: #565c59;
+
+  /* Marca: verde-petróleo */
+  --color-brand: #0e5a4f;
+  --color-brand-strong: #0a433b; /* hover/pressed */
+  --color-on-brand: #ffffff;
+
+  /* Acento: laranja-sinalização. Só para destaque pontual (fio, marcador, foco), nunca texto sobre claro */
+  --color-accent: #e8690c;
+  --color-on-accent: #1b1f1d;
+
+  /* Foco */
+  --color-focus: #e8690c;
+
+  /* Feedback */
+  --color-success: #17673a;
+  --color-success-soft: #e0f0e5;
+  --color-warning: #7d5000;
+  --color-warning-soft: #fbefd5;
+  --color-danger: #b0241a;
+  --color-danger-soft: #fae4e1;
+  --color-info: #1d5a92;
+  --color-info-soft: #e2ecf7;
+
+  /* Status da OS (fg = texto/ícone, bg = fundo do badge) */
+  --status-os-open-fg: #164a7a;        --status-os-open-bg: #e2ecf7;
+  --status-os-in_progress-fg: #664200; --status-os-in_progress-bg: #fbefd5;
+  --status-os-ready-fg: #115430;       --status-os-ready-bg: #e0f0e5;
+  --status-os-delivered-fg: #0a433b;   --status-os-delivered-bg: #dcece8;
+  --status-os-closed-fg: #434946;      --status-os-closed-bg: #e6e4de;
+  --status-os-canceled-fg: #84190f;    --status-os-canceled-bg: #fae4e1;
+
+  /* Status do orçamento */
+  --status-quote-draft-fg: #434946;    --status-quote-draft-bg: #e6e4de;
+  --status-quote-sent-fg: #164a7a;     --status-quote-sent-bg: #e2ecf7;
+  --status-quote-viewed-fg: #0b5566;   --status-quote-viewed-bg: #dbeff3;
+  --status-quote-approved-fg: #115430; --status-quote-approved-bg: #e0f0e5;
+  --status-quote-rejected-fg: #84190f; --status-quote-rejected-bg: #fae4e1;
+  --status-quote-expired-fg: #7a3a06;  --status-quote-expired-bg: #f6e5d6;
+
+  /* Tipografia */
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+
+  /* Forma */
+  --radius-sm: 4px;   /* badges, chips */
+  --radius-md: 8px;   /* botões, campos */
+  --radius-lg: 12px;  /* cards, folhas, modais */
+
+  --shadow-sm: 0 1px 2px rgb(27 31 29 / 0.08);
+  --shadow-md: 0 2px 4px rgb(27 31 29 / 0.06), 0 8px 20px rgb(27 31 29 / 0.08);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #111413;
+  --color-surface: #191d1c;
+  --color-surface-2: #222826;
+  --color-border: #323a37;
+  --color-border-strong: #6b736f;
+
+  --color-text: #ebece8;
+  --color-text-muted: #a2a9a5;
+
+  --color-brand: #3fae99;
+  --color-brand-strong: #63c4b1;
+  --color-on-brand: #0b1715;
+
+  --color-accent: #f08a3a;
+  --color-on-accent: #111413;
+
+  --color-focus: #f08a3a;
+
+  --color-success: #5cc285;
+  --color-success-soft: #173323;
+  --color-warning: #e8b54d;
+  --color-warning-soft: #352a12;
+  --color-danger: #f0776c;
+  --color-danger-soft: #3b1a17;
+  --color-info: #74aee6;
+  --color-info-soft: #172a3d;
+
+  --status-os-open-fg: #8fbdec;        --status-os-open-bg: #172a3d;
+  --status-os-in_progress-fg: #ecc062; --status-os-in_progress-bg: #352a12;
+  --status-os-ready-fg: #74cf98;       --status-os-ready-bg: #173323;
+  --status-os-delivered-fg: #70ccb9;   --status-os-delivered-bg: #13302b;
+  --status-os-closed-fg: #b9bfbb;      --status-os-closed-bg: #2a302d;
+  --status-os-canceled-fg: #f7a49d;    --status-os-canceled-bg: #3b1a17;
+
+  --status-quote-draft-fg: #b9bfbb;    --status-quote-draft-bg: #2a302d;
+  --status-quote-sent-fg: #8fbdec;     --status-quote-sent-bg: #172a3d;
+  --status-quote-viewed-fg: #72c6d8;   --status-quote-viewed-bg: #12303a;
+  --status-quote-approved-fg: #74cf98; --status-quote-approved-bg: #173323;
+  --status-quote-rejected-fg: #f7a49d; --status-quote-rejected-bg: #3b1a17;
+  --status-quote-expired-fg: #eda36a;  --status-quote-expired-bg: #38230f;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 8px 20px rgb(0 0 0 / 0.4);
+}
