@@ -93,7 +93,14 @@ it('lista convites pendentes e cancela: o link deixa de valer', function () {
     $token = basename((string) $this->postJson('/api/user-invitations', ['name' => 'Zé', 'role' => 'technician'])->json('data.link'));
     $id = UserInvitation::sole()->id;
 
-    $this->getJson('/api/user-invitations')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Zé');
+    $this->getJson('/api/user-invitations')->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.name', 'Zé')
+        ->assertJsonPath('data.0.link', fn (string $link) => str_ends_with($link, "/convite/{$token}"));
+
+    // Token cru só criptografado no banco; o JSON do model não o expõe.
+    $raw = DB::table('user_invitations')->value('token');
+    expect($raw)->not->toContain($token)
+        ->and(UserInvitation::sole()->toArray())->not->toHaveKeys(['token', 'token_hash']);
 
     $this->deleteJson("/api/user-invitations/{$id}")->assertNoContent();
     $this->getJson('/api/user-invitations')->assertJsonCount(0, 'data');

@@ -16,7 +16,7 @@ function renderTeam() {
   const fetchMock = vi.fn((url: string, init?: RequestInit) => {
     if (url === '/api/me') return json(200, { data: owner })
     if (url === '/api/users') return json(200, { data: [owner, tech, gone] })
-    if (url === '/api/user-invitations' && (!init?.method || init.method === 'GET')) return json(200, { data: [{ id: 'i1', name: 'Novato', role: 'technician', expires_at: '2099-01-01T00:00:00Z' }] })
+    if (url === '/api/user-invitations' && (!init?.method || init.method === 'GET')) return json(200, { data: [{ id: 'i1', name: 'Novato', role: 'technician', expires_at: '2099-01-01T00:00:00Z', link: 'http://localhost:5173/convite/abc', whatsapp_url: 'https://wa.me/?text=oi' }] })
     if (url === '/sanctum/csrf-cookie') return Promise.resolve(new Response(null, { status: 204 }))
     return json(200, { data: { ...tech, is_active: false } })
   })
@@ -47,7 +47,10 @@ describe('TeamCard', () => {
     expect(within(goneRow).getByText('Balcão · desativado')).toBeInTheDocument()
     expect(within(goneRow).getByRole('button', { name: 'Reativar' })).toBeInTheDocument()
 
-    expect(await screen.findByText('Novato')).toBeInTheDocument()
+    const inviteRow = (await screen.findByText('Novato')).closest('li') as HTMLElement
+    expect(within(inviteRow).getByDisplayValue('http://localhost:5173/convite/abc')).toBeInTheDocument()
+    expect(within(inviteRow).getByRole('button', { name: 'Copiar link' })).toBeInTheDocument()
+    expect(within(inviteRow).getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', 'https://wa.me/?text=oi')
   })
 
   it('admin não vê controles de outro admin nem a opção de criar admin', async () => {

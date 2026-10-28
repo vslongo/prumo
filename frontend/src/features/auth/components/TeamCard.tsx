@@ -12,9 +12,12 @@ import { SelectField, TextField } from '../../../shared/ui/Field'
 import { Card, CardTitle, ErrorBox, ListSkeleton } from '../../../shared/ui/States'
 import { muted } from '../../../shared/ui/styles'
 import { useToast } from '../../../shared/ui/Toast'
-import { authApi, roleLabel, useMe, usePendingInvitations, useUsers, type InvitableRole, type SentInvitation, type User } from '../api'
+import { authApi, roleLabel, useMe, usePendingInvitations, useUsers, type InvitableRole, type User } from '../api'
 
 const invitableRoles: InvitableRole[] = ['technician', 'front', 'admin']
+
+// Rótulo só para leitor de tela (o contexto visual já diz o que é o campo).
+const srOnly = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }
 
 const listSx = { m: 0, p: 0, listStyle: 'none', '& > li': { py: 1.25 }, '& > li + li': { borderTop: 1, borderColor: 'divider' }, '& > li:first-of-type': { pt: 0 } }
 
@@ -41,6 +44,11 @@ export function TeamCard() {
     } finally {
       setBusy(false)
     }
+  }
+
+  const copy = async (text: string) => {
+    await navigator.clipboard?.writeText(text).catch(() => undefined)
+    toast('Link copiado.')
   }
 
   // Espelha a UserPolicy: dono e a própria pessoa nunca; admin só o dono gerencia e cria.
@@ -70,7 +78,7 @@ export function TeamCard() {
                   <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
                     {u.is_active ? (
                       <>
-                        <SelectField label={`Papel de ${u.name}`} value={u.role} disabled={busy} onChange={(e) => run(() => authApi.changeRole(u.id, e.target.value as InvitableRole), 'Papel alterado.')} sx={{ width: 150, '& label': { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } }}>
+                        <SelectField label={`Papel de ${u.name}`} value={u.role} disabled={busy} onChange={(e) => run(() => authApi.changeRole(u.id, e.target.value as InvitableRole), 'Papel alterado.')} sx={{ width: 150, '& label': srOnly }}>
                           {roles.map((r) => (
                             <option key={r} value={r}>
                               {roleLabel[r]}
@@ -101,17 +109,32 @@ export function TeamCard() {
           </Typography>
           <Box component="ul" sx={listSx}>
             {invitations.data.map((i) => (
-              <Stack component="li" key={i.id} direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1.5 }}>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{i.name}</Typography>
-                  <Typography variant="body2" sx={muted}>
-                    {roleLabel[i.role]} · vale até {formatWhen(i.expires_at)}
-                  </Typography>
-                </Box>
-                <Button variant="ghost" tone="danger" size="small" disabled={busy} onClick={() => run(() => authApi.revokeInvitation(i.id), 'Convite cancelado.')}>
-                  Cancelar
-                </Button>
-              </Stack>
+              <li key={i.id}>
+                <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1.5 }}>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{i.name}</Typography>
+                    <Typography variant="body2" sx={muted}>
+                      {roleLabel[i.role]} · vale até {formatWhen(i.expires_at)}
+                    </Typography>
+                  </Box>
+                  <Button variant="ghost" tone="danger" size="small" disabled={busy} onClick={() => run(() => authApi.revokeInvitation(i.id), 'Convite cancelado.')}>
+                    Cancelar
+                  </Button>
+                </Stack>
+                {i.link && i.whatsapp_url ? (
+                  <Stack sx={{ gap: 1, mt: 1 }}>
+                    <TextField label={`Link de convite de ${i.name}`} readOnly value={i.link} onFocus={(e) => e.target.select()} sx={{ '& label': srOnly, '& .MuiOutlinedInput-root': { bgcolor: 'background.default', fontSize: 14 } }} />
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
+                      <Button href={i.whatsapp_url} target="_blank" rel="noreferrer" size="small" icon={<MessageCircle size={16} aria-hidden />}>
+                        WhatsApp
+                      </Button>
+                      <Button variant="secondary" size="small" icon={<Copy size={16} aria-hidden />} onClick={() => copy(i.link ?? '')}>
+                        Copiar link
+                      </Button>
+                    </Box>
+                  </Stack>
+                ) : null}
+              </li>
             ))}
           </Box>
         </Box>
@@ -138,12 +161,11 @@ export function TeamCard() {
   )
 }
 
-/** Convite novo: o funcionário cria o próprio acesso pelo link. */
-function InviteForm({ roles, onSent }: { roles: InvitableRole[]; onSent: () => void }) {
+/** Convite novo: entra na lista de pendentes, onde fica o link para mandar (vale 7 dias, uso único). */
+function InviteForm({ roles, onSent }: { roles: InvitableRole[]; onSent: () => Promise<unknown> }) {
   const toast = useToast()
   const [name, setName] = useState('')
   const [role, setRole] = useState<InvitableRole>('technician')
-  const [sent, setSent] = useState<SentInvitation | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -152,8 +174,10 @@ function InviteForm({ roles, onSent }: { roles: InvitableRole[]; onSent: () => v
     if (!name.trim()) return setError('Informe o nome do funcionário.')
     setSaving(true)
     try {
-      setSent(await authApi.invite(name.trim(), role))
-      onSent()
+      await authApi.invite(name.trim(), role)
+      await onSent()
+      toast(`Convite criado. Mande o link para ${name.trim()} em "Convites pendentes".`)
+      setName('')
     } catch (e) {
       setError(apiMessage(e, 'Não deu para gerar o convite. Tente de novo.'))
     } finally {
@@ -161,48 +185,23 @@ function InviteForm({ roles, onSent }: { roles: InvitableRole[]; onSent: () => v
     }
   }
 
-  const copy = async (text: string) => {
-    await navigator.clipboard?.writeText(text).catch(() => undefined)
-    toast('Link copiado.')
-  }
-
   return (
-    <Box sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-      <Typography variant="body2" sx={[muted, { fontWeight: 600, mb: 1.5 }]}>
+    <Stack sx={{ gap: 2, mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+      <Typography variant="body2" sx={[muted, { fontWeight: 600 }]}>
         Convidar funcionário
       </Typography>
-      {sent ? (
-        <Stack sx={{ gap: 1.5 }}>
-          <Typography variant="body2" sx={muted}>
-            Mande o link para {name.trim()}. Vale por 7 dias e só pode ser usado uma vez.
-          </Typography>
-          <TextField label="Link de convite" readOnly value={sent.link} onFocus={(e) => e.target.select()} sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'background.default', fontSize: 14 } }} />
-          <Button href={sent.whatsapp_url} target="_blank" rel="noreferrer" full icon={<MessageCircle size={18} aria-hidden />}>
-            Enviar pelo WhatsApp
-          </Button>
-          <Button variant="secondary" full icon={<Copy size={18} aria-hidden />} onClick={() => copy(sent.link)}>
-            Copiar link
-          </Button>
-          <Button variant="ghost" full onClick={() => (setSent(null), setName(''))}>
-            Convidar outra pessoa
-          </Button>
-        </Stack>
-      ) : (
-        <Stack sx={{ gap: 2 }}>
-          {error ? <ErrorBox message={error} /> : null}
-          <TextField label="Nome do funcionário" placeholder="Ex.: Zé" value={name} onChange={(e) => setName(e.target.value)} />
-          <SelectField label="Papel" value={role} onChange={(e) => setRole(e.target.value as InvitableRole)}>
-            {roles.map((r) => (
-              <option key={r} value={r}>
-                {roleLabel[r]}
-              </option>
-            ))}
-          </SelectField>
-          <Button onClick={invite} loading={saving} loadingText="Gerando convite…" icon={<UserPlus size={18} aria-hidden />}>
-            Gerar link de convite
-          </Button>
-        </Stack>
-      )}
-    </Box>
+      {error ? <ErrorBox message={error} /> : null}
+      <TextField label="Nome do funcionário" placeholder="Ex.: Zé" value={name} onChange={(e) => setName(e.target.value)} />
+      <SelectField label="Papel" value={role} onChange={(e) => setRole(e.target.value as InvitableRole)}>
+        {roles.map((r) => (
+          <option key={r} value={r}>
+            {roleLabel[r]}
+          </option>
+        ))}
+      </SelectField>
+      <Button onClick={invite} loading={saving} loadingText="Gerando convite…" icon={<UserPlus size={18} aria-hidden />}>
+        Gerar link de convite
+      </Button>
+    </Stack>
   )
 }

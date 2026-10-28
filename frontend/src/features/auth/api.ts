@@ -9,7 +9,7 @@ export type InvitableRole = Exclude<Role, 'owner'>
 export type SentInvitation = { link: string; whatsapp_url: string; expires_at: string }
 export type PublicInvitation = { name: string; role: Role; workshop: string; usable: boolean }
 export type AcceptInvitationInput = { name: string; email: string; password: string }
-export type PendingInvitation = { id: string; name: string; role: InvitableRole; expires_at: string }
+export type PendingInvitation = { id: string; name: string; role: InvitableRole; expires_at: string; link: string | null; whatsapp_url: string | null }
 
 export const roleLabel: Record<Role, string> = { owner: 'Dono', admin: 'Administrador', technician: 'Técnico', front: 'Balcão' }
 

@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Gate;
 
 final class InvitationController
 {
-    /** Convites pendentes, para o dono acompanhar e cancelar. O link não é guardado, então não volta aqui. */
+    /** Convites pendentes, com o link para o dono copiar de novo (só owner/admin chegam aqui). */
     public function index(ListPendingInvitations $list): JsonResponse
     {
         Gate::authorize('viewAny', UserInvitation::class);
@@ -31,6 +31,7 @@ final class InvitationController
             'name' => $i->name,
             'role' => $i->role->value,
             'expires_at' => $i->expires_at->toIso8601String(),
+            ...($i->token !== null ? InviteUser::links($i->name, $i->token) : ['link' => null, 'whatsapp_url' => null]),
         ])]);
     }
 
