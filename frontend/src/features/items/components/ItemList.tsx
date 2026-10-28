@@ -1,6 +1,10 @@
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
 import { Package, Wrench } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { formatMoney, formatQuantity } from '../../../shared/lib/format'
+import { muted } from '../../../shared/ui/styles'
 import type { User } from '../../auth/api'
 import type { FieldSchema } from '../../serviceTypes/api'
 import type { ItemInput } from '../types'
@@ -31,37 +35,45 @@ export function ItemList<T extends Displayable>({ items, users, schemaFor, actio
   const technician = (id: string) => users.find((u) => u.id === id)?.name ?? 'Técnico'
 
   return (
-    <ul className="divide-y divide-border">
+    <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none', '& > li + li': { borderTop: 1, borderColor: 'divider' }, '& > li': { py: 1.5 }, '& > li:first-of-type': { pt: 0 }, '& > li:last-of-type': { pb: 0 } }}>
       {items.map((item, index) => {
         const total = item.total_cents ?? Math.round(item.unit_price_cents * Number(item.quantity))
         const details = detailText(item, item.fields_schema_snapshot ?? schemaFor?.(item) ?? [])
         const Icon = item.kind === 'service' ? Wrench : Package
         return (
-          <li key={item.id ?? index} className="flex gap-3 py-3 first:pt-0 last:pb-0">
-            {aside ? aside(item) : <Icon size={20} className="mt-0.5 shrink-0 text-muted" aria-hidden />}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-3">
-                <p className="font-semibold">{item.description}</p>
-                <p className="num shrink-0 font-semibold">{formatMoney(total)}</p>
-              </div>
-              <p className="num text-sm text-muted">
+          <Stack component="li" direction="row" key={item.id ?? index} sx={{ gap: 1.5 }}>
+            {aside ? aside(item) : <Box component={Icon} size={20} aria-hidden sx={{ mt: 0.25, flexShrink: 0, ...muted }} />}
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5 }}>
+                <Typography sx={{ fontWeight: 600 }}>{item.description}</Typography>
+                <Typography className="num" sx={{ flexShrink: 0, fontWeight: 600 }}>
+                  {formatMoney(total)}
+                </Typography>
+              </Stack>
+              <Typography variant="body2" className="num" sx={muted}>
                 {formatQuantity(item.quantity)} × {formatMoney(item.unit_price_cents)} · {technician(item.technician_id)}
-              </p>
-              {details ? <p className="mt-1 text-sm">{details}</p> : null}
-              {actions ? <div className="mt-2 flex flex-wrap gap-2">{actions(item, index)}</div> : null}
-            </div>
-          </li>
+              </Typography>
+              {details ? (
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {details}
+                </Typography>
+              ) : null}
+              {actions ? <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>{actions(item, index)}</Stack> : null}
+            </Box>
+          </Stack>
         )
       })}
-    </ul>
+    </Box>
   )
 }
 
 export function ItemsTotal({ cents, label = 'Total' }: { cents: number; label?: string }) {
   return (
-    <div className="mt-4 flex items-baseline justify-between border-t border-border pt-4">
-      <span className="text-muted">{label}</span>
-      <span className="num font-display text-2xl font-bold">{formatMoney(cents)}</span>
-    </div>
+    <Stack direction="row" sx={{ mt: 2, alignItems: 'baseline', justifyContent: 'space-between', borderTop: 1, borderColor: 'divider', pt: 2 }}>
+      <Typography sx={muted}>{label}</Typography>
+      <Typography className="num" sx={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700 }}>
+        {formatMoney(cents)}
+      </Typography>
+    </Stack>
   )
 }

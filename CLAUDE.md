@@ -22,7 +22,7 @@ A marca vende sozinha (autoatendimento): todo fluxo precisa funcionar sem call d
 | API / backend | Laravel 12 (PHP 8.3+), monolito modular |
 | Banco | PostgreSQL 16+ (jsonb, pg_trgm; RLS só no pós-core, opcional) |
 | Filas/cache | Redis + Laravel Horizon |
-| Frontend | React 18 + TypeScript + Vite, PWA, TanStack Query, React Hook Form + Zod, Tailwind |
+| Frontend | React 18 + TypeScript + Vite, PWA, TanStack Query, React Hook Form + Zod, MUI (tema nos tokens da marca; ver `docs/adr/0002-frontend-com-mui.md`) |
 | Worker WhatsApp | Node 20+ + TypeScript, consome fila Redis, fala com WhatsApp Cloud API (oficial) |
 | Storage | Cloudflare R2 (S3 compatível), bucket privado; navegador comprime (~300 KB) e sobe direto por URL pré-assinada |
 | Integrações | Core: Asaas (assinatura do SaaS), WhatsApp Cloud API. Pós-core: Focus NFe (NFS-e) |

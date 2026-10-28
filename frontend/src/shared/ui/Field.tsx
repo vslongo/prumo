@@ -1,79 +1,92 @@
-import { CircleAlert } from 'lucide-react'
+import Checkbox from '@mui/material/Checkbox'
+import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import FormHelperText from '@mui/material/FormHelperText'
+import FormLabel from '@mui/material/FormLabel'
+import InputAdornment from '@mui/material/InputAdornment'
+import NativeSelect from '@mui/material/NativeSelect'
+import OutlinedInput from '@mui/material/OutlinedInput'
+import type { SxProps, Theme } from '@mui/material/styles'
+import { CircleAlert, Search } from 'lucide-react'
 import { useId, type InputHTMLAttributes, type ReactNode, type Ref, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
-const control =
-  'w-full rounded-md bg-surface border px-3 text-base text-text placeholder:text-muted outline-none focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-60'
-
-function borderFor(error?: string) {
-  return error ? 'border-danger' : 'border-border-strong'
-}
-
-type FieldProps = { label: string; hint?: string; error?: string; children: (id: string, describedBy: string | undefined) => ReactNode; className?: string }
+type FieldProps = { label: string; hint?: string; error?: string; children: (id: string, describedBy: string | undefined) => ReactNode; sx?: SxProps<Theme> }
 
 /** Rótulo sempre visível acima; ajuda e erro abaixo (docs/brand: "Campo"). */
-export function Field({ label, hint, error, children, className = '' }: FieldProps) {
+export function Field({ label, hint, error, children, sx }: FieldProps) {
   const id = useId()
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-      </label>
+    <FormControl fullWidth error={!!error} sx={sx}>
+      <FormLabel htmlFor={id}>{label}</FormLabel>
       {children(id, describedBy)}
       {error ? (
-        <p id={`${id}-error`} className="flex items-start gap-1.5 text-sm text-danger" role="alert">
-          <CircleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
+        <FormHelperText id={`${id}-error`} role="alert" sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75 }}>
+          <CircleAlert size={16} style={{ marginTop: 2, flexShrink: 0 }} aria-hidden />
           {error}
-        </p>
+        </FormHelperText>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-sm text-muted">
-          {hint}
-        </p>
+        <FormHelperText id={`${id}-hint`}>{hint}</FormHelperText>
       ) : null}
-    </div>
+    </FormControl>
   )
 }
 
-type Common = { label: string; hint?: string; error?: string; className?: string }
+type Common = { label: string; hint?: string; error?: string; sx?: SxProps<Theme>; startAdornment?: ReactNode }
 
-export function TextField({ label, hint, error, className, ref, ...rest }: Common & InputHTMLAttributes<HTMLInputElement> & { ref?: Ref<HTMLInputElement> }) {
+// Os campos ficam não controlados (react-hook-form `register`): o ref vai direto para o elemento nativo.
+export function TextField({ label, hint, error, sx, startAdornment, ref, ...rest }: Common & Omit<InputHTMLAttributes<HTMLInputElement>, 'color' | 'size'> & { ref?: Ref<HTMLInputElement> }) {
   return (
-    <Field label={label} hint={hint} error={error} className={className}>
+    <Field label={label} hint={hint} error={error} sx={sx}>
       {(id, describedBy) => (
-        <input id={id} ref={ref} aria-invalid={!!error} aria-describedby={describedBy} className={`${control} h-12 ${borderFor(error)}`} {...rest} />
+        <OutlinedInput id={id} inputRef={ref} error={!!error} startAdornment={startAdornment} inputProps={{ ...rest, 'aria-invalid': !!error, 'aria-describedby': describedBy }} />
       )}
     </Field>
   )
 }
 
-export function SelectField({ label, hint, error, className, children, ref, ...rest }: Common & SelectHTMLAttributes<HTMLSelectElement> & { ref?: Ref<HTMLSelectElement> }) {
+export function SelectField({ label, hint, error, sx, children, ref, ...rest }: Common & Omit<SelectHTMLAttributes<HTMLSelectElement>, 'color'> & { ref?: Ref<HTMLSelectElement> }) {
   return (
-    <Field label={label} hint={hint} error={error} className={className}>
+    <Field label={label} hint={hint} error={error} sx={sx}>
       {(id, describedBy) => (
-        <select id={id} ref={ref} aria-invalid={!!error} aria-describedby={describedBy} className={`${control} h-12 ${borderFor(error)}`} {...rest}>
+        <NativeSelect input={<OutlinedInput />} error={!!error} inputRef={ref} inputProps={{ ...rest, id, 'aria-invalid': !!error, 'aria-describedby': describedBy } as never}>
           {children}
-        </select>
+        </NativeSelect>
       )}
     </Field>
   )
 }
 
-export function TextAreaField({ label, hint, error, className, ref, ...rest }: Common & TextareaHTMLAttributes<HTMLTextAreaElement> & { ref?: Ref<HTMLTextAreaElement> }) {
+export function TextAreaField({ label, hint, error, sx, ref, ...rest }: Common & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'color'> & { ref?: Ref<HTMLTextAreaElement> }) {
   return (
-    <Field label={label} hint={hint} error={error} className={className}>
+    <Field label={label} hint={hint} error={error} sx={sx}>
       {(id, describedBy) => (
-        <textarea id={id} ref={ref} rows={3} aria-invalid={!!error} aria-describedby={describedBy} className={`${control} py-3 ${borderFor(error)}`} {...rest} />
+        <OutlinedInput id={id} multiline minRows={3} inputRef={ref} error={!!error} inputProps={{ ...rest, 'aria-invalid': !!error, 'aria-describedby': describedBy }} />
       )}
     </Field>
   )
 }
 
-export function CheckboxField({ label, className = '', ref, ...rest }: { label: ReactNode; className?: string } & InputHTMLAttributes<HTMLInputElement> & { ref?: Ref<HTMLInputElement> }) {
+/**
+ * Checkbox do MUI. O ícone segue o estado interno do componente, então valor inicial vindo do
+ * react-hook-form precisa chegar também por `defaultChecked`.
+ */
+export function CheckboxField({ label, sx, ref, checked, defaultChecked, onChange, onBlur, name, disabled }: { label: ReactNode; sx?: SxProps<Theme> } & InputHTMLAttributes<HTMLInputElement> & { ref?: Ref<HTMLInputElement> }) {
   return (
-    <label className={`flex min-h-11 cursor-pointer items-center gap-3 text-base ${className}`}>
-      <input type="checkbox" ref={ref} className="size-5 accent-[var(--color-brand)]" {...rest} />
-      <span>{label}</span>
-    </label>
+    <FormControlLabel
+      sx={[{ minHeight: 44, ml: -1, mr: 0, gap: 0.5 }, ...(Array.isArray(sx) ? sx : [sx])]}
+      label={label}
+      control={<Checkbox name={name} checked={checked} defaultChecked={defaultChecked} onChange={onChange} disabled={disabled} slotProps={{ input: { ref, onBlur } as never }} />}
+    />
+  )
+}
+
+/** Lupa à esquerda do campo de busca. */
+export function SearchAdornment() {
+  return (
+    <InputAdornment position="start">
+      <Search size={18} aria-hidden />
+    </InputAdornment>
   )
 }

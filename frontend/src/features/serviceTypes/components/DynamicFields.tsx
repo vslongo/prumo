@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 import { CheckboxField, SelectField, TextField } from '../../../shared/ui/Field'
 import type { FieldSchema } from '../api'
@@ -14,7 +15,7 @@ export function DynamicFields({ schema, register, errors, prefix = 'fields' }: P
   if (schema.length === 0) return null
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' } }}>
       {schema.map((f) => {
         const name = `${prefix}.${f.key}`
         const error = (errors?.[f.key] as { message?: string } | undefined)?.message
@@ -23,7 +24,7 @@ export function DynamicFields({ schema, register, errors, prefix = 'fields' }: P
 
         switch (f.type) {
           case 'boolean':
-            return <CheckboxField key={f.key} label={f.label} className="sm:col-span-2" {...register(name)} />
+            return <CheckboxField key={f.key} label={f.label} sx={{ gridColumn: { sm: 'span 2' } }} {...register(name)} />
           case 'select':
             return (
               <SelectField key={f.key} label={label} hint={f.required ? undefined : 'Opcional'} error={error} defaultValue="" {...register(name)}>
@@ -43,6 +44,6 @@ export function DynamicFields({ schema, register, errors, prefix = 'fields' }: P
             return <TextField key={f.key} label={label} hint={f.required ? undefined : 'Opcional'} error={error} {...register(name)} />
         }
       })}
-    </div>
+    </Box>
   )
 }

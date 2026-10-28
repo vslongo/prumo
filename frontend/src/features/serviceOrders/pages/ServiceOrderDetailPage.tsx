@@ -1,7 +1,12 @@
+import Box from '@mui/material/Box'
+import MuiLink from '@mui/material/Link'
+import Skeleton from '@mui/material/Skeleton'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Circle, FileText, Plus } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { formatKm, formatPlate, formatWhen } from '../../../shared/lib/format'
 import { ApiError } from '../../../shared/lib/http'
 import { serviceOrderCancelable, serviceOrderNextStep, serviceOrderStatusLabel, type ServiceOrderStatus } from '../../../shared/lib/status'
@@ -9,7 +14,8 @@ import { BackLink } from '../../../shared/ui/BackLink'
 import { Button } from '../../../shared/ui/Button'
 import { ConfirmDialog } from '../../../shared/ui/ConfirmDialog'
 import { TextField } from '../../../shared/ui/Field'
-import { Card, CardTitle, Detail, ErrorBox, PageHeader, Skeleton } from '../../../shared/ui/States'
+import { Card, CardTitle, Detail, DetailGrid, ErrorBox, PageHeader } from '../../../shared/ui/States'
+import { muted } from '../../../shared/ui/styles'
 import { ServiceOrderStatusBadge } from '../../../shared/ui/StatusBadge'
 import { useToast } from '../../../shared/ui/Toast'
 import { useUsers } from '../../auth/api'
@@ -26,14 +32,16 @@ function Progress({ status }: { status: ServiceOrderStatus }) {
   if (status === 'canceled') return null
   const current = steps.indexOf(status)
   return (
-    <ol className="mb-4 grid grid-cols-5 gap-1" aria-label="Andamento da OS">
+    <Box component="ol" aria-label="Andamento da OS" sx={{ mb: 2, mt: 0, p: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0.5 }}>
       {steps.map((s, i) => (
-        <li key={s} className="flex flex-col gap-1.5" aria-current={i === current ? 'step' : undefined}>
-          <span className={`h-1.5 rounded-full ${i <= current ? 'bg-brand' : 'bg-surface-2'}`} />
-          <span className={`text-xs sm:text-[13px] ${i === current ? 'font-semibold text-text' : 'text-muted'}`}>{serviceOrderStatusLabel[s]}</span>
-        </li>
+        <Stack component="li" key={s} aria-current={i === current ? 'step' : undefined} sx={{ gap: 0.75 }}>
+          <Box component="span" sx={{ height: 6, borderRadius: 1.5, bgcolor: i <= current ? 'primary.main' : 'action.hover' }} />
+          <Box component="span" sx={{ fontSize: { xs: 12, sm: 13 }, ...(i === current ? { fontWeight: 600 } : muted) }}>
+            {serviceOrderStatusLabel[s]}
+          </Box>
+        </Stack>
       ))}
-    </ol>
+    </Box>
   )
 }
 
@@ -89,8 +97,8 @@ export function ServiceOrderDetailPage() {
   if (order.isLoading) {
     return (
       <>
-        <Skeleton className="mb-6 h-10 w-64" />
-        <Skeleton className="h-72" />
+        <Skeleton height={40} width={256} sx={{ mb: 3 }} />
+        <Skeleton height={288} />
       </>
     )
   }
@@ -110,18 +118,18 @@ export function ServiceOrderDetailPage() {
         back={<BackLink to="/os" label="OS" />}
         title={`OS ${o.number}`}
         subtitle={
-          <span className="flex flex-wrap items-center gap-2">
+          <Box component="span" sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
             <ServiceOrderStatusBadge status={o.status} />
-            <span className="num font-semibold text-text">{o.vehicle ? formatPlate(o.vehicle.plate) : ''}</span>
+            <Box component="span" className="num" sx={{ fontWeight: 600, color: 'text.primary' }}>{o.vehicle ? formatPlate(o.vehicle.plate) : ''}</Box>
             <span>
               {vehicleName(o.vehicle)} · {o.customer?.name}
             </span>
-          </span>
+          </Box>
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px] lg:items-start">
-        <div className="flex flex-col gap-4">
+      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1fr) 340px' }, alignItems: { lg: 'start' } }}>
+        <Stack sx={{ gap: 2 }}>
           <Card>
             <Progress status={o.status} />
             <CardTitle
@@ -133,35 +141,40 @@ export function ServiceOrderDetailPage() {
                 ) : null
               }
             >
-              Itens{items.length ? <span className="num ml-2 text-base font-normal text-muted">{doneCount} de {items.length} feitos</span> : null}
+              Itens
+              {items.length ? (
+                <Box component="span" className="num" sx={{ ml: 1, fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 400, ...muted }}>
+                  {doneCount} de {items.length} feitos
+                </Box>
+              ) : null}
             </CardTitle>
 
             {error ? (
-              <div className="mb-4">
+              <Box sx={{ mb: 2 }}>
                 <ErrorBox message={error} />
-              </div>
+              </Box>
             ) : null}
 
-            {items.length === 0 && !adding ? <p className="text-muted">Nenhum item ainda. Adicione o que vai ser feito.</p> : null}
+            {items.length === 0 && !adding ? <Typography sx={muted}>Nenhum item ainda. Adicione o que vai ser feito.</Typography> : null}
 
             <ItemList
               items={items}
               users={users.data ?? []}
               aside={(item) =>
                 item.done_at ? (
-                  <Check size={20} className="mt-0.5 shrink-0 text-success" aria-label="Feito" />
+                  <Box component={Check} size={20} aria-label="Feito" sx={{ mt: 0.25, flexShrink: 0, color: 'success.main' }} />
                 ) : (
-                  <Circle size={20} className="mt-0.5 shrink-0 text-border-strong" aria-label="A fazer" />
+                  <Box component={Circle} size={20} aria-label="A fazer" sx={{ mt: 0.25, flexShrink: 0, color: 'var(--color-border-strong)' }} />
                 )
               }
               actions={(item) =>
                 item.done_at ? (
-                  <span className="text-sm text-success">
+                  <Typography variant="body2" sx={{ color: 'success.main' }}>
                     Feito {formatWhen(item.done_at).toLowerCase()}
                     {item.done_by ? ` por ${users.data?.find((u) => u.id === item.done_by)?.name ?? 'técnico'}` : ''}
-                  </span>
+                  </Typography>
                 ) : acceptsItems ? (
-                  <Button variant="secondary" className="h-10" icon={<Check size={16} aria-hidden />} loading={markDone.isPending && markDone.variables === item.id} onClick={() => markDone.mutate(item.id)}>
+                  <Button variant="secondary" size="small" icon={<Check size={16} aria-hidden />} loading={markDone.isPending && markDone.variables === item.id} onClick={() => markDone.mutate(item.id)}>
                     Marcar como feito
                   </Button>
                 ) : null
@@ -170,7 +183,7 @@ export function ServiceOrderDetailPage() {
             {items.length ? <ItemsTotal cents={o.total_cents} /> : null}
 
             {adding ? (
-              <div className="mt-5 border-t border-border pt-5">
+              <Box sx={{ mt: 2.5, borderTop: 1, borderColor: 'divider', pt: 2.5 }}>
                 <ItemForm
                   serviceTypes={types.data ?? []}
                   users={users.data ?? []}
@@ -181,12 +194,12 @@ export function ServiceOrderDetailPage() {
                     toast('Item adicionado.')
                   }}
                 />
-              </div>
+              </Box>
             ) : null}
           </Card>
-        </div>
+        </Stack>
 
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-8">
+        <Stack component="aside" sx={{ gap: 2, position: { lg: 'sticky' }, top: { lg: 32 } }}>
           {o.status !== 'closed' && o.status !== 'canceled' ? (
             <Card>
               <CardTitle>Próximo passo</CardTitle>
@@ -201,10 +214,12 @@ export function ServiceOrderDetailPage() {
                 </Button>
               ) : null}
               {o.status === 'delivered' && (doneCount < items.length || items.length === 0) ? (
-                <p className="mt-2 text-sm text-muted">Para fechar, marque todos os itens como feitos.</p>
+                <Typography variant="body2" sx={{ mt: 1, ...muted }}>
+                  Para fechar, marque todos os itens como feitos.
+                </Typography>
               ) : null}
               {serviceOrderCancelable.includes(o.status) ? (
-                <Button variant="ghost" className="mt-2 w-full text-danger" onClick={() => setConfirm('cancel')}>
+                <Button variant="ghost" tone="danger" full sx={{ mt: 1 }} onClick={() => setConfirm('cancel')}>
                   Cancelar OS
                 </Button>
               ) : null}
@@ -212,13 +227,13 @@ export function ServiceOrderDetailPage() {
           ) : null}
 
           <Card>
-            <dl className="grid grid-cols-2 gap-4">
+            <DetailGrid>
               <Detail label="Aberta">{formatWhen(o.created_at)}</Detail>
               <Detail label="Origem">
                 {o.quote_id ? (
-                  <Link to={`/orcamentos/${o.quote_id}`} className="inline-flex items-center gap-1 text-brand hover:underline">
+                  <MuiLink href={`/orcamentos/${o.quote_id}`} underline="hover" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
                     <FileText size={16} aria-hidden /> Orçamento
-                  </Link>
+                  </MuiLink>
                 ) : (
                   'Direta'
                 )}
@@ -227,11 +242,11 @@ export function ServiceOrderDetailPage() {
               <Detail label="Km saída">{formatKm(o.mileage_out)}</Detail>
               {o.closed_at ? <Detail label="Fechada">{formatWhen(o.closed_at)}</Detail> : null}
               {o.canceled_at ? <Detail label="Cancelada">{formatWhen(o.canceled_at)}</Detail> : null}
-            </dl>
-            {o.notes ? <p className="mt-4 border-t border-border pt-4 text-sm whitespace-pre-line">{o.notes}</p> : null}
+            </DetailGrid>
+            {o.notes ? <Typography variant="body2" sx={{ mt: 2, borderTop: 1, borderColor: 'divider', pt: 2, whiteSpace: 'pre-line' }}>{o.notes}</Typography> : null}
           </Card>
-        </aside>
-      </div>
+        </Stack>
+      </Box>
 
       <ConfirmDialog
         open={confirm === 'cancel'}

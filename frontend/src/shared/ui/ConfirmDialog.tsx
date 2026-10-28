@@ -1,4 +1,8 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import Box from '@mui/material/Box'
+import Dialog from '@mui/material/Dialog'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
+import type { ReactNode } from 'react'
 import { Button } from './Button'
 
 type Props = {
@@ -13,37 +17,26 @@ type Props = {
   children?: ReactNode
 }
 
-/** Confirmação com <dialog> nativo (foco preso e Esc de graça). */
 export function ConfirmDialog({ open, title, text, confirmLabel, danger, loading, onConfirm, onClose, children }: Props) {
-  const ref = useRef<HTMLDialogElement>(null)
-
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    if (open && !dialog.open) dialog.showModal?.()
-    if (!open && dialog.open) dialog.close?.()
-  }, [open])
-
   return (
-    <dialog
-      ref={ref}
-      onClose={onClose}
-      aria-labelledby="confirm-title"
-      className="m-auto w-[min(92vw,440px)] rounded-lg border border-border bg-surface p-5 text-text shadow-md backdrop:bg-[rgb(17_20_19/0.5)]"
-    >
-      <h2 id="confirm-title" className="text-xl font-semibold">
+    <Dialog open={open} onClose={onClose} aria-labelledby="confirm-title">
+      <Typography id="confirm-title" variant="h3" component="h2" sx={{ fontWeight: 600 }}>
         {title}
-      </h2>
-      {text ? <p className="mt-2 text-muted">{text}</p> : null}
-      {children ? <div className="mt-4">{children}</div> : null}
-      <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      </Typography>
+      {text ? (
+        <Typography color="text.secondary" sx={{ mt: 1 }}>
+          {text}
+        </Typography>
+      ) : null}
+      {children ? <Box sx={{ mt: 2 }}>{children}</Box> : null}
+      <Stack direction={{ xs: 'column-reverse', sm: 'row' }} sx={{ justifyContent: 'flex-end', gap: 1, mt: 3 }}>
         <Button variant="secondary" onClick={onClose}>
           Voltar
         </Button>
         <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm} loading={loading}>
           {confirmLabel}
         </Button>
-      </div>
-    </dialog>
+      </Stack>
+    </Dialog>
   )
 }

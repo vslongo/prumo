@@ -1,4 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -6,6 +8,7 @@ import { ApiError } from '../../../shared/lib/http'
 import { Button } from '../../../shared/ui/Button'
 import { TextField } from '../../../shared/ui/Field'
 import { ErrorBox } from '../../../shared/ui/States'
+import { fieldsetSx, uppercase } from '../../../shared/ui/styles'
 import { vehiclesApi, type Vehicle } from '../api'
 
 const schema = z.object({
@@ -39,15 +42,15 @@ export function VehicleForm({ customerId, onCreated, onCancel }: { customerId: s
   })
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-md border border-border bg-bg p-4" aria-label="Novo veículo">
+    <Stack component="form" onSubmit={submit} noValidate aria-label="Novo veículo" sx={fieldsetSx}>
       {error ? <ErrorBox message={error} /> : null}
-      <TextField label="Placa" autoCapitalize="characters" className="[&_input]:uppercase" error={formState.errors.plate?.message} {...register('plate')} />
-      <div className="grid grid-cols-2 gap-3">
+      <TextField label="Placa" autoCapitalize="characters" sx={uppercase} error={formState.errors.plate?.message} {...register('plate')} />
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
         <TextField label="Marca" {...register('brand')} />
         <TextField label="Modelo" {...register('model')} />
-      </div>
-      <TextField label="Ano" inputMode="numeric" className="max-w-40" error={formState.errors.year?.message} {...register('year')} />
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      </Box>
+      <TextField label="Ano" inputMode="numeric" sx={{ maxWidth: 160 }} error={formState.errors.year?.message} {...register('year')} />
+      <Stack direction={{ xs: 'column-reverse', sm: 'row' }} sx={{ gap: 1, justifyContent: 'flex-end' }}>
         {onCancel ? (
           <Button variant="secondary" onClick={onCancel}>
             Cancelar
@@ -56,7 +59,7 @@ export function VehicleForm({ customerId, onCreated, onCancel }: { customerId: s
         <Button type="submit" variant="secondary" loading={formState.isSubmitting} loadingText="Salvando…">
           Salvar veículo
         </Button>
-      </div>
-    </form>
+      </Stack>
+    </Stack>
   )
 }

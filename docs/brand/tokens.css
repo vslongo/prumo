@@ -1,5 +1,5 @@
 /* Prumo — design tokens
- * Fonte da verdade da marca. Importe uma vez no CSS global do app (antes do Tailwind).
+ * Fonte da verdade da marca. Importe uma vez no CSS global do app; o tema MUI (frontend/src/app/theme.ts) aponta para estas variáveis.
  * Claro em :root, escuro em [data-theme="dark"]. Contrastes validados em BRAND.md (WCAG 2.1).
  * Google Fonts: IBM Plex Sans + IBM Plex Sans Condensed (ver BRAND.md).
  */

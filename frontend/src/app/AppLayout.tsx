@@ -1,10 +1,18 @@
+import BottomNavigation from '@mui/material/BottomNavigation'
+import BottomNavigationAction from '@mui/material/BottomNavigationAction'
+import Box from '@mui/material/Box'
+import IconButton from '@mui/material/IconButton'
+import ListItemButton from '@mui/material/ListItemButton'
+import Paper from '@mui/material/Paper'
+import Skeleton from '@mui/material/Skeleton'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
 import { ClipboardList, FileText, House, LogOut, Moon, Settings, Sun, Users, type LucideIcon } from 'lucide-react'
-import { Navigate, NavLink, Outlet, useNavigate } from 'react-router'
+import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { authApi, canManageSettings, roleLabel, useMe } from '../features/auth/api'
 import { useTheme } from '../shared/hooks/useTheme'
 import { Logo } from '../shared/ui/Logo'
-import { Skeleton } from '../shared/ui/States'
 
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean }
 
@@ -15,18 +23,24 @@ const nav: NavItem[] = [
   { to: '/clientes', label: 'Clientes', icon: Users },
 ]
 
+const isActive = (pathname: string, { to, end }: NavItem) => (end ? pathname === to : pathname === to || pathname.startsWith(`${to}/`))
+
+// Fio laranja da marca marcando o item ativo.
+const accentBar = { content: '""', position: 'absolute', bgcolor: 'secondary.main' } as const
+
 export function AppLayout() {
   const { data: me, isLoading } = useMe()
   const [theme, toggleTheme] = useTheme()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl p-6">
-        <Skeleton className="mb-6 h-9 w-48" />
-        <Skeleton className="h-40" />
-      </div>
+      <Box sx={{ maxWidth: 1024, mx: 'auto', p: 3 }}>
+        <Skeleton height={36} width={192} sx={{ mb: 3 }} />
+        <Skeleton height={160} />
+      </Box>
     )
   }
   if (!me) return <Navigate to="/login" replace />
@@ -37,105 +51,116 @@ export function AppLayout() {
     navigate('/login', { replace: true })
   }
 
+  const current = nav.findIndex((item) => isActive(pathname, item))
+  const ThemeIcon = theme === 'dark' ? Sun : Moon
+
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[240px_1fr]">
+    <Box sx={{ minHeight: '100dvh', display: { lg: 'grid' }, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: '240px minmax(0, 1fr)' } }}>
       {/* Desktop: barra lateral */}
-      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-border bg-surface lg:flex">
-        <div className="px-5 pt-6 pb-5">
+      <Box component="aside" sx={{ position: 'sticky', top: 0, height: '100dvh', display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Box sx={{ px: 2.5, pt: 3, pb: 2.5 }}>
           <Logo height={30} />
-          <p className="mt-3 truncate text-sm text-muted" title={me.workshop}>
+          <Typography variant="body2" color="text.secondary" noWrap title={me.workshop} sx={{ mt: 1.5 }}>
             {me.workshop}
-          </p>
-        </div>
-        <nav aria-label="Principal" className="flex flex-1 flex-col gap-0.5 px-3">
+          </Typography>
+        </Box>
+        <Stack component="nav" aria-label="Principal" sx={{ gap: 0.25, px: 1.5, flex: 1 }}>
           {nav.map((item) => (
             <SideLink key={item.to} {...item} />
           ))}
-          <div className="flex-1" />
+          <Box sx={{ flex: 1 }} />
           {canManageSettings(me) ? <SideLink to="/configuracoes" label="Configurações" icon={Settings} /> : null}
-        </nav>
-        <div className="border-t border-border p-3">
-          <div className="px-2 pb-2">
-            <p className="truncate font-semibold">{me.name}</p>
-            <p className="text-sm text-muted">{roleLabel[me.role]}</p>
-          </div>
-          <div className="flex gap-1">
-            <button type="button" onClick={toggleTheme} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md text-sm text-muted hover:bg-surface-2 hover:text-text">
-              {theme === 'dark' ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
+        </Stack>
+        <Box sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
+          <Box sx={{ px: 1, pb: 1 }}>
+            <Typography noWrap sx={{ fontWeight: 600 }}>
+              {me.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {roleLabel[me.role]}
+            </Typography>
+          </Box>
+          <Stack direction="row" sx={{ gap: 0.5 }}>
+            <ListItemButton onClick={toggleTheme} sx={{ height: 40, flex: 1, justifyContent: 'center', gap: 1, borderRadius: 1, fontSize: 14, color: 'text.secondary', '&:hover': { color: 'text.primary' } }}>
+              <ThemeIcon size={18} aria-hidden />
               {theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
-            </button>
-            <button type="button" onClick={logout} aria-label="Sair" title="Sair" className="flex size-10 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text">
+            </ListItemButton>
+            <IconButton onClick={logout} aria-label="Sair" title="Sair" sx={{ borderRadius: 1, width: 40, color: 'text.secondary' }}>
               <LogOut size={18} aria-hidden />
-            </button>
-          </div>
-        </div>
-      </aside>
+            </IconButton>
+          </Stack>
+        </Box>
+      </Box>
 
-      <div className="flex min-w-0 flex-col">
+      <Box sx={{ display: 'flex', minWidth: 0, flexDirection: 'column' }}>
         {/* Mobile: topo enxuto */}
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface px-4 lg:hidden">
+        <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 30, display: { xs: 'flex', lg: 'none' }, height: 56, alignItems: 'center', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', px: 2 }}>
           <Logo height={26} />
-          <div className="flex items-center">
-            <button type="button" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Usar tema claro' : 'Usar tema escuro'} className="flex size-11 items-center justify-center text-muted">
-              {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
-            </button>
+          <Stack direction="row">
+            <IconButton onClick={toggleTheme} aria-label={theme === 'dark' ? 'Usar tema claro' : 'Usar tema escuro'} sx={{ width: 44, height: 44, color: 'text.secondary' }}>
+              <ThemeIcon size={20} aria-hidden />
+            </IconButton>
             {canManageSettings(me) ? (
-              <NavLink to="/configuracoes" aria-label="Configurações" className="flex size-11 items-center justify-center text-muted">
+              <IconButton component={NavLink} to="/configuracoes" aria-label="Configurações" sx={{ width: 44, height: 44, color: 'text.secondary' }}>
                 <Settings size={20} aria-hidden />
-              </NavLink>
+              </IconButton>
             ) : null}
-            <button type="button" onClick={logout} aria-label="Sair" className="flex size-11 items-center justify-center text-muted">
+            <IconButton onClick={logout} aria-label="Sair" sx={{ width: 44, height: 44, color: 'text.secondary' }}>
               <LogOut size={20} aria-hidden />
-            </button>
-          </div>
-        </header>
+            </IconButton>
+          </Stack>
+        </Box>
 
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-5 pb-28 lg:px-8 lg:pt-8 lg:pb-12">
+        <Box component="main" sx={{ mx: 'auto', width: '100%', maxWidth: 1024, flex: 1, px: { xs: 2, lg: 4 }, pt: { xs: 2.5, lg: 4 }, pb: { xs: 14, lg: 6 } }}>
           <Outlet />
-        </main>
+        </Box>
 
         {/* Mobile: navegação inferior */}
-        <nav aria-label="Principal" className="pb-safe fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-surface lg:hidden">
-          {nav.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `relative flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium ${isActive ? 'text-brand' : 'text-muted'}`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive ? <span className="absolute inset-x-5 top-0 h-0.5 bg-accent" aria-hidden /> : null}
-                  <Icon size={24} aria-hidden />
-                  {label}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-    </div>
+        <Paper component="nav" aria-label="Principal" square sx={{ position: 'fixed', insetInline: 0, bottom: 0, zIndex: 40, display: { lg: 'none' }, borderWidth: '1px 0 0', pb: 'env(safe-area-inset-bottom)' }}>
+          <BottomNavigation showLabels value={current} sx={{ height: 64, bgcolor: 'transparent' }}>
+            {nav.map(({ to, label, icon: Icon, end }) => (
+              <BottomNavigationAction
+                key={to}
+                component={NavLink}
+                to={to}
+                end={end}
+                label={label}
+                icon={<Icon size={24} aria-hidden />}
+                sx={{
+                  position: 'relative',
+                  minWidth: 0,
+                  gap: 0.5,
+                  color: 'text.secondary',
+                  '& .MuiBottomNavigationAction-label': { fontSize: 12, fontWeight: 500, '&.Mui-selected': { fontSize: 12 } },
+                  '&.Mui-selected': { color: 'primary.main', '&::before': { ...accentBar, top: 0, insetInline: 20, height: 2 } },
+                }}
+              />
+            ))}
+          </BottomNavigation>
+        </Paper>
+      </Box>
+    </Box>
   )
 }
 
 function SideLink({ to, label, icon: Icon, end }: NavItem) {
   return (
-    <NavLink
+    <ListItemButton
+      component={NavLink}
       to={to}
       end={end}
-      className={({ isActive }) =>
-        `relative flex h-11 items-center gap-3 rounded-md px-3 ${isActive ? 'bg-surface-2 font-semibold text-brand' : 'text-text hover:bg-surface-2'}`
-      }
+      sx={{
+        position: 'relative',
+        height: 44,
+        flexGrow: 0,
+        gap: 1.5,
+        borderRadius: 1,
+        px: 1.5,
+        '&.active': { bgcolor: 'action.selected', fontWeight: 600, color: 'primary.main', '&::before': { ...accentBar, insetBlock: 8, left: 0, width: 3, borderRadius: '0 2px 2px 0' } },
+      }}
     >
-      {({ isActive }) => (
-        <>
-          {isActive ? <span className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-accent" aria-hidden /> : null}
-          <Icon size={20} aria-hidden />
-          {label}
-        </>
-      )}
-    </NavLink>
+      <Icon size={20} aria-hidden />
+      {label}
+    </ListItemButton>
   )
 }

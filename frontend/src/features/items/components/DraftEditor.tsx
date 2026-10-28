@@ -1,9 +1,13 @@
+import Box from '@mui/material/Box'
+import Skeleton from '@mui/material/Skeleton'
+import Stack from '@mui/material/Stack'
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { ApiError } from '../../../shared/lib/http'
 import { Button } from '../../../shared/ui/Button'
 import { TextAreaField, TextField } from '../../../shared/ui/Field'
-import { Card, CardTitle, ErrorBox, Skeleton } from '../../../shared/ui/States'
+import { Card, CardTitle, ErrorBox } from '../../../shared/ui/States'
+import { muted } from '../../../shared/ui/styles'
 import { useMe, useUsers } from '../../auth/api'
 import { CustomerVehiclePicker, type Selection } from '../../customers/components/CustomerVehiclePicker'
 import { useServiceTypes } from '../../serviceTypes/api'
@@ -50,42 +54,42 @@ export function DraftEditor({ mileageLabel, submitLabel, submittingLabel, requir
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_340px] lg:items-start">
-      <div className="flex flex-col gap-4">
+    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1fr) 340px' }, alignItems: { lg: 'start' } }}>
+      <Stack sx={{ gap: 2 }}>
         <Card>
           <CardTitle>1. Cliente e veículo</CardTitle>
           <CustomerVehiclePicker value={selection} onChange={setSelection} />
           {selection?.vehicle ? (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Box sx={{ mt: 2, display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' } }}>
               <TextField label={mileageLabel} hint="Opcional" inputMode="numeric" value={mileage} onChange={(e) => setMileage(e.target.value.replace(/\D/g, ''))} />
-            </div>
+            </Box>
           ) : null}
         </Card>
 
         <Card>
           <CardTitle>2. Itens</CardTitle>
           {items.length > 0 ? (
-            <div className="mb-5">
+            <Box sx={{ mb: 2.5 }}>
               <ItemList
                 items={items}
                 users={users.data ?? []}
                 schemaFor={(i) => types.data?.find((t) => t.id === i.service_type_id)?.fields_schema ?? []}
                 actions={(_, index) => (
-                  <Button variant="ghost" className="h-9 text-danger" icon={<Trash2 size={16} aria-hidden />} onClick={() => setItems((all) => all.filter((_, i) => i !== index))}>
+                  <Button variant="ghost" tone="danger" size="small" icon={<Trash2 size={16} aria-hidden />} onClick={() => setItems((all) => all.filter((_, i) => i !== index))}>
                     Remover
                   </Button>
                 )}
               />
-            </div>
+            </Box>
           ) : null}
           {users.isLoading || types.isLoading ? (
-            <Skeleton className="h-64" />
+            <Skeleton height={256} />
           ) : users.isError || types.isError ? (
             <ErrorBox message="Não deu para carregar técnicos e tipos de serviço." onRetry={() => (users.refetch(), types.refetch())} />
           ) : (
-            <div className={items.length > 0 ? 'border-t border-border pt-5' : ''}>
+            <Box sx={items.length > 0 ? { borderTop: 1, borderColor: 'divider', pt: 2.5 } : undefined}>
               <ItemForm serviceTypes={types.data ?? []} users={users.data ?? []} defaultTechnicianId={me?.id} onSubmit={(item) => setItems((all) => [...all, item])} />
-            </div>
+            </Box>
           )}
         </Card>
 
@@ -93,36 +97,36 @@ export function DraftEditor({ mileageLabel, submitLabel, submittingLabel, requir
           <CardTitle>3. Observações</CardTitle>
           <TextAreaField label="Observações para a oficina e o cliente" hint="Opcional" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} />
         </Card>
-      </div>
+      </Stack>
 
-      <aside className="lg:sticky lg:top-8">
+      <Box component="aside" sx={{ position: { lg: 'sticky' }, top: { lg: 32 } }}>
         <Card>
           <CardTitle>Resumo</CardTitle>
-          <dl className="flex flex-col gap-2 text-sm">
-            <div className="flex justify-between gap-3">
-              <dt className="text-muted">Cliente</dt>
-              <dd className="truncate font-medium">{selection?.customer.name ?? '—'}</dd>
+          <Stack component="dl" sx={{ gap: 1, m: 0, fontSize: 14, '& > div': { display: 'flex', justifyContent: 'space-between', gap: 1.5 }, '& dt': muted, '& dd': { m: 0, fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }}>
+            <div>
+              <dt>Cliente</dt>
+              <dd>{selection?.customer.name ?? '—'}</dd>
             </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-muted">Veículo</dt>
-              <dd className="num font-medium">{selection?.vehicle?.plate ?? '—'}</dd>
+            <div>
+              <dt>Veículo</dt>
+              <dd className="num">{selection?.vehicle?.plate ?? '—'}</dd>
             </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-muted">Itens</dt>
-              <dd className="num font-medium">{items.length}</dd>
+            <div>
+              <dt>Itens</dt>
+              <dd className="num">{items.length}</dd>
             </div>
-          </dl>
+          </Stack>
           <ItemsTotal cents={total} />
           {error ? (
-            <div className="mt-4">
+            <Box sx={{ mt: 2 }}>
               <ErrorBox message={error} />
-            </div>
+            </Box>
           ) : null}
-          <Button full className="mt-4" onClick={submit} loading={saving} loadingText={submittingLabel}>
+          <Button full sx={{ mt: 2 }} onClick={submit} loading={saving} loadingText={submittingLabel}>
             {submitLabel}
           </Button>
         </Card>
-      </aside>
-    </div>
+      </Box>
+    </Box>
   )
 }

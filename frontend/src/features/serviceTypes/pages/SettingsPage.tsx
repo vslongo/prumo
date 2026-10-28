@@ -1,3 +1,6 @@
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -7,6 +10,7 @@ import { ApiError } from '../../../shared/lib/http'
 import { Button } from '../../../shared/ui/Button'
 import { CheckboxField, SelectField, TextField } from '../../../shared/ui/Field'
 import { Card, CardTitle, ErrorBox, ListSkeleton, PageHeader } from '../../../shared/ui/States'
+import { fieldsetSx, legendSx, muted } from '../../../shared/ui/styles'
 import { useToast } from '../../../shared/ui/Toast'
 import { canManageSettings, useMe } from '../../auth/api'
 import { fieldTypeLabel, serviceTypesApi, useServiceTypes, type FieldSchema, type FieldType } from '../api'
@@ -74,7 +78,7 @@ export function SettingsPage() {
     <>
       <PageHeader title="Configurações" subtitle="Tipos de serviço e os campos que o técnico preenche em cada um." />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1fr] lg:items-start">
+      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(2, minmax(0, 1fr))' }, alignItems: { lg: 'start' } }}>
         <Card>
           <CardTitle>Tipos de serviço</CardTitle>
           {types.isLoading ? (
@@ -82,35 +86,39 @@ export function SettingsPage() {
           ) : types.isError ? (
             <ErrorBox message="Não deu para carregar." onRetry={() => types.refetch()} />
           ) : (
-            <ul className="divide-y divide-border">
+            <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none', '& > li': { py: 1.5 }, '& > li + li': { borderTop: 1, borderColor: 'divider' }, '& > li:first-of-type': { pt: 0 }, '& > li:last-of-type': { pb: 0 } }}>
               {types.data?.map((t) => (
-                <li key={t.id} className="py-3 first:pt-0 last:pb-0">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <p className="font-semibold">{t.name}</p>
-                    <p className="num text-sm text-muted">{t.default_price_cents ? formatMoney(t.default_price_cents) : '—'}</p>
-                  </div>
-                  <p className="text-sm text-muted">
+                <li key={t.id}>
+                  <Stack direction="row" sx={{ alignItems: 'baseline', justifyContent: 'space-between', gap: 1.5 }}>
+                    <Typography sx={{ fontWeight: 600 }}>{t.name}</Typography>
+                    <Typography variant="body2" className="num" sx={muted}>
+                      {t.default_price_cents ? formatMoney(t.default_price_cents) : '—'}
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2" sx={muted}>
                     {t.fields_schema.length ? t.fields_schema.map((f) => f.label).join(' · ') : 'Sem campos específicos'}
                     {t.is_system_default ? ' · padrão Prumo' : ''}
-                  </p>
+                  </Typography>
                 </li>
               ))}
-            </ul>
+            </Box>
           )}
         </Card>
 
         <Card>
           <CardTitle>Novo tipo de serviço</CardTitle>
-          <div className="flex flex-col gap-4">
+          <Stack sx={{ gap: 2 }}>
             {error ? <ErrorBox message={error} /> : null}
             <TextField label="Nome do serviço" placeholder="Ex.: Alinhamento" value={name} onChange={(e) => setName(e.target.value)} />
             <TextField label="Valor padrão (R$)" hint="Opcional. Preenche o valor do item." inputMode="decimal" placeholder="0,00" value={price} onChange={(e) => setPrice(e.target.value)} onBlur={() => { const c = parseMoneyToCents(price); if (c !== null) setPrice(centsToInput(c)) }} />
 
             {fields.map((f, i) => (
-              <fieldset key={i} className="flex flex-col gap-3 rounded-md border border-border bg-bg p-4">
-                <legend className="px-1 text-sm font-semibold">Campo {i + 1}</legend>
+              <Stack component="fieldset" key={i} sx={[fieldsetSx, { gap: 1.5 }]}>
+                <Box component="legend" sx={legendSx}>
+                  Campo {i + 1}
+                </Box>
                 <TextField label="Nome do campo" placeholder="Ex.: Lado" value={f.label} onChange={(e) => update(i, { label: e.target.value })} />
-                <div className="grid grid-cols-2 gap-3">
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
                   <SelectField label="Tipo" value={f.type} onChange={(e) => update(i, { type: e.target.value as FieldType })}>
                     {(Object.keys(fieldTypeLabel) as FieldType[]).map((t) => (
                       <option key={t} value={t}>
@@ -119,15 +127,15 @@ export function SettingsPage() {
                     ))}
                   </SelectField>
                   <TextField label="Unidade" hint="Opcional" placeholder="km, L…" value={f.unit ?? ''} onChange={(e) => update(i, { unit: e.target.value })} />
-                </div>
+                </Box>
                 {f.type === 'select' ? <TextField label="Opções" hint="Separe por vírgula." placeholder="esquerdo, direito, ambos" value={f.optionsText} onChange={(e) => update(i, { optionsText: e.target.value })} /> : null}
-                <div className="flex items-center justify-between">
+                <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
                   <CheckboxField label="Obrigatório" checked={f.required} onChange={(e) => update(i, { required: e.target.checked })} />
-                  <Button variant="ghost" className="h-9 text-danger" icon={<Trash2 size={16} aria-hidden />} onClick={() => setFields((all) => all.filter((_, j) => j !== i))}>
+                  <Button variant="ghost" tone="danger" size="small" icon={<Trash2 size={16} aria-hidden />} onClick={() => setFields((all) => all.filter((_, j) => j !== i))}>
                     Remover
                   </Button>
-                </div>
-              </fieldset>
+                </Stack>
+              </Stack>
             ))}
 
             <Button variant="secondary" icon={<Plus size={18} aria-hidden />} onClick={() => setFields((all) => [...all, { key: '', label: '', type: 'text', required: false, unit: '', optionsText: '' }])}>
@@ -136,9 +144,9 @@ export function SettingsPage() {
             <Button onClick={save} loading={saving} loadingText="Salvando…">
               Salvar tipo de serviço
             </Button>
-          </div>
+          </Stack>
         </Card>
-      </div>
+      </Box>
     </>
   )
 }

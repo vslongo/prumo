@@ -1,10 +1,15 @@
+import Box from '@mui/material/Box'
+import ButtonBase from '@mui/material/ButtonBase'
+import MuiLink from '@mui/material/Link'
+import Skeleton from '@mui/material/Skeleton'
+import Typography from '@mui/material/Typography'
 import { useQuery } from '@tanstack/react-query'
 import { ClipboardList, FileText, Plus } from 'lucide-react'
-import { Link } from 'react-router'
 import { formatMoney } from '../../../shared/lib/format'
 import { serviceOrderStatusLabel, type ServiceOrderStatus } from '../../../shared/lib/status'
 import { ButtonLink } from '../../../shared/ui/Button'
-import { Card, CardTitle, EmptyState, ErrorBox, ListSkeleton, PageHeader, Skeleton } from '../../../shared/ui/States'
+import { Card, CardTitle, EmptyState, ErrorBox, ListSkeleton, PageHeader } from '../../../shared/ui/States'
+import { muted } from '../../../shared/ui/styles'
 import { useMe } from '../../auth/api'
 import { quotesApi } from '../../quotes/api'
 import { QuoteList } from '../../quotes/components/QuoteList'
@@ -38,41 +43,47 @@ export function DashboardPage() {
         subtitle={me?.workshop}
         action={
           <>
-            <ButtonLink to="/orcamentos/novo" variant="secondary" icon={<FileText size={18} aria-hidden />} className="flex-1 sm:flex-none">
+            <ButtonLink to="/orcamentos/novo" variant="secondary" icon={<FileText size={18} aria-hidden />} sx={{ flex: { xs: 1, sm: 'none' } }}>
               Novo orçamento
             </ButtonLink>
-            <ButtonLink to="/os/nova" icon={<Plus size={18} aria-hidden />} className="flex-1 sm:flex-none">
+            <ButtonLink to="/os/nova" icon={<Plus size={18} aria-hidden />} sx={{ flex: { xs: 1, sm: 'none' } }}>
               Nova OS
             </ButtonLink>
           </>
         }
       />
 
-      <section aria-label="OS no pátio" className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
+      <Box component="section" aria-label="OS no pátio" sx={{ mb: 3, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: { xs: 1, sm: 1.5 } }}>
         {board.map((s) => (
-          <Link
+          <ButtonBase
             key={s}
-            to={`/os?status=${s}`}
-            className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-3 hover:border-border-strong sm:p-4"
+            href={`/os?status=${s}`}
+            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.5, border: 1, borderColor: 'divider', borderRadius: 1.5, bgcolor: 'background.paper', p: { xs: 1.5, sm: 2 }, '&:hover': { borderColor: 'var(--color-border-strong)' } }}
           >
-            <span className="flex items-center gap-1.5 text-sm text-muted">
-              <span className="size-2 rounded-full" style={{ background: `var(--status-os-${s}-fg)` }} aria-hidden />
+            <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.75, fontSize: 14, ...muted }}>
+              <Box component="span" aria-hidden sx={{ width: 8, height: 8, borderRadius: '50%' }} style={{ background: `var(--status-os-${s}-fg)` }} />
               {serviceOrderStatusLabel[s]}
-            </span>
-            {counts.isLoading ? <Skeleton className="h-9 w-12" /> : <span className="num font-display text-[32px] leading-none font-bold">{counts.data?.[s] ?? 0}</span>}
-          </Link>
+            </Box>
+            {counts.isLoading ? (
+              <Skeleton height={36} width={48} />
+            ) : (
+              <Box component="span" className="num" sx={{ fontFamily: 'var(--font-display)', fontSize: 32, lineHeight: 1, fontWeight: 700 }}>
+                {counts.data?.[s] ?? 0}
+              </Box>
+            )}
+          </ButtonBase>
         ))}
-      </section>
+      </Box>
 
       {counts.isError ? <ErrorBox message="Não deu para carregar o resumo." onRetry={() => counts.refetch()} /> : null}
 
-      <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+      <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 3fr) minmax(0, 2fr)' } }}>
         <Card>
           <CardTitle
             action={
-              <Link to="/os" className="text-sm font-semibold text-brand hover:underline">
+              <MuiLink href="/os" underline="hover" sx={{ fontSize: 14, fontWeight: 600 }}>
                 Ver todas
-              </Link>
+              </MuiLink>
             }
           >
             Últimas OS
@@ -94,16 +105,19 @@ export function DashboardPage() {
             <ListSkeleton rows={2} />
           ) : awaitingCustomer.length ? (
             <>
-              <p className="mb-3 text-sm text-muted">
-                {awaitingCustomer.length} {awaitingCustomer.length === 1 ? 'orçamento' : 'orçamentos'} · <span className="num font-semibold text-text">{formatMoney(awaitingTotal)}</span>
-              </p>
+              <Typography variant="body2" sx={{ mb: 1.5, ...muted }}>
+                {awaitingCustomer.length} {awaitingCustomer.length === 1 ? 'orçamento' : 'orçamentos'} ·{' '}
+                <Box component="span" className="num" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                  {formatMoney(awaitingTotal)}
+                </Box>
+              </Typography>
               <QuoteList quotes={awaitingCustomer.slice(0, 5)} compact />
             </>
           ) : (
-            <p className="text-muted">Nenhum orçamento esperando resposta.</p>
+            <Typography sx={muted}>Nenhum orçamento esperando resposta.</Typography>
           )}
         </Card>
-      </div>
+      </Box>
     </>
   )
 }

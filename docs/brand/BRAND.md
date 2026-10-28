@@ -117,7 +117,7 @@ Dinheiro, km, quantidade, número da OS e placa: sempre `tabular-nums`, alinhado
 
 ## 7. Espaçamento, raio, sombra, ícones
 
-- **Espaçamento:** escala de 4 px do Tailwind (4, 8, 12, 16, 24, 32, 48). Gutter lateral mobile 16 px; entre cards 12 px; dentro de card 16 px.
+- **Espaçamento:** escala de 4 px (4, 8, 12, 16, 24, 32, 48; no `sx` do MUI, `0.5` a `6`). Gutter lateral mobile 16 px; entre cards 12 px; dentro de card 16 px.
 - **Alvo de toque:** mínimo 44×44 px; botões principais no mobile com 48 px de altura.
 - **Raios:** `--radius-sm` 4 px (badge), `--radius-md` 8 px (botão, campo), `--radius-lg` 12 px (card, folha, modal). Nada de pílula em botão; pílula só em badge se preferir, mas padrão é 4 px.
 - **Sombras:** `--shadow-sm` em card (opcional, a borda já separa), `--shadow-md` só em elementos flutuantes (menu, folha inferior, toast). Sem sombra colorida.
@@ -145,49 +145,27 @@ No `index.html`, dentro de `<head>`:
 
 Copie `docs/brand/favicon.svg` para `frontend/public/favicon.svg`.
 
-### 2. Tokens com Tailwind v4
+### 2. Tokens com MUI
 
-Copie (ou importe) `docs/brand/tokens.css` em `frontend/src/` e no CSS global:
+O CSS global importa `docs/brand/tokens.css` (sem copiar). O tema MUI fica em `frontend/src/app/theme.ts` e aponta a paleta para os tokens, então nenhum hex vai para o código:
 
-```css
-@import "tailwindcss";
-@import "./tokens.css";
+```ts
+const v = (token: string) => `var(--color-${token})`
 
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
-@theme inline {
-  --color-bg: var(--color-bg);
-  --color-surface: var(--color-surface);
-  --color-surface-2: var(--color-surface-2);
-  --color-border: var(--color-border);
-  --color-border-strong: var(--color-border-strong);
-  --color-text: var(--color-text);
-  --color-muted: var(--color-text-muted);
-  --color-brand: var(--color-brand);
-  --color-brand-strong: var(--color-brand-strong);
-  --color-on-brand: var(--color-on-brand);
-  --color-accent: var(--color-accent);
-  --color-success: var(--color-success);   --color-success-soft: var(--color-success-soft);
-  --color-warning: var(--color-warning);   --color-warning-soft: var(--color-warning-soft);
-  --color-danger: var(--color-danger);     --color-danger-soft: var(--color-danger-soft);
-  --color-info: var(--color-info);         --color-info-soft: var(--color-info-soft);
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --shadow-sm: var(--shadow-sm);
-  --shadow-md: var(--shadow-md);
-}
-
-body { @apply bg-bg text-text font-sans antialiased; }
-:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
-.num { font-variant-numeric: tabular-nums; }
+createTheme({
+  cssVariables: { nativeColor: true }, // hover/opacidade calculados em CSS a partir da var
+  palette: {
+    primary: { main: v('brand'), dark: v('brand-strong'), contrastText: v('on-brand') },
+    error: { main: v('danger'), light: v('danger-soft') }, // idem success, warning, info
+    background: { default: v('bg'), paper: v('surface') },
+    text: { primary: v('text'), secondary: v('text-muted') },
+    divider: v('border'),
+  },
+  typography: { fontFamily: 'var(--font-sans)' }, // títulos com var(--font-display)
+})
 ```
 
-As linhas `--x: var(--x)` só registram o utilitário no Tailwind (`inline` faz a classe usar `var(--color-bg)` direto). O valor real vem do `tokens.css`, que fica fora de `@layer` e por isso vence a camada `theme` do Tailwind. Não mova `tokens.css` para dentro de `@layer`.
-
-Classes resultantes: `bg-surface`, `text-muted`, `border-border`, `bg-brand`, `text-on-brand`, `font-display`, `rounded-md`, `shadow-md` etc.
+Nos componentes, use as chaves da paleta no `sx` (`'primary.main'`, `'text.secondary'`, `'error.light'`, `'divider'`) ou `var(--color-…)` para o que a paleta não tem (`--color-border-strong`). `.num` (tabular-nums) é global. Raios no `sx`: `0.5` = 4 px, `1` = 8 px, `1.5` = 12 px.
 
 - **Tema:** `document.documentElement.dataset.theme = "dark"`. Padrão: seguir `prefers-color-scheme` na primeira visita e salvar a escolha do usuário. Use só tokens; nunca hex no componente. Assim o escuro sai de graça.
 - **Status:** use as variáveis direto, mapeando o enum: `style={{ color: \`var(--status-os-${status}-fg)\`, background: \`var(--status-os-${status}-bg)\` }}` (ou `--status-quote-…`). Os nomes batem com os enums do backend.
@@ -250,7 +228,7 @@ Datas: "Hoje, 14:20", "Ontem", "12/10/2026". Dinheiro: `Intl.NumberFormat('pt-BR
 
 ### 5. Proibido no frontend
 
-- Hex, `rgb()` ou cor do Tailwind padrão (`bg-blue-500`, `text-gray-600`) em componente: só tokens.
+- Hex, `rgb()` ou cor padrão do MUI (`blue[500]`, `grey[600]`) em componente: só tokens.
 - Gradiente, `backdrop-blur`, sombra colorida, emoji, ícones de brilho/IA, ilustrações.
 - Status só com cor; laranja (`accent`) como cor de texto no tema claro.
 - Texto < 13 px; input < 16 px; alvo de toque < 44 px.
