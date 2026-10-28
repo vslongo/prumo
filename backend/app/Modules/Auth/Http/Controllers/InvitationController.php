@@ -44,11 +44,13 @@ final class InvitationController
 
     public function store(InviteUserRequest $request, InviteUser $invite): JsonResponse
     {
+        $role = UserRole::from((string) $request->validated('role'));
         Gate::authorize('create', UserInvitation::class);
+        Gate::authorize('assignRole', [User::class, $role]);
 
         /** @var User $user */
         $user = $request->user();
-        $sent = $invite->handle($user, (string) $request->validated('name'), UserRole::from((string) $request->validated('role')));
+        $sent = $invite->handle($user, (string) $request->validated('name'), $role);
 
         return response()->json(['data' => [
             'link' => $sent['link'],

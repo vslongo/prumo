@@ -25,9 +25,11 @@ final class UserController
 
     public function changeRole(ChangeUserRoleRequest $request, User $user, ChangeUserRole $change): UserResource
     {
+        $role = UserRole::from((string) $request->validated('role'));
         Gate::authorize('manage', $user);
+        Gate::authorize('assignRole', [User::class, $role]);
 
-        return new UserResource($change->handle($user, UserRole::from((string) $request->validated('role'))));
+        return new UserResource($change->handle($user, $role));
     }
 
     public function deactivate(User $user, DeactivateUser $deactivate): UserResource

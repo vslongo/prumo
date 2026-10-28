@@ -43,8 +43,10 @@ export function TeamCard() {
     }
   }
 
-  // Dono e a própria pessoa não são editáveis aqui (o backend também barra).
-  const editable = (u: User) => u.role !== 'owner' && u.id !== me?.id
+  // Espelha a UserPolicy: dono e a própria pessoa nunca; admin só o dono gerencia e cria.
+  const isOwner = me?.role === 'owner'
+  const roles = isOwner ? invitableRoles : invitableRoles.filter((r) => r !== 'admin')
+  const editable = (u: User) => u.role !== 'owner' && u.id !== me?.id && (isOwner || u.role !== 'admin')
 
   return (
     <Card>
@@ -69,7 +71,7 @@ export function TeamCard() {
                     {u.is_active ? (
                       <>
                         <SelectField label={`Papel de ${u.name}`} value={u.role} disabled={busy} onChange={(e) => run(() => authApi.changeRole(u.id, e.target.value as InvitableRole), 'Papel alterado.')} sx={{ width: 150, '& label': { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } }}>
-                          {invitableRoles.map((r) => (
+                          {roles.map((r) => (
                             <option key={r} value={r}>
                               {roleLabel[r]}
                             </option>
@@ -115,7 +117,7 @@ export function TeamCard() {
         </Box>
       ) : null}
 
-      <InviteForm onSent={() => queryClient.invalidateQueries({ queryKey: ['user-invitations'] })} />
+      <InviteForm roles={roles} onSent={() => queryClient.invalidateQueries({ queryKey: ['user-invitations'] })} />
 
       <ConfirmDialog
         open={toDeactivate !== null}
@@ -137,7 +139,7 @@ export function TeamCard() {
 }
 
 /** Convite novo: o funcionário cria o próprio acesso pelo link. */
-function InviteForm({ onSent }: { onSent: () => void }) {
+function InviteForm({ roles, onSent }: { roles: InvitableRole[]; onSent: () => void }) {
   const toast = useToast()
   const [name, setName] = useState('')
   const [role, setRole] = useState<InvitableRole>('technician')
@@ -190,7 +192,7 @@ function InviteForm({ onSent }: { onSent: () => void }) {
           {error ? <ErrorBox message={error} /> : null}
           <TextField label="Nome do funcionário" placeholder="Ex.: Zé" value={name} onChange={(e) => setName(e.target.value)} />
           <SelectField label="Papel" value={role} onChange={(e) => setRole(e.target.value as InvitableRole)}>
-            {invitableRoles.map((r) => (
+            {roles.map((r) => (
               <option key={r} value={r}>
                 {roleLabel[r]}
               </option>

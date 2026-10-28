@@ -50,6 +50,32 @@ describe('TeamCard', () => {
     expect(await screen.findByText('Novato')).toBeInTheDocument()
   })
 
+  it('admin não vê controles de outro admin nem a opção de criar admin', async () => {
+    const admin = { id: 'u4', name: 'Ana', email: 'a@x.test', role: 'admin', is_active: true }
+    const otherAdmin = { id: 'u5', name: 'Bruno', email: 'br@x.test', role: 'admin', is_active: true }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (url === '/api/me') return json(200, { data: admin })
+        if (url === '/api/users') return json(200, { data: [owner, admin, otherAdmin, tech] })
+        return json(200, { data: [] })
+      }),
+    )
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <ToastProvider>
+          <TeamCard />
+        </ToastProvider>
+      </QueryClientProvider>,
+    )
+
+    const otherRow = (await screen.findByText('Bruno')).closest('li') as HTMLElement
+    expect(within(otherRow).queryByRole('button')).not.toBeInTheDocument()
+    const techRow = screen.getByText('Zé').closest('li') as HTMLElement
+    expect(within(techRow).getByRole('button', { name: 'Desativar' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Administrador' })).not.toBeInTheDocument()
+  })
+
   it('pede confirmação antes de desativar', async () => {
     const fetchMock = renderTeam()
     const user = userEvent.setup()

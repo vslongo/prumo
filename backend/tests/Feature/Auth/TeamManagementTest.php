@@ -7,6 +7,7 @@ use App\Modules\Auth\Models\User;
 use App\Modules\Auth\Models\UserInvitation;
 use App\Modules\Tenancy\TenantContext;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 
 function colleague(User $of, UserRole $role = UserRole::Technician): User
 {
@@ -58,6 +59,24 @@ it('ninguém mexe no dono nem em si mesmo; técnico e balcão não gerenciam', f
     $this->getJson('/api/user-invitations')->assertForbidden();
 
     expect($owner->refresh()->is_active)->toBeTrue();
+});
+
+it('só o dono gerencia, promove ou convida admin', function () {
+    $owner = actingAsRole();
+    $otherAdmin = colleague($owner, UserRole::Admin);
+    $tech = colleague($owner);
+
+    actingAsRole(UserRole::Admin, $owner->tenant);
+    $this->postJson("/api/users/{$otherAdmin->id}/deactivate")->assertForbidden();
+    $this->patchJson("/api/users/{$otherAdmin->id}/role", ['role' => 'technician'])->assertForbidden();
+    $this->patchJson("/api/users/{$tech->id}/role", ['role' => 'admin'])->assertForbidden();
+    $this->postJson('/api/user-invitations', ['name' => 'X', 'role' => 'admin'])->assertForbidden();
+    $this->patchJson("/api/users/{$tech->id}/role", ['role' => 'front'])->assertOk();
+
+    Sanctum::actingAs($owner);
+    $this->patchJson("/api/users/{$otherAdmin->id}/role", ['role' => 'technician'])->assertOk();
+    $this->postJson('/api/user-invitations', ['name' => 'Novo admin', 'role' => 'admin'])->assertCreated();
+    expect($otherAdmin->refresh()->role)->toBe(UserRole::Technician);
 });
 
 it('não gerencia usuário de outra oficina (404)', function () {
