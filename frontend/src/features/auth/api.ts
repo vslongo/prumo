@@ -4,12 +4,18 @@ import { ApiError, ensureCsrf, http, type Wrapped } from '../../shared/lib/http'
 export type Role = 'owner' | 'admin' | 'technician' | 'front'
 export type User = { id: string; name: string; email: string; role: Role; workshop?: string }
 
+export type SignUpInput = { workshop_name: string; name: string; email: string; password: string }
+
 export const roleLabel: Record<Role, string> = { owner: 'Dono', admin: 'Administrador', technician: 'Técnico', front: 'Balcão' }
 
 export const authApi = {
   async login(email: string, password: string) {
     await ensureCsrf(true)
     return (await http.post<Wrapped<User>>('/api/login', { email, password })).data
+  },
+  async signUp(input: SignUpInput) {
+    await ensureCsrf(true)
+    return (await http.post<Wrapped<User>>('/api/signup', input)).data
   },
   logout: () => http.post<void>('/api/logout'),
   me: async () => (await http.get<Wrapped<User>>('/api/me')).data,

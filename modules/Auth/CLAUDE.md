@@ -10,9 +10,9 @@ Usuários, papéis e 2FA.
 users
 
 ## API pública (outros módulos só usam isto)
-- Actions: pendentes (InviteUser, ChangeUserRole, DeactivateUser). Rotas: POST /api/login, POST /api/logout, GET /api/me
+- Actions: SignUp (cria oficina via Tenancy CreateTenant + owner). Pendentes: InviteUser, ChangeUserRole, DeactivateUser. Rotas: POST /api/signup, POST /api/login, POST /api/logout, GET /api/me
 - Eventos emitidos: UserInvited
-- Eventos ouvidos: TenantCreated
+- Eventos ouvidos: –
 
 ## Estados
 –
@@ -36,3 +36,4 @@ nenhuma
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
 - 2026-10-27: login SPA (Sanctum cookie) com rate limit; usuário inativo não entra. `User` sem global scope de tenant (ADR 0001). 2FA do owner pendente.
 - 2026-10-27: ListTenantUsers + GET /api/users (filtro de tenant explícito, ADR 0001); /api/me traz o nome da oficina.
+- 2026-10-28: cadastro por autoatendimento (SignUp + POST /api/signup, tela /cadastro): cria tenant em trial e o owner na mesma transação e já loga. Sem cartão. Rate limit 5/h por IP. E-mail normalizado em minúsculas no cadastro e no login.

@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router'
 import { LoginPage } from '../features/auth/pages/LoginPage'
+import { SignUpPage } from '../features/auth/pages/SignUpPage'
 import { CustomerDetailPage } from '../features/customers/pages/CustomerDetailPage'
 import { CustomersPage } from '../features/customers/pages/CustomersPage'
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage'
@@ -15,6 +16,7 @@ import { NotFoundPage } from './NotFoundPage'
 
 export const routes = [
   { path: '/login', element: <LoginPage /> },
+  { path: '/cadastro', element: <SignUpPage /> },
   // Link que o cliente recebe no WhatsApp: sem login, sem navegação do app.
   // Carregado à parte: o cliente abre no 4G e não precisa do app inteiro.
   { path: '/o/:token', lazy: async () => ({ Component: (await import('../features/publicQuote/pages/PublicQuotePage')).PublicQuotePage }) },

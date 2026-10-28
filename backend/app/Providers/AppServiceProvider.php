@@ -45,6 +45,8 @@ final class AppServiceProvider extends ServiceProvider
         Event::listen(QuoteApproved::class, CreateServiceOrderFromApprovedQuote::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip()));
+        // Cada cadastro cria um tenant: limite apertado por IP contra criação em massa.
+        RateLimiter::for('signup', fn (Request $request) => Limit::perHour(5)->by((string) $request->ip()));
         RateLimiter::for('public-links', fn (Request $request) => Limit::perMinute(30)->by((string) $request->ip()));
         // Por link (não por IP): cada pedido cria um registro em media e uma URL de upload.
         RateLimiter::for('quote-signature', fn (Request $request) => Limit::perHour(10)->by(hash('sha256', (string) $request->route('token'))));

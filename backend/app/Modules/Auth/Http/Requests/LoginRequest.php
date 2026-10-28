@@ -8,6 +8,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 final class LoginRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['email' => mb_strtolower(trim((string) $this->input('email')))]);
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
