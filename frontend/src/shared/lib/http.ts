@@ -36,7 +36,7 @@ export function ensureCsrf(force = false): Promise<void> {
   return csrfReady
 }
 
-type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 async function request<T>(method: Method, url: string, body?: unknown): Promise<T> {
   if (method !== 'GET') {
@@ -72,6 +72,7 @@ export const http = {
   get: <T>(url: string) => request<T>('GET', url),
   post: <T>(url: string, body?: unknown) => request<T>('POST', url, body ?? {}),
   put: <T>(url: string, body?: unknown) => request<T>('PUT', url, body ?? {}),
+  patch: <T>(url: string, body?: unknown) => request<T>('PATCH', url, body ?? {}),
   delete: <T>(url: string) => request<T>('DELETE', url),
 }
 

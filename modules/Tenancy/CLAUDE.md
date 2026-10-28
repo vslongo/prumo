@@ -36,3 +36,4 @@ nenhuma
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
 - 2026-10-27: TenantContext (scoped), TenantScope (falha fechada sem tenant), BelongsToTenant e ResolvePublicToken (único `withoutGlobalScope`, para links públicos). Middleware `tenant` roda antes do route model binding.
 - 2026-10-28: CreateTenant + evento TenantCreated (após commit). Chamada pelo SignUp do Auth.
+- 2026-10-28: ResolveTenant devolve 401 para usuário desativado com sessão aberta (vale para todas as rotas da oficina).

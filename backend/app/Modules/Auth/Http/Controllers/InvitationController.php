@@ -6,6 +6,8 @@ namespace App\Modules\Auth\Http\Controllers;
 
 use App\Modules\Auth\Actions\AcceptInvitation;
 use App\Modules\Auth\Actions\InviteUser;
+use App\Modules\Auth\Actions\ListPendingInvitations;
+use App\Modules\Auth\Actions\RevokeInvitation;
 use App\Modules\Auth\Enums\UserRole;
 use App\Modules\Auth\Http\Requests\AcceptInvitationRequest;
 use App\Modules\Auth\Http\Requests\InviteUserRequest;
@@ -19,6 +21,27 @@ use Illuminate\Support\Facades\Gate;
 
 final class InvitationController
 {
+    /** Convites pendentes, para o dono acompanhar e cancelar. O link não é guardado, então não volta aqui. */
+    public function index(ListPendingInvitations $list): JsonResponse
+    {
+        Gate::authorize('viewAny', UserInvitation::class);
+
+        return response()->json(['data' => $list->handle()->map(fn (UserInvitation $i) => [
+            'id' => $i->id,
+            'name' => $i->name,
+            'role' => $i->role->value,
+            'expires_at' => $i->expires_at->toIso8601String(),
+        ])]);
+    }
+
+    public function destroy(UserInvitation $userInvitation, RevokeInvitation $revoke): JsonResponse
+    {
+        Gate::authorize('delete', $userInvitation);
+        $revoke->handle($userInvitation);
+
+        return response()->json(status: 204);
+    }
+
     public function store(InviteUserRequest $request, InviteUser $invite): JsonResponse
     {
         Gate::authorize('create', UserInvitation::class);

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Modules\Auth\Models\User;
 use App\Modules\Auth\Models\UserInvitation;
 use App\Modules\Auth\Policies\UserInvitationPolicy;
+use App\Modules\Auth\Policies\UserPolicy;
 use App\Modules\Customers\Models\Customer;
 use App\Modules\Customers\Policies\CustomerPolicy;
 use App\Modules\Quotes\Events\QuoteApproved;
@@ -38,6 +40,7 @@ final class AppServiceProvider extends ServiceProvider
     {
         Model::shouldBeStrict(! $this->app->isProduction());
 
+        Gate::policy(User::class, UserPolicy::class);
         Gate::policy(UserInvitation::class, UserInvitationPolicy::class);
         Gate::policy(Customer::class, CustomerPolicy::class);
         Gate::policy(Vehicle::class, VehiclePolicy::class);

@@ -16,7 +16,12 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
     Route::get('me', [SessionController::class, 'show']);
     Route::post('logout', [SessionController::class, 'destroy']);
     Route::get('users', [UserController::class, 'index']);
+    Route::patch('users/{user}/role', [UserController::class, 'changeRole']);
+    Route::post('users/{user}/deactivate', [UserController::class, 'deactivate']);
+    Route::post('users/{user}/reactivate', [UserController::class, 'reactivate']);
+    Route::get('user-invitations', [InvitationController::class, 'index']);
     Route::post('user-invitations', [InvitationController::class, 'store']);
+    Route::delete('user-invitations/{userInvitation}', [InvitationController::class, 'destroy']);
 });
 
 Route::prefix('public/invitations/{token}')
