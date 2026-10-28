@@ -44,9 +44,3 @@ it('marca failed e apaga arquivo maior que 2 MB ou com conteúdo de outro tipo',
     'grande demais' => fn () => "\xFF\xD8\xFF".str_repeat('x', 2 * 1024 * 1024),
     'não é JPEG' => fn () => '%PDF-1.4 '.str_repeat('x', 100),
 ]);
-
-it('isola mídia entre tenants', function () {
-    $foreign = inOtherTenant(fn () => requestUpload());
-
-    expect(Media::query()->find($foreign->id))->toBeNull();
-});

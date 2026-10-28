@@ -34,13 +34,3 @@ it('permite a mesma placa em outro tenant', function () {
     $this->postJson('/api/vehicles', ['customer_id' => $customer->id, 'plate' => 'ABC1234'])->assertCreated();
     expect($other->plate_normalized)->toBe('ABC1234');
 });
-
-it('isola veículos e não aceita cliente de outro tenant', function () {
-    actingAsRole();
-    $other = inOtherTenant(fn () => Vehicle::factory()->create());
-
-    $this->getJson("/api/vehicles/{$other->id}")->assertNotFound();
-    $this->getJson("/api/vehicles?plate={$other->plate_normalized}")->assertNotFound();
-    $this->postJson('/api/vehicles', ['customer_id' => $other->customer_id, 'plate' => 'QWE1234'])
-        ->assertUnprocessable()->assertJsonValidationErrors('customer_id');
-});

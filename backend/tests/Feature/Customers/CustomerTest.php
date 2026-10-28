@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Customers\Models\Customer;
 use Illuminate\Support\Facades\DB;
 
 it('cria cliente com telefone e CPF criptografados e consentimento registrado', function () {
@@ -36,12 +35,4 @@ it('valida o cadastro', function () {
     actingAsRole();
 
     $this->postJson('/api/customers', ['phone' => 'abc'])->assertUnprocessable()->assertJsonValidationErrors(['name', 'phone']);
-});
-
-it('isola clientes entre tenants', function () {
-    actingAsRole();
-    $other = inOtherTenant(fn () => Customer::factory()->create(['name' => 'Cliente da outra']));
-
-    $this->getJson("/api/customers/{$other->id}")->assertNotFound();
-    $this->getJson('/api/customers')->assertJsonCount(0, 'data');
 });

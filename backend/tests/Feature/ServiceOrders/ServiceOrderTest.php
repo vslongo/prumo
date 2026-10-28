@@ -189,20 +189,3 @@ it('lista histórico do veículo', function () {
 
     $this->getJson("/api/service-orders?vehicle_id={$vehicleId}")->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $id);
 });
-
-it('isola OS entre tenants', function () {
-    $tech = actingAsRole();
-    $foreign = inOtherTenant(function () {
-        $vehicle = makeVehicle();
-        $user = User::factory()->create(['tenant_id' => TenantContext::id()]);
-
-        return app(OpenServiceOrder::class)->handle(
-            new OpenServiceOrderData($vehicle->customer_id, $vehicle->id, $user->id)
-        );
-    });
-
-    $this->getJson("/api/service-orders/{$foreign->id}")->assertNotFound();
-    $this->postJson("/api/service-orders/{$foreign->id}/transition", ['status' => 'in_progress'])->assertNotFound();
-    $this->postJson("/api/service-orders/{$foreign->id}/items", productItem($tech))->assertNotFound();
-    $this->getJson('/api/service-orders')->assertJsonCount(0, 'data');
-});

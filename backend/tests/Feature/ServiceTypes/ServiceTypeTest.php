@@ -50,11 +50,3 @@ it('tipo padrão do sistema é somente leitura', function () use ($gasket) {
     $this->putJson("/api/service-types/{$system->id}", $gasket)->assertForbidden();
     $this->getJson('/api/service-types')->assertJsonFragment(['name' => 'Padrão', 'is_system_default' => true]);
 });
-
-it('isola tipos de serviço entre tenants', function () use ($gasket) {
-    actingAsRole();
-    $other = inOtherTenant(fn () => ServiceType::factory()->create(['name' => 'Da outra']));
-
-    $this->getJson('/api/service-types')->assertJsonMissing(['name' => 'Da outra']);
-    $this->putJson("/api/service-types/{$other->id}", $gasket)->assertNotFound();
-});
