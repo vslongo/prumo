@@ -36,7 +36,7 @@ final class Message extends Model
 
     protected $fillable = ['customer_id', 'template', 'status', 'to', 'params', 'sender_phone_number_id', 'subject_type', 'subject_id', 'idempotency_key'];
 
-    protected $hidden = ['to'];
+    protected $hidden = ['to', 'params'];
 
     protected function casts(): array
     {
@@ -44,7 +44,8 @@ final class Message extends Model
             'template' => MessageTemplate::class,
             'status' => MessageStatus::class,
             'to' => 'encrypted',
-            'params' => 'array',
+            // Leva o link do orçamento (token cru); o orçamento só guarda o hash, então aqui também não pode ficar legível.
+            'params' => 'encrypted:array',
             'sent_at' => 'datetime',
             'delivered_at' => 'datetime',
             'read_at' => 'datetime',

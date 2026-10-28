@@ -12,6 +12,7 @@ use App\Modules\Quotes\Models\Quote;
 use App\Modules\ServiceOrders\Enums\ServiceOrderStatus;
 use App\Modules\ServiceOrders\Events\ServiceOrderStatusChanged;
 use App\Modules\Tenancy\TenantContext;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Testing\TestResponse;
@@ -54,6 +55,10 @@ it('orçamento enviado com consentimento enfileira o WhatsApp do número do Prum
         ->and($message->to)->toStartWith('55')
         ->and($message->params[2])->toBe($link)
         ->and($message->subject_id)->toBe($quote->id);
+    // Link (token cru) e telefone não ficam legíveis no banco.
+    $raw = DB::table('messages')->first(['params', 'to']);
+    expect($raw->params)->not->toContain(basename($link))
+        ->and($raw->to)->not->toContain($message->to);
     Queue::assertPushed(PublishWhatsappMessageJob::class, fn ($job) => $job->messageId === $message->id);
 });
 

@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('template', 60);
             $table->string('status', 20);
             $table->text('to'); // telefone E.164, criptografado
-            $table->jsonb('params');
+            // Criptografado: leva o link do orçamento, e o orçamento guarda só o hash do token.
+            $table->text('params');
             // De qual número saiu (ADR 0003: hoje o do Prumo; no futuro o da oficina).
             $table->string('sender_phone_number_id', 40);
             $table->string('subject_type', 40);
