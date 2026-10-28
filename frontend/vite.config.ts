@@ -1,4 +1,3 @@
-import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
@@ -8,7 +7,6 @@ const api = process.env.API_URL ?? 'http://localhost:8000'
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {

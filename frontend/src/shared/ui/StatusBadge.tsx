@@ -1,14 +1,15 @@
+import Box from '@mui/material/Box'
 import { quoteStatusLabel, serviceOrderStatusLabel, type QuoteStatus, type ServiceOrderStatus } from '../lib/status'
 
 function Badge({ family, status, label }: { family: 'os' | 'quote'; status: string; label: string }) {
   return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 text-[13px] font-semibold whitespace-nowrap"
-      style={{ color: `var(--status-${family}-${status}-fg)`, background: `var(--status-${family}-${status}-bg)` }}
+    <Box
+      component="span"
+      style={{ color: `var(--status-${family}-${status}-fg)`, background: `var(--status-${family}-${status}-bg)` }} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, borderRadius: 0.5, px: 1, py: 0.25, fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}
     >
-      <span className="size-1.5 rounded-full bg-current" aria-hidden />
+      <Box component="span" aria-hidden sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'currentColor' }} />
       {label}
-    </span>
+    </Box>
   )
 }
 

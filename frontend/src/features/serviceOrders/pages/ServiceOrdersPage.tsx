@@ -23,7 +23,7 @@ export function ServiceOrdersPage() {
       <PageHeader
         title="Ordens de serviço"
         action={
-          <ButtonLink to="/os/nova" icon={<Plus size={18} aria-hidden />} full className="sm:w-auto">
+          <ButtonLink to="/os/nova" icon={<Plus size={18} aria-hidden />} full sx={{ width: { sm: 'auto' } }}>
             Nova OS
           </ButtonLink>
         }

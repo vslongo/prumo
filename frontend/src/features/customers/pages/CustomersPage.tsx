@@ -1,10 +1,15 @@
+import Box from '@mui/material/Box'
+import ListItemButton from '@mui/material/ListItemButton'
+import Paper from '@mui/material/Paper'
+import Typography from '@mui/material/Typography'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronRight, Search, UserPlus, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { Button } from '../../../shared/ui/Button'
-import { TextField } from '../../../shared/ui/Field'
+import { SearchAdornment, TextField } from '../../../shared/ui/Field'
 import { Card, CardTitle, EmptyState, ErrorBox, ListSkeleton, PageHeader } from '../../../shared/ui/States'
+import { muted } from '../../../shared/ui/styles'
 import { useToast } from '../../../shared/ui/Toast'
 import { customersApi, formatPhone } from '../api'
 import { CustomerForm } from '../components/CustomerForm'
@@ -30,7 +35,7 @@ export function CustomersPage() {
         title="Clientes"
         action={
           creating ? null : (
-            <Button icon={<UserPlus size={18} aria-hidden />} full className="sm:w-auto" onClick={() => setCreating(true)}>
+            <Button icon={<UserPlus size={18} aria-hidden />} full sx={{ width: { sm: 'auto' } }} onClick={() => setCreating(true)}>
               Cadastrar cliente
             </Button>
           )
@@ -38,7 +43,7 @@ export function CustomersPage() {
       />
 
       {creating ? (
-        <Card className="mb-5">
+        <Card sx={{ mb: 2.5 }}>
           <CardTitle>Novo cliente</CardTitle>
           <CustomerForm
             onCancel={() => setCreating(false)}
@@ -51,29 +56,30 @@ export function CustomersPage() {
         </Card>
       ) : null}
 
-      <div className="relative mb-4">
-        <TextField label="Buscar" placeholder="Nome, celular ou CPF" value={term} onChange={(e) => setTerm(e.target.value)} className="[&_input]:pl-10" />
-        <Search size={18} className="pointer-events-none absolute bottom-[15px] left-3 text-muted" aria-hidden />
-      </div>
+      <TextField label="Buscar" placeholder="Nome, celular ou CPF" value={term} onChange={(e) => setTerm(e.target.value)} startAdornment={<SearchAdornment />} sx={{ mb: 2 }} />
 
       {list.isLoading ? (
         <ListSkeleton />
       ) : list.isError ? (
         <ErrorBox message="Não deu para carregar os clientes." onRetry={() => list.refetch()} />
       ) : list.data?.data.length ? (
-        <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
-          {list.data.data.map((c) => (
+        <Paper component="ul" sx={{ m: 0, p: 0, listStyle: 'none', overflow: 'hidden' }}>
+          {list.data.data.map((c, i) => (
             <li key={c.id}>
-              <Link to={`/clientes/${c.id}`} className="flex min-h-16 items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{c.name}</p>
-                  <p className="num text-sm text-muted">{formatPhone(c.phone)}</p>
-                </div>
-                <ChevronRight size={18} className="shrink-0 text-muted" aria-hidden />
-              </Link>
+              <ListItemButton href={`/clientes/${c.id}`} divider={i < list.data.data.length - 1} sx={{ minHeight: 64, justifyContent: 'space-between', gap: 1.5, px: 2, py: 1.5 }}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography noWrap sx={{ fontWeight: 600 }}>
+                    {c.name}
+                  </Typography>
+                  <Typography variant="body2" className="num" sx={muted}>
+                    {formatPhone(c.phone)}
+                  </Typography>
+                </Box>
+                <Box component={ChevronRight} size={18} aria-hidden sx={{ flexShrink: 0, ...muted }} />
+              </ListItemButton>
             </li>
           ))}
-        </ul>
+        </Paper>
       ) : q ? (
         <EmptyState icon={Search} title={`Nada encontrado para “${q}”.`} text="Confira o nome ou o celular." />
       ) : (

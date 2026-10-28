@@ -1,4 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import { useState } from 'react'
@@ -40,47 +43,55 @@ export function LoginPage() {
   })
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(420px,5fr)_7fr]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-brand p-10 text-on-brand lg:flex">
-        <div className="flex items-center gap-3">
+    <Box sx={{ minHeight: '100dvh', display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(420px, 5fr) 7fr' } }}>
+      <Box
+        component="aside" sx={{ position: 'relative', display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden', bgcolor: 'primary.main', color: 'primary.contrastText', p: 5 }}
+      >
+        <Stack direction="row" sx={{ alignItems: 'center', gap: 1.5 }}>
           <LogoMark size={40} />
-          <span className="font-display text-2xl font-bold tracking-wide">Prumo</span>
-        </div>
+          <Typography sx={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, letterSpacing: '0.025em' }}>Prumo</Typography>
+        </Stack>
         <div>
-          <p className="font-display text-[40px] leading-[1.1] font-bold">Sua oficina no prumo.</p>
-          <ul className="mt-8 flex flex-col gap-3 text-lg opacity-95">
+          <Typography sx={{ fontFamily: 'var(--font-display)', fontSize: 40, lineHeight: 1.1, fontWeight: 700 }}>Sua oficina no prumo.</Typography>
+          <Stack component="ul" sx={{ gap: 1.5, mt: 4, p: 0, listStyle: 'none', fontSize: 18, opacity: 0.95 }}>
             {['Orçamento pelo celular, aprovado no WhatsApp.', 'OS aberta na hora, com técnico em cada item.', 'Histórico de cada carro, sem papel.'].map((t) => (
-              <li key={t} className="flex items-start gap-3">
-                <Check size={22} className="mt-0.5 shrink-0 text-accent" aria-hidden />
+              <Stack component="li" key={t} direction="row" sx={{ alignItems: 'flex-start', gap: 1.5 }}>
+                <Box component={Check} size={22} aria-hidden sx={{ mt: 0.25, flexShrink: 0, color: 'secondary.main' }} />
                 {t}
-              </li>
+              </Stack>
             ))}
-          </ul>
+          </Stack>
         </div>
-        <p className="text-sm opacity-80">Feito para oficinas de 2 a 10 pessoas.</p>
+        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+          Feito para oficinas de 2 a 10 pessoas.
+        </Typography>
         {/* fio de prumo: elemento gráfico da marca */}
-        <span className="absolute top-0 right-16 h-[58%] w-px bg-on-brand/25" aria-hidden />
-        <span className="absolute top-[58%] right-[60px] size-[9px] rotate-45 bg-accent" aria-hidden />
-      </aside>
+        <Box component="span" aria-hidden sx={{ position: 'absolute', top: 0, right: 64, height: '58%', width: '1px', bgcolor: 'currentColor', opacity: 0.25 }} />
+        <Box component="span" aria-hidden sx={{ position: 'absolute', top: '58%', right: 60, width: 9, height: 9, transform: 'rotate(45deg)', bgcolor: 'secondary.main' }} />
+      </Box>
 
-      <main className="flex items-center justify-center px-5 py-10">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
+      <Box component="main" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2.5, py: 5 }}>
+        <Box sx={{ width: '100%', maxWidth: 384 }}>
+          <Box sx={{ mb: 4, display: { lg: 'none' } }}>
             <Logo height={34} />
-          </div>
-          <h1 className="text-[28px] font-bold">Entrar</h1>
-          <p className="mt-1 text-muted">Use o e-mail cadastrado na oficina.</p>
+          </Box>
+          <Typography variant="h1" sx={{ fontSize: 28 }}>
+            Entrar
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Use o e-mail cadastrado na oficina.
+          </Typography>
 
-          <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-5">
+          <Stack component="form" onSubmit={onSubmit} noValidate sx={{ gap: 2.5, mt: 4 }}>
             {error ? <ErrorBox message={error} /> : null}
             <TextField label="E-mail" type="email" autoComplete="username" inputMode="email" error={formState.errors.email?.message} {...register('email')} />
             <TextField label="Senha" type="password" autoComplete="current-password" error={formState.errors.password?.message} {...register('password')} />
             <Button type="submit" full loading={formState.isSubmitting} loadingText="Entrando…">
               Entrar
             </Button>
-          </form>
-        </div>
-      </main>
-    </div>
+          </Stack>
+        </Box>
+      </Box>
+    </Box>
   )
 }

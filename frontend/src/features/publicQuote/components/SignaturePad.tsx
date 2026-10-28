@@ -1,3 +1,5 @@
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
 import { Eraser } from 'lucide-react'
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { Button } from '../../../shared/ui/Button'
@@ -91,26 +93,32 @@ export function SignaturePad({ ref, onChange }: { ref?: Ref<SignaturePadHandle>;
 
   return (
     <div>
-      <div className="relative">
-        <canvas
+      <Box sx={{ position: 'relative' }}>
+        <Box
+          component="canvas"
           ref={canvasRef}
           aria-label="Área de assinatura. Assine com o dedo."
           role="img"
-          className="h-44 w-full touch-none rounded-md border-2 border-dashed border-border-strong bg-white"
+          sx={{ display: 'block', height: 176, width: '100%', touchAction: 'none', borderRadius: 1, border: '2px dashed var(--color-border-strong)', bgcolor: '#ffffff' }}
           onPointerDown={start}
           onPointerMove={move}
           onPointerUp={end}
           onPointerCancel={end}
           onPointerLeave={end}
         />
-        {empty ? <span className="pointer-events-none absolute inset-x-0 bottom-10 text-center text-sm text-[#565c59]">Assine aqui com o dedo</span> : null}
-        <span className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-[#d4d1c8]" aria-hidden />
-      </div>
-      <div className="mt-2 flex justify-end">
+        {/* Cores fixas: o quadro é sempre branco, em qualquer tema. */}
+        {empty ? (
+          <Box component="span" sx={{ pointerEvents: 'none', position: 'absolute', insetInline: 0, bottom: 40, textAlign: 'center', fontSize: 14, color: '#565c59' }}>
+            Assine aqui com o dedo
+          </Box>
+        ) : null}
+        <Box component="span" aria-hidden sx={{ pointerEvents: 'none', position: 'absolute', insetInline: 24, bottom: 32, borderBottom: '1px solid #d4d1c8' }} />
+      </Box>
+      <Stack direction="row" sx={{ mt: 1, justifyContent: 'flex-end' }}>
         <Button variant="ghost" icon={<Eraser size={16} aria-hidden />} onClick={clear} disabled={empty}>
           Limpar assinatura
         </Button>
-      </div>
+      </Stack>
     </div>
   )
 }

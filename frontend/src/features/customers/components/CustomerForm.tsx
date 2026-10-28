@@ -1,4 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -6,6 +8,7 @@ import { ApiError } from '../../../shared/lib/http'
 import { Button } from '../../../shared/ui/Button'
 import { CheckboxField, TextField } from '../../../shared/ui/Field'
 import { ErrorBox } from '../../../shared/ui/States'
+import { fieldsetSx, legendSx, uppercase } from '../../../shared/ui/styles'
 import { vehiclesApi, type Vehicle } from '../../vehicles/api'
 import { customersApi, type Customer } from '../api'
 
@@ -61,25 +64,27 @@ export function CustomerForm({ onCreated, onCancel, withVehicle = true }: { onCr
   })
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4" aria-label="Novo cliente">
+    <Stack component="form" onSubmit={submit} noValidate aria-label="Novo cliente" sx={{ gap: 2 }}>
       {error ? <ErrorBox message={error} /> : null}
       <TextField label="Nome" autoComplete="off" error={formState.errors.name?.message} {...register('name')} />
       <TextField label="Celular (WhatsApp)" type="tel" inputMode="tel" placeholder="(11) 98888-7777" error={formState.errors.phone?.message} {...register('phone')} />
-      <CheckboxField label="Cliente aceita receber orçamento e avisos pelo WhatsApp" {...register('consent_whatsapp')} />
+      <CheckboxField label="Cliente aceita receber orçamento e avisos pelo WhatsApp" defaultChecked {...register('consent_whatsapp')} />
 
       {withVehicle ? (
-        <fieldset className="flex flex-col gap-4 rounded-md border border-border bg-bg p-4">
-          <legend className="px-1 text-sm font-semibold">Veículo</legend>
-          <TextField label="Placa" autoCapitalize="characters" className="[&_input]:uppercase" error={formState.errors.plate?.message} {...register('plate')} />
-          <div className="grid grid-cols-2 gap-3">
+        <Stack component="fieldset" sx={fieldsetSx}>
+          <Box component="legend" sx={legendSx}>
+            Veículo
+          </Box>
+          <TextField label="Placa" autoCapitalize="characters" sx={uppercase} error={formState.errors.plate?.message} {...register('plate')} />
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
             <TextField label="Marca" {...register('brand')} />
             <TextField label="Modelo" {...register('model')} />
-          </div>
-          <TextField label="Ano" inputMode="numeric" className="max-w-40" error={formState.errors.year?.message} {...register('year')} />
-        </fieldset>
+          </Box>
+          <TextField label="Ano" inputMode="numeric" sx={{ maxWidth: 160 }} error={formState.errors.year?.message} {...register('year')} />
+        </Stack>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <Stack direction={{ xs: 'column-reverse', sm: 'row' }} sx={{ gap: 1, justifyContent: 'flex-end' }}>
         {onCancel ? (
           <Button variant="secondary" onClick={onCancel}>
             Cancelar
@@ -88,7 +93,7 @@ export function CustomerForm({ onCreated, onCancel, withVehicle = true }: { onCr
         <Button type="submit" loading={formState.isSubmitting} loadingText="Salvando…">
           Salvar cliente
         </Button>
-      </div>
-    </form>
+      </Stack>
+    </Stack>
   )
 }

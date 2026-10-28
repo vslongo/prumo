@@ -23,7 +23,7 @@ export function QuotesPage() {
       <PageHeader
         title="Orçamentos"
         action={
-          <ButtonLink to="/orcamentos/novo" icon={<Plus size={18} aria-hidden />} full className="sm:w-auto">
+          <ButtonLink to="/orcamentos/novo" icon={<Plus size={18} aria-hidden />} full sx={{ width: { sm: 'auto' } }}>
             Novo orçamento
           </ButtonLink>
         }

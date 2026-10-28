@@ -1,10 +1,16 @@
+import Box from '@mui/material/Box'
+import ButtonBase from '@mui/material/ButtonBase'
+import Skeleton from '@mui/material/Skeleton'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Car, Check, Search, UserPlus } from 'lucide-react'
+import { Car, Check, UserPlus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { formatPlate } from '../../../shared/lib/format'
 import { Button } from '../../../shared/ui/Button'
-import { TextField } from '../../../shared/ui/Field'
-import { ErrorBox, Skeleton } from '../../../shared/ui/States'
+import { SearchAdornment, TextField } from '../../../shared/ui/Field'
+import { ErrorBox } from '../../../shared/ui/States'
+import { muted, optionRowSx } from '../../../shared/ui/styles'
 import { vehicleName, vehiclesApi, type Vehicle } from '../../vehicles/api'
 import { VehicleForm } from '../../vehicles/components/VehicleForm'
 import { customersApi, formatPhone, type Customer } from '../api'
@@ -55,21 +61,27 @@ export function CustomerVehiclePicker({ value, onChange }: { value: Selection | 
 
   if (value) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-bg p-3">
-          <div className="min-w-0">
-            <p className="truncate font-semibold">{value.customer.name}</p>
-            <p className="text-sm text-muted">{formatPhone(value.customer.phone)}</p>
-          </div>
+      <Stack sx={{ gap: 2 }}>
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1.5, border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'background.default', p: 1.5 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography noWrap sx={{ fontWeight: 600 }}>
+              {value.customer.name}
+            </Typography>
+            <Typography variant="body2" sx={muted}>
+              {formatPhone(value.customer.phone)}
+            </Typography>
+          </Box>
           <Button variant="ghost" onClick={() => onChange(null)}>
             Trocar
           </Button>
-        </div>
+        </Stack>
 
         <div>
-          <p className="mb-2 text-sm font-medium">Veículo</p>
+          <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+            Veículo
+          </Typography>
           {vehicles.isLoading ? (
-            <Skeleton className="h-14" />
+            <Skeleton height={56} />
           ) : vehicles.isError ? (
             <ErrorBox message="Não deu para carregar os veículos." onRetry={() => vehicles.refetch()} />
           ) : mode === 'new-vehicle' ? (
@@ -83,64 +95,64 @@ export function CustomerVehiclePicker({ value, onChange }: { value: Selection | 
               }}
             />
           ) : (
-            <div role="radiogroup" aria-label="Veículo" className="flex flex-col gap-2">
+            <Stack role="radiogroup" aria-label="Veículo" sx={{ gap: 1 }}>
               {vehicles.data?.map((v) => {
                 const selected = value.vehicle?.id === v.id
                 return (
-                  <button
-                    key={v.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => onChange({ ...value, vehicle: v })}
-                    className={`flex min-h-14 items-center gap-3 rounded-md border px-3 text-left ${selected ? 'border-brand bg-surface ring-1 ring-brand' : 'border-border-strong bg-surface hover:bg-surface-2'}`}
-                  >
-                    <Car size={20} className="shrink-0 text-muted" aria-hidden />
-                    <span className="num font-semibold">{formatPlate(v.plate)}</span>
-                    <span className="truncate text-muted">
+                  <ButtonBase key={v.id} role="radio" aria-checked={selected} onClick={() => onChange({ ...value, vehicle: v })} sx={optionRowSx}>
+                    <Box component={Car} size={20} aria-hidden sx={{ flexShrink: 0, ...muted }} />
+                    <Box component="span" className="num" sx={{ fontWeight: 600 }}>
+                      {formatPlate(v.plate)}
+                    </Box>
+                    <Box component="span" sx={{ ...muted, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {vehicleName(v)}
                       {v.year ? ` ${v.year}` : ''}
-                    </span>
-                    {selected ? <Check size={20} className="ml-auto shrink-0 text-brand" aria-hidden /> : null}
-                  </button>
+                    </Box>
+                    {selected ? <Box component={Check} size={20} aria-hidden sx={{ ml: 'auto', flexShrink: 0, color: 'primary.main' }} /> : null}
+                  </ButtonBase>
                 )
               })}
-              <Button variant="ghost" className="self-start" onClick={() => setMode('new-vehicle')}>
+              <Button variant="ghost" sx={{ alignSelf: 'flex-start' }} onClick={() => setMode('new-vehicle')}>
                 Adicionar outro veículo
               </Button>
-            </div>
+            </Stack>
           )}
         </div>
-      </div>
+      </Stack>
     )
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="relative">
-        <TextField label="Buscar cliente" placeholder="Nome, celular ou CPF" value={term} onChange={(e) => setTerm(e.target.value)} className="[&_input]:pl-10" autoComplete="off" />
-        <Search size={18} className="pointer-events-none absolute bottom-[15px] left-3 text-muted" aria-hidden />
-      </div>
+    <Stack sx={{ gap: 1.5 }}>
+      <TextField label="Buscar cliente" placeholder="Nome, celular ou CPF" value={term} onChange={(e) => setTerm(e.target.value)} autoComplete="off" startAdornment={<SearchAdornment />} />
       {results.isLoading ? (
-        <Skeleton className="h-14" />
+        <Skeleton height={56} />
       ) : results.isError ? (
         <ErrorBox message="Não deu para buscar clientes." onRetry={() => results.refetch()} />
       ) : (
-        <ul className="flex flex-col gap-1.5">
+        <Stack component="ul" sx={{ gap: 0.75, m: 0, p: 0, listStyle: 'none' }}>
           {results.data?.data.slice(0, 6).map((c) => (
             <li key={c.id}>
-              <button type="button" onClick={() => onChange({ customer: c, vehicle: null })} className="flex min-h-14 w-full items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 text-left hover:bg-surface-2">
-                <span className="truncate font-semibold">{c.name}</span>
-                <span className="num shrink-0 text-sm text-muted">{formatPhone(c.phone)}</span>
-              </button>
+              <ButtonBase onClick={() => onChange({ customer: c, vehicle: null })} sx={[optionRowSx, { justifyContent: 'space-between', borderColor: 'divider' }]}>
+                <Box component="span" sx={{ fontWeight: 600, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {c.name}
+                </Box>
+                <Box component="span" className="num" sx={{ flexShrink: 0, fontSize: 14, ...muted }}>
+                  {formatPhone(c.phone)}
+                </Box>
+              </ButtonBase>
             </li>
           ))}
-          {q && results.data?.data.length === 0 ? <li className="py-2 text-muted">Nada encontrado para “{q}”. Confira o nome ou o celular.</li> : null}
-        </ul>
+          {q && results.data?.data.length === 0 ? (
+            <Box component="li" sx={{ py: 1, ...muted }}>
+              Nada encontrado para “{q}”. Confira o nome ou o celular.
+            </Box>
+          ) : null}
+        </Stack>
       )}
       <Button variant="secondary" icon={<UserPlus size={18} aria-hidden />} onClick={() => setMode('new-customer')}>
         Cadastrar cliente
       </Button>
-    </div>
+    </Stack>
   )
 }

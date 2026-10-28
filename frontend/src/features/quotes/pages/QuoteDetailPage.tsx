@@ -1,12 +1,19 @@
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
+import Skeleton from '@mui/material/Skeleton'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ClipboardList, Copy, MessageCircle, Plus, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { formatKm, formatPlate, formatWhen } from '../../../shared/lib/format'
 import { ApiError } from '../../../shared/lib/http'
 import { BackLink } from '../../../shared/ui/BackLink'
-import { Button, buttonClass } from '../../../shared/ui/Button'
-import { Card, CardTitle, Detail, ErrorBox, PageHeader, Skeleton } from '../../../shared/ui/States'
+import { Button, ButtonLink } from '../../../shared/ui/Button'
+import { TextField } from '../../../shared/ui/Field'
+import { Card, CardTitle, Detail, DetailGrid, ErrorBox, PageHeader } from '../../../shared/ui/States'
+import { muted } from '../../../shared/ui/styles'
 import { QuoteStatusBadge } from '../../../shared/ui/StatusBadge'
 import { useToast } from '../../../shared/ui/Toast'
 import { useUsers } from '../../auth/api'
@@ -70,8 +77,8 @@ export function QuoteDetailPage() {
   if (quote.isLoading) {
     return (
       <>
-        <Skeleton className="mb-6 h-10 w-64" />
-        <Skeleton className="h-72" />
+        <Skeleton height={40} width={256} sx={{ mb: 3 }} />
+        <Skeleton height={288} />
       </>
     )
   }
@@ -93,35 +100,35 @@ export function QuoteDetailPage() {
         back={<BackLink to="/orcamentos" label="Orçamentos" />}
         title={q.vehicle ? `${formatPlate(q.vehicle.plate)} · ${vehicleName(q.vehicle)}` : 'Orçamento'}
         subtitle={
-          <span className="flex flex-wrap items-center gap-2">
+          <Box component="span" sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
             <QuoteStatusBadge status={q.status} />
             <span>{q.customer?.name}</span>
             {q.version > 1 ? <span>· versão {q.version}</span> : null}
-          </span>
+          </Box>
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px] lg:items-start">
-        <div className="flex flex-col gap-4">
+      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1fr) 340px' }, alignItems: { lg: 'start' } }}>
+        <Stack sx={{ gap: 2 }}>
           {q.status === 'approved' ? (
-            <div role="status" className="flex flex-col gap-3 rounded-lg border border-success/30 bg-success-soft p-4 text-success sm:flex-row sm:items-center sm:justify-between">
-              <p>
+            <Stack role="status" direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 1.5, alignItems: { sm: 'center' }, justifyContent: 'space-between', borderRadius: 1.5, bgcolor: 'success.light', color: 'success.main', p: 2 }}>
+              <Typography>
                 <strong>{q.approval?.signer_name}</strong> aprovou e assinou {formatWhen(q.approval?.approved_at).toLowerCase()}.
                 {q.items && approvedIds.size < q.items.length ? ` ${approvedIds.size} de ${q.items.length} itens aprovados.` : ''}
-              </p>
+              </Typography>
               {order.data ? (
-                <Link to={`/os/${order.data.id}`} className={buttonClass('secondary')}>
-                  <ClipboardList size={18} aria-hidden /> Ver OS {order.data.number}
-                </Link>
+                <ButtonLink to={`/os/${order.data.id}`} variant="secondary" icon={<ClipboardList size={18} aria-hidden />} sx={{ flexShrink: 0 }}>
+                  Ver OS {order.data.number}
+                </ButtonLink>
               ) : (
-                <span className="text-sm">Gerando a OS…</span>
+                <Typography variant="body2">Gerando a OS…</Typography>
               )}
-            </div>
+            </Stack>
           ) : null}
           {q.status === 'rejected' ? (
-            <div role="status" className="rounded-lg bg-danger-soft p-4 text-danger">
+            <Box role="status" sx={{ borderRadius: 1.5, bgcolor: 'error.light', color: 'error.main', p: 2 }}>
               Cliente recusou {formatWhen(q.decided_at).toLowerCase()}.{q.rejection_reason ? ` Motivo: “${q.rejection_reason}”` : ''}
-            </div>
+            </Box>
           ) : null}
 
           <Card>
@@ -137,9 +144,9 @@ export function QuoteDetailPage() {
               Itens
             </CardTitle>
             {actionError ? (
-              <div className="mb-4">
+              <Box sx={{ mb: 2 }}>
                 <ErrorBox message={actionError} />
-              </div>
+              </Box>
             ) : null}
             <ItemList
               items={q.items ?? []}
@@ -147,14 +154,19 @@ export function QuoteDetailPage() {
               aside={
                 q.status === 'approved'
                   ? (item) => (
-                      <span className={`mt-1 size-2.5 shrink-0 rounded-full ${approvedIds.has(item.id) ? 'bg-success' : 'bg-border-strong'}`} title={approvedIds.has(item.id) ? 'Aprovado' : 'Não aprovado'} aria-label={approvedIds.has(item.id) ? 'Aprovado' : 'Não aprovado'} />
+                      <Box
+                        component="span"
+                        title={approvedIds.has(item.id) ? 'Aprovado' : 'Não aprovado'}
+                        aria-label={approvedIds.has(item.id) ? 'Aprovado' : 'Não aprovado'}
+                        sx={{ mt: 0.75, width: 10, height: 10, flexShrink: 0, borderRadius: '50%', bgcolor: approvedIds.has(item.id) ? 'success.main' : 'var(--color-border-strong)' }}
+                      />
                     )
                   : undefined
               }
               actions={
                 isEditable && (q.items?.length ?? 0) > 1
                   ? (item) => (
-                      <Button variant="ghost" className="h-9 text-danger" icon={<Trash2 size={16} aria-hidden />} loading={remove.isPending && remove.variables === item.id} onClick={() => remove.mutate(item.id)}>
+                      <Button variant="ghost" tone="danger" size="small" icon={<Trash2 size={16} aria-hidden />} loading={remove.isPending && remove.variables === item.id} onClick={() => remove.mutate(item.id)}>
                         Remover
                       </Button>
                     )
@@ -164,8 +176,12 @@ export function QuoteDetailPage() {
             <ItemsTotal cents={q.total_cents} />
 
             {adding ? (
-              <div className="mt-5 border-t border-border pt-5">
-                {wasSent ? <p className="mb-4 rounded-md bg-warning-soft p-3 text-sm text-warning">O cliente já recebeu este orçamento. Ao mudar, o link antigo deixa de valer e será preciso enviar de novo.</p> : null}
+              <Box sx={{ mt: 2.5, borderTop: 1, borderColor: 'divider', pt: 2.5 }}>
+                {wasSent ? (
+                  <Alert severity="warning" icon={false} sx={{ mb: 2, bgcolor: 'warning.light', color: 'warning.main', fontSize: 14 }}>
+                    O cliente já recebeu este orçamento. Ao mudar, o link antigo deixa de valer e será preciso enviar de novo.
+                  </Alert>
+                ) : null}
                 <ItemForm
                   serviceTypes={types.data ?? []}
                   users={users.data ?? []}
@@ -177,47 +193,46 @@ export function QuoteDetailPage() {
                     toast('Item adicionado.')
                   }}
                 />
-              </div>
+              </Box>
             ) : null}
           </Card>
-        </div>
+        </Stack>
 
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-8">
+        <Stack component="aside" sx={{ gap: 2, position: { lg: 'sticky' }, top: { lg: 32 } }}>
           <Card>
-            <dl className="grid grid-cols-2 gap-4">
+            <DetailGrid>
               <Detail label="Criado">{formatWhen(q.created_at)}</Detail>
               <Detail label="Km">{formatKm(q.mileage)}</Detail>
               <Detail label="Enviado">{formatWhen(q.sent_at)}</Detail>
               <Detail label="Link vale até">{formatWhen(q.link_expires_at)}</Detail>
-            </dl>
-            {q.notes ? <p className="mt-4 border-t border-border pt-4 text-sm whitespace-pre-line">{q.notes}</p> : null}
+            </DetailGrid>
+            {q.notes ? <Typography variant="body2" sx={{ mt: 2, borderTop: 1, borderColor: 'divider', pt: 2, whiteSpace: 'pre-line' }}>{q.notes}</Typography> : null}
           </Card>
 
           {sendable.includes(q.status) ? (
             <Card>
               <CardTitle>Enviar ao cliente</CardTitle>
               {sent ? (
-                <div className="flex flex-col gap-3">
-                  <label className="text-sm font-medium" htmlFor="quote-link">
-                    Link de aprovação
-                  </label>
-                  <input id="quote-link" readOnly value={sent.link} onFocus={(e) => e.target.select()} className="h-12 w-full rounded-md border border-border-strong bg-bg px-3 text-sm" />
+                <Stack sx={{ gap: 1.5 }}>
+                  <TextField label="Link de aprovação" readOnly value={sent.link} onFocus={(e) => e.target.select()} sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'background.default', fontSize: 14 } }} />
                   {sent.whatsapp_url ? (
-                    <a href={sent.whatsapp_url} target="_blank" rel="noreferrer" className={buttonClass('primary', true)}>
-                      <MessageCircle size={18} aria-hidden /> Enviar pelo WhatsApp
-                    </a>
+                    <Button href={sent.whatsapp_url} target="_blank" rel="noreferrer" full icon={<MessageCircle size={18} aria-hidden />}>
+                      Enviar pelo WhatsApp
+                    </Button>
                   ) : (
-                    <p className="text-sm text-muted">Cliente sem celular cadastrado. Copie o link e envie como preferir.</p>
+                    <Typography variant="body2" sx={muted}>
+                      Cliente sem celular cadastrado. Copie o link e envie como preferir.
+                    </Typography>
                   )}
                   <Button variant="secondary" full icon={<Copy size={18} aria-hidden />} onClick={() => copy(sent.link)}>
                     Copiar link
                   </Button>
-                </div>
+                </Stack>
               ) : (
                 <>
-                  <p className="mb-4 text-sm text-muted">
+                  <Typography variant="body2" sx={{ mb: 2, ...muted }}>
                     {wasSent ? 'Gerar um link novo invalida o anterior.' : 'O cliente recebe um link para ver, aprovar e assinar. Vale por 7 dias.'}
-                  </p>
+                  </Typography>
                   <Button full icon={<Send size={18} aria-hidden />} loading={send.isPending} loadingText="Gerando link…" onClick={() => send.mutate()}>
                     {wasSent || q.status === 'expired' ? 'Reenviar link' : 'Gerar link de aprovação'}
                   </Button>
@@ -225,8 +240,8 @@ export function QuoteDetailPage() {
               )}
             </Card>
           ) : null}
-        </aside>
-      </div>
+        </Stack>
+      </Box>
     </>
   )
 }

@@ -1,4 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import ToggleButton from '@mui/material/ToggleButton'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
+import Typography from '@mui/material/Typography'
 import { useEffect, useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { z } from 'zod'
@@ -7,6 +12,7 @@ import { ApiError } from '../../../shared/lib/http'
 import { Button } from '../../../shared/ui/Button'
 import { SelectField, TextField } from '../../../shared/ui/Field'
 import { ErrorBox } from '../../../shared/ui/States'
+import { muted } from '../../../shared/ui/styles'
 import type { User } from '../../auth/api'
 import type { ServiceType } from '../../serviceTypes/api'
 import { DynamicFields } from '../../serviceTypes/components/DynamicFields'
@@ -102,25 +108,39 @@ export function ItemForm({ serviceTypes, users, defaultTechnicianId, submitLabel
   })
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4" aria-label="Item">
+    <Stack component="form" onSubmit={submit} noValidate aria-label="Item" sx={{ gap: 2 }}>
       {error ? <ErrorBox message={error} /> : null}
 
-      <fieldset>
-        <legend className="mb-1.5 text-sm font-medium">Tipo de item</legend>
-        <div className="grid grid-cols-2 gap-2">
+      <Box component="fieldset" sx={{ m: 0, p: 0, border: 0, minWidth: 0 }}>
+        <Box component="legend" sx={{ mb: 0.75, p: 0, fontSize: 14, fontWeight: 500 }}>
+          Tipo de item
+        </Box>
+        <ToggleButtonGroup
+          exclusive
+          fullWidth
+          value={kind}
+          onChange={(_, k: FormValues['kind'] | null) => k && setValue('kind', k)}
+          sx={{ gap: 1, '& .MuiToggleButtonGroup-grouped': { m: 0, border: '1px solid var(--color-border-strong) !important', borderRadius: '8px !important' } }}
+        >
           {(['service', 'product'] as const).map((k) => (
-            <label
+            <ToggleButton
               key={k}
-              className={`flex h-12 cursor-pointer items-center justify-center rounded-md border text-[15px] font-semibold ${
-                kind === k ? 'border-brand bg-brand text-on-brand' : 'border-border-strong bg-surface hover:bg-surface-2'
-              }`}
+              value={k}
+              sx={{
+                height: 48,
+                textTransform: 'none',
+                fontSize: 15,
+                fontWeight: 600,
+                color: 'text.primary',
+                bgcolor: 'background.paper',
+                '&.Mui-selected, &.Mui-selected:hover': { bgcolor: 'primary.main', color: 'primary.contrastText', borderColor: 'primary.main !important' },
+              }}
             >
-              <input type="radio" value={k} className="sr-only" {...register('kind')} />
               {itemKindLabel[k]}
-            </label>
+            </ToggleButton>
           ))}
-        </div>
-      </fieldset>
+        </ToggleButtonGroup>
+      </Box>
 
       {kind === 'service' ? (
         <SelectField label="Tipo de serviço" hint="Define os campos específicos do serviço." {...register('service_type_id')}>
@@ -135,10 +155,10 @@ export function ItemForm({ serviceTypes, users, defaultTechnicianId, submitLabel
 
       <TextField label="Descrição" error={formState.errors.description?.message} {...register('description')} />
 
-      <div className="grid grid-cols-2 gap-3">
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
         <TextField label="Quantidade" inputMode="decimal" error={formState.errors.quantity?.message} {...register('quantity')} />
         <TextField label="Valor unitário (R$)" inputMode="decimal" placeholder="0,00" error={formState.errors.price?.message} {...register('price')} />
-      </div>
+      </Box>
 
       <SelectField label="Técnico responsável" error={formState.errors.technician_id?.message} {...register('technician_id')}>
         <option value="">Escolha</option>
@@ -150,17 +170,22 @@ export function ItemForm({ serviceTypes, users, defaultTechnicianId, submitLabel
       </SelectField>
 
       {selectedType && selectedType.fields_schema.length > 0 ? (
-        <div className="rounded-md border border-border bg-bg p-4">
-          <p className="mb-3 text-sm font-semibold">{selectedType.name}: detalhes</p>
+        <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'background.default', p: 2 }}>
+          <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 600 }}>
+            {selectedType.name}: detalhes
+          </Typography>
           <DynamicFields schema={selectedType.fields_schema} register={register} errors={formState.errors.fields as never} />
-        </div>
+        </Box>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted">
-          Total do item: <span className="num font-semibold text-text">{preview === null ? '—' : formatMoney(preview)}</span>
-        </p>
-        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+      <Stack direction={{ xs: 'column-reverse', sm: 'row' }} sx={{ gap: 1, alignItems: { sm: 'center' }, justifyContent: 'space-between', borderTop: 1, borderColor: 'divider', pt: 2 }}>
+        <Typography variant="body2" sx={muted}>
+          Total do item:{' '}
+          <Box component="span" className="num" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            {preview === null ? '—' : formatMoney(preview)}
+          </Box>
+        </Typography>
+        <Stack direction={{ xs: 'column-reverse', sm: 'row' }} sx={{ gap: 1 }}>
           {onCancel ? (
             <Button variant="secondary" onClick={onCancel}>
               Cancelar
@@ -169,8 +194,8 @@ export function ItemForm({ serviceTypes, users, defaultTechnicianId, submitLabel
           <Button type="submit" variant="secondary" loading={formState.isSubmitting} loadingText="Adicionando…">
             {submitLabel}
           </Button>
-        </div>
-      </div>
-    </form>
+        </Stack>
+      </Stack>
+    </Stack>
   )
 }

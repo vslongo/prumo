@@ -1,45 +1,55 @@
-import { Loader2 } from 'lucide-react'
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { Link, type LinkProps } from 'react-router'
+import MuiButton, { type ButtonProps as MuiButtonProps } from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import type { ReactNode } from 'react'
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
 
-const base =
-  'inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-colors select-none disabled:opacity-50 disabled:cursor-not-allowed h-12 lg:h-10 px-4 text-[15px] lg:text-base whitespace-nowrap'
-
-const variants: Record<Variant, string> = {
-  primary: 'bg-brand text-on-brand hover:bg-brand-strong',
-  secondary: 'bg-surface text-text border border-border-strong hover:bg-surface-2',
-  danger: 'bg-danger text-white dark:text-bg hover:opacity-90',
-  ghost: 'text-brand underline-offset-4 hover:underline px-2',
+/** Variantes da marca → props do MUI. */
+function variantProps(variant: Variant = 'primary'): Pick<MuiButtonProps, 'variant' | 'color' | 'sx'> {
+  switch (variant) {
+    case 'secondary':
+      return { variant: 'outlined', color: 'inherit', sx: { bgcolor: 'background.paper', borderColor: 'var(--color-border-strong)', '&:hover': { bgcolor: 'action.hover' } } }
+    case 'danger':
+      return { variant: 'contained', color: 'error' }
+    case 'ghost':
+      return { variant: 'text', color: 'primary' }
+    default:
+      return { variant: 'contained', color: 'primary' }
+  }
 }
 
-export function buttonClass(variant: Variant = 'primary', full = false, extra = ''): string {
-  return [base, variants[variant], full ? 'w-full' : '', extra].join(' ')
-}
-
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = Omit<MuiButtonProps, 'variant' | 'color'> & {
+  /** Com `href` externo (ex.: wa.me). */
+  target?: string
+  rel?: string
   variant?: Variant
+  /** Ação destrutiva com cara de link (ex.: "Remover"). */
+  tone?: 'danger'
   full?: boolean
   loading?: boolean
   loadingText?: string
   icon?: ReactNode
 }
 
-export function Button({ variant = 'primary', full, loading, loadingText, icon, children, className = '', disabled, type = 'button', ...rest }: ButtonProps) {
+export function Button({ variant, tone, full, loading, loadingText, icon, children, disabled, sx, ...rest }: ButtonProps) {
+  const v = variantProps(variant)
   return (
-    <button type={type} className={buttonClass(variant, full, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
-      {loading ? <Loader2 size={16} className="animate-spin" aria-hidden /> : icon}
+    <MuiButton
+      {...v}
+      color={tone === 'danger' ? 'error' : v.color}
+      fullWidth={full}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      startIcon={loading ? <CircularProgress size={16} color="inherit" /> : icon}
+      sx={[v.sx ?? {}, ...(Array.isArray(sx) ? sx : [sx])]}
+      {...rest}
+    >
       {loading && loadingText ? loadingText : children}
-    </button>
+    </MuiButton>
   )
 }
 
-export function ButtonLink({ variant = 'primary', full, className = '', icon, children, ...rest }: LinkProps & { variant?: Variant; full?: boolean; icon?: ReactNode }) {
-  return (
-    <Link className={buttonClass(variant, full, className)} {...rest}>
-      {icon}
-      {children}
-    </Link>
-  )
+/** Botão que navega (href passa pelo react-router, ver LinkBehavior em app/theme). */
+export function ButtonLink({ to, ...rest }: Omit<ButtonProps, 'href' | 'loading' | 'loadingText'> & { to: string }) {
+  return <Button href={to} {...rest} />
 }

@@ -1,8 +1,11 @@
+import CssBaseline from '@mui/material/CssBaseline'
+import { ThemeProvider } from '@mui/material/styles'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from 'react-router'
 import { ApiError } from '../shared/lib/http'
 import { ToastProvider } from '../shared/ui/Toast'
 import { router } from './router'
+import { theme } from './theme'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,10 +19,13 @@ const queryClient = new QueryClient({
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <RouterProvider router={router} />
-      </ToastProvider>
-    </QueryClientProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }

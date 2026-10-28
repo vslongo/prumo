@@ -1,3 +1,8 @@
+import Box from '@mui/material/Box'
+import ButtonBase from '@mui/material/ButtonBase'
+import Skeleton from '@mui/material/Skeleton'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Car, ClipboardList, Plus } from 'lucide-react'
 import { useState } from 'react'
@@ -5,7 +10,8 @@ import { useParams } from 'react-router'
 import { formatPlate } from '../../../shared/lib/format'
 import { BackLink } from '../../../shared/ui/BackLink'
 import { Button, ButtonLink } from '../../../shared/ui/Button'
-import { Card, CardTitle, Detail, EmptyState, ErrorBox, ListSkeleton, PageHeader, Skeleton } from '../../../shared/ui/States'
+import { Card, CardTitle, Detail, DetailGrid, EmptyState, ErrorBox, ListSkeleton, PageHeader } from '../../../shared/ui/States'
+import { muted, optionRowSx } from '../../../shared/ui/styles'
 import { useToast } from '../../../shared/ui/Toast'
 import { serviceOrdersApi } from '../../serviceOrders/api'
 import { ServiceOrderList } from '../../serviceOrders/components/ServiceOrderList'
@@ -29,7 +35,7 @@ export function CustomerDetailPage() {
     enabled: !!selected,
   })
 
-  if (customer.isLoading) return <Skeleton className="h-64" />
+  if (customer.isLoading) return <Skeleton height={256} />
   if (customer.isError || !customer.data) return <ErrorBox message="Não deu para carregar o cliente." onRetry={() => customer.refetch()} />
 
   const c = customer.data
@@ -38,14 +44,14 @@ export function CustomerDetailPage() {
     <>
       <PageHeader back={<BackLink to="/clientes" label="Clientes" />} title={c.name} subtitle={formatPhone(c.phone)} />
 
-      <div className="grid gap-4 lg:grid-cols-[340px_1fr] lg:items-start">
-        <div className="flex flex-col gap-4">
+      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: '340px minmax(0, 1fr)' }, alignItems: { lg: 'start' } }}>
+        <Stack sx={{ gap: 2 }}>
           <Card>
-            <dl className="grid gap-4">
+            <DetailGrid columns={1}>
               <Detail label="Celular">{formatPhone(c.phone)}</Detail>
               {c.email ? <Detail label="E-mail">{c.email}</Detail> : null}
               <Detail label="WhatsApp">{c.consent_whatsapp_at ? 'Aceita receber' : 'Sem autorização'}</Detail>
-            </dl>
+            </DetailGrid>
           </Card>
 
           <Card>
@@ -61,7 +67,7 @@ export function CustomerDetailPage() {
               Veículos
             </CardTitle>
             {adding ? (
-              <div className="mb-3">
+              <Box sx={{ mb: 1.5 }}>
                 <VehicleForm
                   customerId={id}
                   onCancel={() => setAdding(false)}
@@ -72,39 +78,34 @@ export function CustomerDetailPage() {
                     toast('Veículo cadastrado.')
                   }}
                 />
-              </div>
+              </Box>
             ) : null}
             {vehicles.isLoading ? (
-              <Skeleton className="h-14" />
+              <Skeleton height={56} />
             ) : vehicles.data?.length ? (
-              <div role="radiogroup" aria-label="Veículos" className="flex flex-col gap-2">
+              <Stack role="radiogroup" aria-label="Veículos" sx={{ gap: 1 }}>
                 {vehicles.data.map((v) => (
-                  <button
-                    key={v.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected === v.id}
-                    onClick={() => setVehicleId(v.id)}
-                    className={`flex min-h-14 items-center gap-3 rounded-md border px-3 text-left ${selected === v.id ? 'border-brand ring-1 ring-brand' : 'border-border hover:bg-surface-2'}`}
-                  >
-                    <Car size={20} className="text-muted" aria-hidden />
-                    <span className="num font-semibold">{formatPlate(v.plate)}</span>
-                    <span className="truncate text-muted">
+                  <ButtonBase key={v.id} role="radio" aria-checked={selected === v.id} onClick={() => setVehicleId(v.id)} sx={[optionRowSx, { borderColor: 'divider' }]}>
+                    <Box component={Car} size={20} aria-hidden sx={muted} />
+                    <Box component="span" className="num" sx={{ fontWeight: 600 }}>
+                      {formatPlate(v.plate)}
+                    </Box>
+                    <Box component="span" sx={{ ...muted, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {vehicleName(v)} {v.year ?? ''}
-                    </span>
-                  </button>
+                    </Box>
+                  </ButtonBase>
                 ))}
-              </div>
+              </Stack>
             ) : (
-              <p className="text-muted">Nenhum veículo cadastrado.</p>
+              <Typography sx={muted}>Nenhum veículo cadastrado.</Typography>
             )}
           </Card>
-        </div>
+        </Stack>
 
         <Card>
           <CardTitle>Histórico do veículo</CardTitle>
           {!selected ? (
-            <p className="text-muted">Cadastre um veículo para ver o histórico.</p>
+            <Typography sx={muted}>Cadastre um veículo para ver o histórico.</Typography>
           ) : history.isLoading ? (
             <ListSkeleton rows={2} />
           ) : history.data?.data.length ? (
@@ -113,7 +114,7 @@ export function CustomerDetailPage() {
             <EmptyState icon={ClipboardList} title="Nenhuma OS para este veículo." text="As OS aparecem aqui assim que forem abertas." action={<ButtonLink to="/os/nova">Nova OS</ButtonLink>} />
           )}
         </Card>
-      </div>
+      </Box>
     </>
   )
 }
