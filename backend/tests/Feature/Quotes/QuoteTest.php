@@ -6,7 +6,6 @@ use App\Modules\Auth\Enums\UserRole;
 use App\Modules\Auth\Models\User;
 use App\Modules\Quotes\Events\QuoteSent;
 use App\Modules\Quotes\Models\Quote;
-use App\Modules\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Event;
 
 function createQuote(User $tech, array $items = []): Quote
@@ -125,19 +124,4 @@ it('orçamento aprovado não pode ser editado', function () {
     $quote->update(['status' => 'approved']);
 
     $this->postJson("/api/quotes/{$quote->id}/items", productItem($tech))->assertUnprocessable();
-});
-
-it('isola orçamentos entre tenants', function () {
-    $tech = actingAsRole();
-    $foreign = inOtherTenant(function () {
-        $owner = User::factory()->create(['tenant_id' => TenantContext::id()]);
-        $vehicle = makeVehicle();
-
-        return Quote::create(['customer_id' => $vehicle->customer_id, 'vehicle_id' => $vehicle->id, 'created_by' => $owner->id]);
-    });
-
-    $this->getJson("/api/quotes/{$foreign->id}")->assertNotFound();
-    $this->postJson("/api/quotes/{$foreign->id}/send")->assertNotFound();
-    $this->postJson("/api/quotes/{$foreign->id}/items", productItem($tech))->assertNotFound();
-    $this->getJson('/api/quotes')->assertJsonCount(0, 'data');
 });

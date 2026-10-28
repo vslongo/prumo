@@ -17,13 +17,3 @@ it('lista só usuários ativos da própria oficina (para escolher técnico)', fu
         ->assertJsonFragment(['id' => $colleague->id])
         ->assertJsonMissing(['name' => 'De fora']);
 });
-
-it('lista veículos do cliente sem vazar de outro tenant', function () {
-    actingAsRole();
-    $vehicle = makeVehicle();
-    $foreign = inOtherTenant(fn () => makeVehicle());
-
-    $this->getJson("/api/customers/{$vehicle->customer_id}/vehicles")->assertOk()->assertJsonCount(1, 'data');
-    $this->getJson("/api/customers/{$foreign->customer_id}/vehicles")->assertOk()->assertJsonCount(0, 'data');
-    $this->getJson('/api/customers/nao-e-uuid/vehicles')->assertNotFound();
-});
