@@ -7,6 +7,7 @@ namespace App\Modules\Quotes\Actions;
 use App\Modules\Quotes\Enums\QuoteStatus;
 use App\Modules\Quotes\Events\QuoteSent;
 use App\Modules\Quotes\Models\Quote;
+use App\Shared\Support\BrazilPhone;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -64,12 +65,11 @@ final class SendQuote
     private function whatsappUrl(Quote $quote, string $link): ?string
     {
         $customer = $quote->customer;
-        $phone = $customer?->phone;
-        if ($phone === null || $phone === '') {
+        $phone = BrazilPhone::e164Digits($customer?->phone);
+        if ($customer === null || $phone === null) {
             return null;
         }
 
-        $phone = strlen($phone) <= 11 ? '55'.$phone : $phone;
         $text = sprintf('Olá, %s! Segue o orçamento do seu veículo. Para ver e aprovar, acesse: %s', $customer->name, $link);
 
         return 'https://wa.me/'.$phone.'?text='.rawurlencode($text);
