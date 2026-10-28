@@ -13,6 +13,7 @@ import { Card, CardTitle, ErrorBox, ListSkeleton, PageHeader } from '../../../sh
 import { fieldsetSx, legendSx, muted } from '../../../shared/ui/styles'
 import { useToast } from '../../../shared/ui/Toast'
 import { canManageSettings, useMe } from '../../auth/api'
+import { TeamCard } from '../../auth/components/TeamCard'
 import { fieldTypeLabel, serviceTypesApi, useServiceTypes, type FieldSchema, type FieldType } from '../api'
 
 type DraftField = FieldSchema & { optionsText: string }
@@ -76,9 +77,10 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Configurações" subtitle="Tipos de serviço e os campos que o técnico preenche em cada um." />
+      <PageHeader title="Configurações" subtitle="Equipe da oficina e os tipos de serviço com os campos que o técnico preenche." />
 
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(2, minmax(0, 1fr))' }, alignItems: { lg: 'start' } }}>
+        <TeamCard />
         <Card>
           <CardTitle>Tipos de serviço</CardTitle>
           {types.isLoading ? (

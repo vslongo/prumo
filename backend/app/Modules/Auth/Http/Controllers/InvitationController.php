@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Auth\Http\Controllers;
+
+use App\Modules\Auth\Actions\AcceptInvitation;
+use App\Modules\Auth\Actions\InviteUser;
+use App\Modules\Auth\Enums\UserRole;
+use App\Modules\Auth\Http\Requests\AcceptInvitationRequest;
+use App\Modules\Auth\Http\Requests\InviteUserRequest;
+use App\Modules\Auth\Http\Resources\UserResource;
+use App\Modules\Auth\Models\User;
+use App\Modules\Auth\Models\UserInvitation;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+
+final class InvitationController
+{
+    public function store(InviteUserRequest $request, InviteUser $invite): JsonResponse
+    {
+        Gate::authorize('create', UserInvitation::class);
+
+        /** @var User $user */
+        $user = $request->user();
+        $sent = $invite->handle($user, (string) $request->validated('name'), UserRole::from((string) $request->validated('role')));
+
+        return response()->json(['data' => [
+            'link' => $sent['link'],
+            'whatsapp_url' => $sent['whatsapp_url'],
+            'expires_at' => $sent['expires_at'],
+        ]], 201);
+    }
+
+    /** Público: o que a tela de aceite mostra. Sem id interno. */
+    public function show(Request $request): JsonResponse
+    {
+        /** @var UserInvitation $invitation */
+        $invitation = $request->attributes->get('invitation');
+
+        return response()->json(['data' => [
+            'name' => $invitation->name,
+            'role' => $invitation->role->value,
+            'workshop' => $invitation->tenant?->name,
+            'usable' => $invitation->isUsable(),
+        ]]);
+    }
+
+    public function accept(AcceptInvitationRequest $request, AcceptInvitation $accept): JsonResponse
+    {
+        /** @var UserInvitation $invitation */
+        $invitation = $request->attributes->get('invitation');
+        /** @var array{name: string, email: string, password: string} $data */
+        $data = $request->validated();
+
+        $user = $accept->handle($invitation, $data['name'], $data['email'], $data['password']);
+
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+
+        return (new UserResource($user->load('tenant')))->response()->setStatusCode(201);
+    }
+}
