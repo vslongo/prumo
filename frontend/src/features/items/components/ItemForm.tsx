@@ -162,7 +162,7 @@ export function ItemForm({ serviceTypes, users, defaultTechnicianId, submitLabel
 
       <SelectField label="Técnico responsável" error={formState.errors.technician_id?.message} {...register('technician_id')}>
         <option value="">Escolha</option>
-        {users.map((u) => (
+        {users.filter((u) => u.is_active).map((u) => (
           <option key={u.id} value={u.id}>
             {u.name}
           </option>

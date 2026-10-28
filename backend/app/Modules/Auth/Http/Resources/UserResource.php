@@ -19,6 +19,8 @@ final class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role->value,
+            // Recém-criado ainda não leu o default do banco: sem valor = ativo.
+            'is_active' => $this->is_active ?? true,
             'workshop' => $this->whenLoaded('tenant', fn () => $this->tenant?->name),
         ];
     }

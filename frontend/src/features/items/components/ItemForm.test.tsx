@@ -5,8 +5,9 @@ import type { ServiceType } from '../../serviceTypes/api'
 import { ItemForm } from './ItemForm'
 
 const users: User[] = [
-  { id: 'u1', name: 'Carlos Mendes', email: 'c@x.test', role: 'owner' },
-  { id: 'u2', name: 'Rafael Souza', email: 'r@x.test', role: 'technician' },
+  { id: 'u1', name: 'Carlos Mendes', email: 'c@x.test', role: 'owner', is_active: true },
+  { id: 'u2', name: 'Rafael Souza', email: 'r@x.test', role: 'technician', is_active: true },
+  { id: 'u3', name: 'Saiu da Oficina', email: 's@x.test', role: 'technician', is_active: false },
 ]
 
 const types: ServiceType[] = [
@@ -23,6 +24,13 @@ const types: ServiceType[] = [
 ]
 
 describe('ItemForm', () => {
+  it('só oferece técnicos ativos como responsável', () => {
+    render(<ItemForm serviceTypes={types} users={users} onSubmit={vi.fn()} />)
+
+    expect(screen.getByRole('option', { name: 'Rafael Souza' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Saiu da Oficina' })).not.toBeInTheDocument()
+  })
+
   it('ao escolher o tipo, preenche descrição e preço e exige os campos específicos', async () => {
     const onSubmit = vi.fn()
     render(<ItemForm serviceTypes={types} users={users} defaultTechnicianId="u1" onSubmit={onSubmit} />)

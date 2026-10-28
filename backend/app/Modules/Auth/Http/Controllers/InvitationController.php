@@ -6,6 +6,8 @@ namespace App\Modules\Auth\Http\Controllers;
 
 use App\Modules\Auth\Actions\AcceptInvitation;
 use App\Modules\Auth\Actions\InviteUser;
+use App\Modules\Auth\Actions\ListPendingInvitations;
+use App\Modules\Auth\Actions\RevokeInvitation;
 use App\Modules\Auth\Enums\UserRole;
 use App\Modules\Auth\Http\Requests\AcceptInvitationRequest;
 use App\Modules\Auth\Http\Requests\InviteUserRequest;
@@ -19,13 +21,40 @@ use Illuminate\Support\Facades\Gate;
 
 final class InvitationController
 {
+    /** Convites pendentes, com o link para o dono copiar de novo (só owner/admin chegam aqui). */
+    public function index(Request $request, ListPendingInvitations $list): JsonResponse
+    {
+        Gate::authorize('viewAny', UserInvitation::class);
+
+        /** @var User $viewer */
+        $viewer = $request->user();
+
+        return response()->json(['data' => $list->handle($viewer)->map(fn (UserInvitation $i) => [
+            'id' => $i->id,
+            'name' => $i->name,
+            'role' => $i->role->value,
+            'expires_at' => $i->expires_at->toIso8601String(),
+            ...($i->token !== null ? InviteUser::links($i->name, $i->token) : ['link' => null, 'whatsapp_url' => null]),
+        ])]);
+    }
+
+    public function destroy(UserInvitation $userInvitation, RevokeInvitation $revoke): JsonResponse
+    {
+        Gate::authorize('delete', $userInvitation);
+        $revoke->handle($userInvitation);
+
+        return response()->json(status: 204);
+    }
+
     public function store(InviteUserRequest $request, InviteUser $invite): JsonResponse
     {
+        $role = UserRole::from((string) $request->validated('role'));
         Gate::authorize('create', UserInvitation::class);
+        Gate::authorize('assignRole', [User::class, $role]);
 
         /** @var User $user */
         $user = $request->user();
-        $sent = $invite->handle($user, (string) $request->validated('name'), UserRole::from((string) $request->validated('role')));
+        $sent = $invite->handle($user, (string) $request->validated('name'), $role);
 
         return response()->json(['data' => [
             'link' => $sent['link'],

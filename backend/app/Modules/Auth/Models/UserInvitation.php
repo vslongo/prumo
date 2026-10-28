@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property UserRole $role
  * @property string $token_hash
+ * @property string|null $token Token cru, criptografado no banco; só para o dono copiar o link de novo.
  * @property Carbon $expires_at
  * @property string $invited_by_id
  * @property string|null $accepted_user_id
@@ -28,11 +29,14 @@ final class UserInvitation extends Model
 {
     use BelongsToTenant, HasUuids;
 
-    protected $fillable = ['name', 'role', 'token_hash', 'expires_at', 'invited_by_id'];
+    protected $fillable = ['name', 'role', 'token_hash', 'token', 'expires_at', 'invited_by_id'];
+
+    protected $hidden = ['token', 'token_hash'];
 
     protected function casts(): array
     {
         return [
+            'token' => 'encrypted',
             'role' => UserRole::class,
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
