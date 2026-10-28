@@ -22,11 +22,14 @@ use Illuminate\Support\Facades\Gate;
 final class InvitationController
 {
     /** Convites pendentes, com o link para o dono copiar de novo (só owner/admin chegam aqui). */
-    public function index(ListPendingInvitations $list): JsonResponse
+    public function index(Request $request, ListPendingInvitations $list): JsonResponse
     {
         Gate::authorize('viewAny', UserInvitation::class);
 
-        return response()->json(['data' => $list->handle()->map(fn (UserInvitation $i) => [
+        /** @var User $viewer */
+        $viewer = $request->user();
+
+        return response()->json(['data' => $list->handle($viewer)->map(fn (UserInvitation $i) => [
             'id' => $i->id,
             'name' => $i->name,
             'role' => $i->role->value,

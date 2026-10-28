@@ -41,3 +41,4 @@ nenhuma
 - 2026-10-28: gestão da equipe (owner/admin): trocar papel, desativar (derruba sessões e tokens) e reativar; ninguém mexe no dono nem em si mesmo; usuário de outra oficina = 404 (UserPolicy). Convites pendentes listados e cancelados (cancelar = expirar agora). /api/users passa a trazer desativados para o nome continuar nas OS; o seletor de técnico mostra só ativos.
 - 2026-10-28: só o dono gerencia admins (trocar papel, desativar) e só ele promove ou convida admin; admin gerencia técnico e balcão.
 - 2026-10-28: convite guarda também o token cru criptografado (`token`, cast encrypted, oculto no JSON do model) para o dono copiar o link de novo em "Convites pendentes"; a busca do link segue pelo `token_hash`.
+- 2026-10-28: convite de admin só aparece e só é cancelado pelo dono (o link dá o papel a quem abrir; ver o link = poder criar admin).

@@ -79,6 +79,21 @@ it('só o dono gerencia, promove ou convida admin', function () {
     expect($otherAdmin->refresh()->role)->toBe(UserRole::Technician);
 });
 
+it('admin não vê nem cancela convite de admin (o link daria o papel a quem abrir)', function () {
+    $owner = actingAsRole();
+    $this->postJson('/api/user-invitations', ['name' => 'Maria', 'role' => 'admin'])->assertCreated();
+    $this->postJson('/api/user-invitations', ['name' => 'Zé', 'role' => 'technician'])->assertCreated();
+    $adminInvite = UserInvitation::query()->where('name', 'Maria')->sole();
+
+    actingAsRole(UserRole::Admin, $owner->tenant);
+    $this->getJson('/api/user-invitations')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Zé');
+    $this->deleteJson("/api/user-invitations/{$adminInvite->id}")->assertForbidden();
+
+    Sanctum::actingAs($owner);
+    $this->getJson('/api/user-invitations')->assertJsonCount(2, 'data');
+    $this->deleteJson("/api/user-invitations/{$adminInvite->id}")->assertNoContent();
+});
+
 it('não gerencia usuário de outra oficina (404)', function () {
     actingAsRole();
     $outsider = inOtherTenant(fn () => User::factory()->create(['tenant_id' => TenantContext::id()]));
