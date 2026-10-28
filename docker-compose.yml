@@ -2,7 +2,9 @@
 services:
   app:
     build: docker/php
-    volumes: [".:/app"]
+    # vendor/ num volume do Docker: no Windows a pasta do projeto chega no container por um
+    # compartilhamento lento (9p) e o Laravel lê milhares de arquivos do vendor a cada request.
+    volumes: [".:/app", "vendor:/app/backend/vendor"]
     working_dir: /app/backend
     ports: ["8000:8000"]
     environment:
@@ -12,7 +14,7 @@ services:
   # Processa a fila (ex.: QuoteApproved → gera a OS). Em produção: Horizon.
   queue:
     build: docker/php
-    volumes: [".:/app"]
+    volumes: [".:/app", "vendor:/app/backend/vendor"]
     working_dir: /app/backend
     depends_on: [pgsql, redis]
     command: php artisan queue:work --tries=5
@@ -28,3 +30,4 @@ services:
     image: redis:7-alpine
 volumes:
   pgdata:
+  vendor:
