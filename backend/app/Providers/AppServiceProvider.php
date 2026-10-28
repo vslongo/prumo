@@ -10,9 +10,13 @@ use App\Modules\Auth\Policies\UserInvitationPolicy;
 use App\Modules\Auth\Policies\UserPolicy;
 use App\Modules\Customers\Models\Customer;
 use App\Modules\Customers\Policies\CustomerPolicy;
+use App\Modules\Messaging\Listeners\QueueQuoteLinkMessage;
+use App\Modules\Messaging\Listeners\QueueServiceOrderReadyMessage;
 use App\Modules\Quotes\Events\QuoteApproved;
+use App\Modules\Quotes\Events\QuoteSent;
 use App\Modules\Quotes\Models\Quote;
 use App\Modules\Quotes\Policies\QuotePolicy;
+use App\Modules\ServiceOrders\Events\ServiceOrderStatusChanged;
 use App\Modules\ServiceOrders\Listeners\CreateServiceOrderFromApprovedQuote;
 use App\Modules\ServiceOrders\Models\ServiceOrder;
 use App\Modules\ServiceOrders\Policies\ServiceOrderPolicy;
@@ -49,6 +53,8 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(ServiceOrder::class, ServiceOrderPolicy::class);
 
         Event::listen(QuoteApproved::class, CreateServiceOrderFromApprovedQuote::class);
+        Event::listen(QuoteSent::class, QueueQuoteLinkMessage::class);
+        Event::listen(ServiceOrderStatusChanged::class, QueueServiceOrderReadyMessage::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip()));
         // Cada cadastro cria um tenant: limite apertado por IP contra criação em massa.
