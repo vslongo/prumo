@@ -1,13 +1,16 @@
+'use client'
+
+import { useState } from 'react'
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter'
 import CssBaseline from '@mui/material/CssBaseline'
 import { ThemeProvider } from '@mui/material/styles'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider } from 'react-router'
 import { ApiError } from '../shared/lib/http'
 import { ToastProvider } from '../shared/ui/Toast'
-import { router } from './router'
 import { theme } from './theme'
+import { ServiceWorker } from './ServiceWorker'
 
-const queryClient = new QueryClient({
+const createQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: {
       // Conexão ruim na oficina: tenta de novo, mas não insiste em erro de regra (4xx).
@@ -17,15 +20,19 @@ const queryClient = new QueryClient({
   },
 })
 
-export function App() {
+export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(createQueryClient)
   return (
+    <AppRouterCacheProvider>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
-          <RouterProvider router={router} />
+          <ServiceWorker />
+          {children}
         </ToastProvider>
       </QueryClientProvider>
     </ThemeProvider>
+    </AppRouterCacheProvider>
   )
 }

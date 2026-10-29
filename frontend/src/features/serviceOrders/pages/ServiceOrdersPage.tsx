@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ClipboardList, Plus } from 'lucide-react'
-import { useSearchParams } from 'react-router'
+import { useSearchParams } from '../../../shared/lib/navigation'
 import { serviceOrderStatusLabel, type ServiceOrderStatus } from '../../../shared/lib/status'
 import { ButtonLink } from '../../../shared/ui/Button'
 import { EmptyState, ErrorBox, ListSkeleton, PageHeader } from '../../../shared/ui/States'

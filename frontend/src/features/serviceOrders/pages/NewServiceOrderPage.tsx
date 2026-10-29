@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router'
+import { useNavigate } from '../../../shared/lib/navigation'
 import { BackLink } from '../../../shared/ui/BackLink'
 import { PageHeader } from '../../../shared/ui/States'
 import { useToast } from '../../../shared/ui/Toast'

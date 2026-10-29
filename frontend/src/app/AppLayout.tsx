@@ -1,3 +1,5 @@
+'use client'
+
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import Box from '@mui/material/Box'
@@ -9,7 +11,7 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
 import { ClipboardList, FileText, House, LogOut, Moon, Settings, Sun, Users, type LucideIcon } from 'lucide-react'
-import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { Navigate, NavLink, useLocation, useNavigate } from '../shared/lib/navigation'
 import { authApi, canManageSettings, roleLabel, useMe } from '../features/auth/api'
 import { useTheme } from '../shared/hooks/useTheme'
 import { Logo } from '../shared/ui/Logo'
@@ -28,7 +30,7 @@ const isActive = (pathname: string, { to, end }: NavItem) => (end ? pathname ===
 // Fio laranja da marca marcando o item ativo.
 const accentBar = { content: '""', position: 'absolute', bgcolor: 'secondary.main' } as const
 
-export function AppLayout() {
+export function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: me, isLoading } = useMe()
   const [theme, toggleTheme] = useTheme()
   const queryClient = useQueryClient()
@@ -112,7 +114,7 @@ export function AppLayout() {
         </Box>
 
         <Box component="main" sx={{ mx: 'auto', width: '100%', maxWidth: 1024, flex: 1, px: { xs: 2, lg: 4 }, pt: { xs: 2.5, lg: 4 }, pb: { xs: 14, lg: 6 } }}>
-          <Outlet />
+          {children}
         </Box>
 
         {/* Mobile: navegação inferior */}
