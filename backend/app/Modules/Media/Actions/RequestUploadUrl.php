@@ -26,6 +26,9 @@ final class RequestUploadUrl
         'application/pdf' => 'pdf',
     ];
 
+    /** Fotos de item (orçamento/OS): só imagem. */
+    public const PHOTO_MIMES = ['image/jpeg', 'image/webp', 'image/png'];
+
     /**
      * @param  list<string>|null  $allowedMimes  restringe além da lista padrão (ex.: assinatura só PNG)
      * @return array{media: Media, url: string, headers: array<string, mixed>, expires_at: string}

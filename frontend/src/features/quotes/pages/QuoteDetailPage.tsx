@@ -19,6 +19,8 @@ import { useToast } from '../../../shared/ui/Toast'
 import { useUsers } from '../../auth/api'
 import { ItemForm } from '../../items/components/ItemForm'
 import { ItemList, ItemsTotal } from '../../items/components/ItemList'
+import { ItemPhotos } from '../../items/components/ItemPhotos'
+import { useItemPhotos } from '../../items/hooks/useItemPhotos'
 import { serviceOrdersApi } from '../../serviceOrders/api'
 import { useServiceTypes } from '../../serviceTypes/api'
 import { vehicleName } from '../../vehicles/api'
@@ -38,6 +40,12 @@ export function QuoteDetailPage() {
   const [actionError, setActionError] = useState<string | null>(null)
 
   const quote = useQuery({ queryKey: ['quotes', id], queryFn: () => quotesApi.get(id) })
+  const photos = useItemPhotos(['quotes', id, 'photos'], {
+    list: () => quotesApi.photos(id),
+    request: (itemId, mime, size) => quotesApi.requestPhotoUpload(id, itemId, mime, size),
+    confirm: (itemId, mediaId) => quotesApi.confirmPhoto(id, itemId, mediaId),
+    remove: (itemId, mediaId) => quotesApi.removePhoto(id, itemId, mediaId),
+  })
   const order = useQuery({
     queryKey: ['service-orders', 'by-quote', id],
     queryFn: async () => (await serviceOrdersApi.list({ quoteId: id })).data[0] ?? null,
@@ -172,6 +180,20 @@ export function QuoteDetailPage() {
                     )
                   : undefined
               }
+              extra={(item) => {
+                const mine = photos.byItem(item.id)
+                return (
+                  <ItemPhotos
+                    uploadGroup={item.id}
+                    photos={mine.map((p) => ({ key: p.id, url: p.url, thumb_url: p.thumb_url, removable: isEditable }))}
+                    onAdd={isEditable ? (files) => photos.add(item.id, files) : undefined}
+                    onRemove={(key) => {
+                      const photo = mine.find((p) => p.id === key)
+                      if (photo) photos.remove.mutate(photo, { onError: fail })
+                    }}
+                  />
+                )
+              }}
             />
             <ItemsTotal cents={q.total_cents} />
 

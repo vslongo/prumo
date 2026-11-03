@@ -7,12 +7,14 @@
 Upload de fotos/arquivos direto do navegador pro R2.
 
 ## Tabelas
-media (owner_type, owner_id, r2_key, status pending|uploaded|failed, size, mime)
+media (owner_type, owner_id, r2_key, thumb_key, status pending|uploaded|failed, size, mime). owner_type em uso: quote_signature, quote_item, service_order_item
 
 ## API pública (outros módulos só usam isto)
-- Actions: RequestUploadUrl, ConfirmUpload, FindLatestOwnerMedia. Pendente: GetSignedReadUrl, endpoints autenticados de foto, job de miniatura, limpeza de pending > 24 h
+- Actions: RequestUploadUrl (PHOTO_MIMES para fotos de item), ConfirmUpload, FindLatestOwnerMedia, FindOwnerMedia, ListOwnerPhotos (devolve PhotoData com URLs assinadas), GetSignedReadUrl (30 min), DeleteMedia. Internas: GenerateThumbnail, PurgeStalePendingMedia
+- Endpoints: o Media não tem rotas; quem é dono da foto (Quotes, ServiceOrders) expõe as rotas e decide quando pode
 - Eventos emitidos: MediaUploaded
-- Eventos ouvidos: –
+- Eventos ouvidos: MediaUploaded → GenerateThumbnailOnUpload (fila)
+- Agendado: PurgeStalePendingMediaJob diário 04:00 (routes/console.php), tenant a tenant via Tenancy ForEachTenant
 
 ## Estados
 pending|uploaded|failed
@@ -36,3 +38,4 @@ Cloudflare R2
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
 - 2026-10-27: mínimo implementado para a assinatura do orçamento. Disco `r2` (S3, bucket privado). Chave `<owner_type>/<uuid7>.<ext>` sem tenant_id (a URL vai para o cliente final). ConfirmUpload checa existência e tamanho no R2.
 - 2026-10-27: ConfirmUpload confere os bytes iniciais (PNG/JPEG/WebP/PDF) além do tamanho; arquivo inválido é apagado e vira `failed`.
+- 2026-11-03: fotos por item. Miniatura WebP de 320 px (GD) gerada em fila após o upload; leitura por URL assinada de 30 min; remoção apaga arquivo + miniatura; pending > 24 h limpo todo dia. Front: `shared/upload` comprime (≤1600 px, ~300 KB, WebP/JPEG) e sobe em fila local com retry (em memória; aviso ao sair da página com envio pendente).

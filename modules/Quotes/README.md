@@ -10,7 +10,7 @@ Orçamento versionado, envio, aprovação com assinatura e conversão automátic
 quotes, quote_items (technician_id, service_type_id, fields jsonb), quote_approvals
 
 ## API pública (outros módulos só usam isto)
-- Actions: CreateQuote, ListQuotes, AddQuoteItem, RemoveQuoteItem, SendQuote, OpenPublicQuote, RequestSignatureUpload, ApproveQuote, RejectQuote (interna: PrepareQuoteForEdit)
+- Actions: CreateQuote, ListQuotes, AddQuoteItem, RemoveQuoteItem, SendQuote, OpenPublicQuote, RequestSignatureUpload, ApproveQuote, RejectQuote, RequestQuoteItemPhotoUpload, ConfirmQuoteItemPhoto, RemoveQuoteItemPhoto, ListQuotePhotos (interna: PrepareQuoteForEdit)
 - Eventos emitidos: QuoteSent, QuoteApproved, QuoteRejected
 - Eventos ouvidos: –
 
@@ -36,3 +36,4 @@ Messaging (link), Media (assinatura)
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
 - 2026-10-27: implementado. Versão na mesma linha: editar enviado/visto incrementa `version`, volta a `draft` e anula o token. Token = 32 bytes hex, só o hash (sha256) no banco, 7 dias. Link público identifica itens por `position` (sem ids internos). Assinatura: `RequestSignatureUpload` → PUT direto no R2 → `ApproveQuote` confirma o PNG mais recente enviado após `sent_at`. `QuoteApproved` leva `ApprovedQuoteData` só com os itens aprovados. Reenviar (inclusive expirado) gera token novo.
 - 2026-10-27: revisão de segurança: edição/envio relêem o orçamento com `lockForUpdate` (não desfazem aprovação concorrente); aprovação recusa assinatura de envio anterior; link morre após `token_expires_at` em qualquer status; URL de assinatura limitada a 10/h por link.
+- 2026-11-03: fotos por item (`quote_item`). Rotas `GET quotes/{quote}/photos`, `POST quotes/{quote}/items/{item}/photos` (URL pré-assinada), `.../photos/{media}/confirm`, `DELETE .../photos/{media}`. Envio e remoção só com orçamento editável (draft|sent|viewed); foto não cria nova versão nem invalida o link. Confirmação vale em qualquer estado (upload em segundo plano pode terminar depois da decisão). Link público: `GET public/quotes/{token}/photos`, item pela posição, sem ids.

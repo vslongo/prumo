@@ -21,6 +21,8 @@ import { useToast } from '../../../shared/ui/Toast'
 import { useUsers } from '../../auth/api'
 import { ItemForm } from '../../items/components/ItemForm'
 import { ItemList, ItemsTotal } from '../../items/components/ItemList'
+import { ItemPhotos } from '../../items/components/ItemPhotos'
+import { useItemPhotos } from '../../items/hooks/useItemPhotos'
 import { useServiceTypes } from '../../serviceTypes/api'
 import { vehicleName } from '../../vehicles/api'
 import { serviceOrdersApi, type ServiceOrder } from '../api'
@@ -57,6 +59,12 @@ export function ServiceOrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   const order = useQuery({ queryKey: ['service-orders', id], queryFn: () => serviceOrdersApi.get(id) })
+  const photos = useItemPhotos(['service-orders', id, 'photos'], {
+    list: () => serviceOrdersApi.photos(id),
+    request: (itemId, mime, size) => serviceOrdersApi.requestPhotoUpload(id, itemId, mime, size),
+    confirm: (itemId, mediaId) => serviceOrdersApi.confirmPhoto(id, itemId, mediaId),
+    remove: (itemId, mediaId) => serviceOrdersApi.removePhoto(id, itemId, mediaId),
+  })
 
   const apply = (data: ServiceOrder) => {
     queryClient.setQueryData(['service-orders', id], data)
@@ -108,6 +116,7 @@ export function ServiceOrderDetailPage() {
   const items = o.items ?? []
   const next = serviceOrderNextStep[o.status]
   const acceptsItems = o.status === 'open' || o.status === 'in_progress'
+  const acceptsPhotos = o.status !== 'closed' && o.status !== 'canceled'
   const doneCount = items.filter((i) => i.done_at).length
   const kmOut = Number(mileageOut)
   const kmInvalid = mileageOut === '' || (o.mileage_in !== null && kmOut < o.mileage_in)
@@ -179,6 +188,20 @@ export function ServiceOrderDetailPage() {
                   </Button>
                 ) : null
               }
+              extra={(item) => {
+                const mine = photos.byItem(item.id)
+                return (
+                  <ItemPhotos
+                    uploadGroup={item.id}
+                    photos={mine.map((p) => ({ key: p.id, url: p.url, thumb_url: p.thumb_url, removable: acceptsPhotos && !p.from_quote }))}
+                    onAdd={acceptsPhotos ? (files) => photos.add(item.id, files) : undefined}
+                    onRemove={(key) => {
+                      const photo = mine.find((p) => p.id === key)
+                      if (photo) photos.remove.mutate(photo, { onError: fail })
+                    }}
+                  />
+                )
+              }}
             />
             {items.length ? <ItemsTotal cents={o.total_cents} /> : null}
 
