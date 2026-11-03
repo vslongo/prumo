@@ -10,7 +10,7 @@ Tenants, contexto atual e global scope (RLS do Postgres é etapa pós-core opcio
 tenants
 
 ## API pública (outros módulos só usam isto)
-- Actions: TenantContext::run/set/id, ResolvePublicToken, ForEachTenant (jobs agendados rodam tenant a tenant, sem tirar o global scope), CreateTenant (nasce `trialing`, `trial_ends_at` = hoje + `config/plans.php` trial_days)
+- Actions: TenantContext::run/set/id, ResolvePublicToken, ForEachTenant (jobs agendados rodam tenant a tenant, sem tirar o global scope), ChangeTenantStatus (Billing espelha o status da assinatura), ResolveWebhookOwner (acha o dono de um webhook autenticado pelo id externo, sem tenant no contexto), CreateTenant (nasce `trialing`, `trial_ends_at` = hoje + `config/plans.php` trial_days)
 - Eventos emitidos: TenantCreated
 - Eventos ouvidos: SubscriptionStatusChanged (Billing)
 
@@ -38,3 +38,4 @@ nenhuma
 - 2026-10-28: CreateTenant + evento TenantCreated (após commit). Chamada pelo SignUp do Auth.
 - 2026-10-28: ResolveTenant devolve 401 para usuário desativado com sessão aberta (vale para todas as rotas da oficina).
 - 2026-11-03: ForEachTenant para jobs agendados (primeiro uso: limpeza de mídia pendente).
+- 2026-11-04: ChangeTenantStatus e ResolveWebhookOwner (Billing). Middleware `tenant` virou grupo: ResolveTenant + Billing EnsureTenantCanWrite.

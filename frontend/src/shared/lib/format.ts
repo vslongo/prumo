@@ -48,3 +48,10 @@ export function formatQuantity(q: string | number): string {
 export function formatPlate(plate: string): string {
   return /^[A-Z]{3}\d{4}$/.test(plate) ? `${plate.slice(0, 3)}-${plate.slice(3)}` : plate
 }
+
+/** "2026-12-10" ou ISO com hora → "10/12/2026". Data sem hora é lida no fuso local (senão vira o dia anterior em Brasília). */
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return '—'
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  return date.format(ymd ? new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3])) : new Date(value))
+}

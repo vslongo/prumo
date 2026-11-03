@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ClipboardList, FileText, House, LogOut, Moon, Settings, Sun, Users, type LucideIcon } from 'lucide-react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { authApi, canManageSettings, roleLabel, useMe } from '../features/auth/api'
+import { BillingBanner } from '../features/billing/components/BillingBanner'
 import { useTheme } from '../shared/hooks/useTheme'
 import { Logo } from '../shared/ui/Logo'
 
@@ -112,6 +113,7 @@ export function AppLayout() {
         </Box>
 
         <Box component="main" sx={{ mx: 'auto', width: '100%', maxWidth: 1024, flex: 1, px: { xs: 2, lg: 4 }, pt: { xs: 2.5, lg: 4 }, pb: { xs: 14, lg: 6 } }}>
+          <BillingBanner isOwner={me.role === 'owner'} />
           <Outlet />
         </Box>
 

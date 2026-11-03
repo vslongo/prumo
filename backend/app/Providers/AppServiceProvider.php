@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Modules\Auth\Enums\UserRole;
 use App\Modules\Auth\Models\User;
 use App\Modules\Auth\Models\UserInvitation;
 use App\Modules\Auth\Policies\UserInvitationPolicy;
@@ -53,6 +54,8 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(ServiceType::class, ServiceTypePolicy::class);
         Gate::policy(Quote::class, QuotePolicy::class);
         Gate::policy(ServiceOrder::class, ServiceOrderPolicy::class);
+        // Assinatura do SaaS: só o dono (assina, troca de plano, cancela).
+        Gate::define('manage-billing', fn (User $user) => $user->is_active && $user->role === UserRole::Owner);
 
         Event::listen(QuoteApproved::class, CreateServiceOrderFromApprovedQuote::class);
         Event::listen(QuoteSent::class, QueueQuoteLinkMessage::class);

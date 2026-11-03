@@ -8,6 +8,8 @@ use App\Modules\Auth\Enums\UserRole;
 use App\Modules\Auth\Events\UserInvited;
 use App\Modules\Auth\Models\User;
 use App\Modules\Auth\Models\UserInvitation;
+use App\Modules\Billing\Actions\EnsureSeatAvailable;
+use App\Modules\Tenancy\TenantContext;
 
 /**
  * Gera link de convite (token ≥ 32 bytes) para o funcionário criar o próprio acesso.
@@ -21,9 +23,17 @@ final class InviteUser
 {
     public const LINK_TTL_DAYS = 7;
 
+    public function __construct(private readonly EnsureSeatAvailable $ensureSeat) {}
+
     /** @return SentInvitation */
     public function handle(User $invitedBy, string $name, UserRole $role): array
     {
+        // Limite do plano: usuários ativos + convites ainda válidos.
+        $this->ensureSeat->handle(
+            User::query()->where('tenant_id', TenantContext::idOrFail())->where('is_active', true)->count()
+            + UserInvitation::query()->whereNull('accepted_at')->where('expires_at', '>', now())->count(),
+        );
+
         $token = bin2hex(random_bytes(32));
 
         $invitation = UserInvitation::create([
