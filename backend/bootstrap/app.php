@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Billing\Http\Middleware\EnsureTenantCanWrite;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,7 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
-        $middleware->alias(['tenant' => ResolveTenant::class]);
+        // `tenant`: define a oficina do usuário logado e barra escrita em modo somente leitura (Billing).
+        $middleware->group('tenant', [ResolveTenant::class, EnsureTenantCanWrite::class]);
         // O tenant precisa estar no contexto antes do route model binding, senão o scope barra tudo.
         $middleware->prependToPriorityList(SubstituteBindings::class, ResolveTenant::class);
     })

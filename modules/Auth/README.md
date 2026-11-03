@@ -42,3 +42,4 @@ nenhuma
 - 2026-10-28: só o dono gerencia admins (trocar papel, desativar) e só ele promove ou convida admin; admin gerencia técnico e balcão.
 - 2026-10-28: convite guarda também o token cru criptografado (`token`, cast encrypted, oculto no JSON do model) para o dono copiar o link de novo em "Convites pendentes"; a busca do link segue pelo `token_hash`.
 - 2026-10-28: convite de admin só aparece e só é cancelado pelo dono (o link dá o papel a quem abrir; ver o link = poder criar admin).
+- 2026-11-04: InviteUser, AcceptInvitation e ReactivateUser respeitam o limite de usuários do plano (Billing EnsureSeatAvailable). Convite pendente ocupa lugar; no trial não há limite.
