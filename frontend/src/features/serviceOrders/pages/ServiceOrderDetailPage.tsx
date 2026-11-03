@@ -25,7 +25,7 @@ import { ItemPhotos } from '../../items/components/ItemPhotos'
 import { useItemPhotos } from '../../items/hooks/useItemPhotos'
 import { useServiceTypes } from '../../serviceTypes/api'
 import { vehicleName } from '../../vehicles/api'
-import { serviceOrdersApi, type ServiceOrder } from '../api'
+import { serviceOrdersApi, serviceOrdersPhotoApi, type ServiceOrder } from '../api'
 
 const steps: ServiceOrderStatus[] = ['open', 'in_progress', 'ready', 'delivered', 'closed']
 
@@ -59,12 +59,7 @@ export function ServiceOrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   const order = useQuery({ queryKey: ['service-orders', id], queryFn: () => serviceOrdersApi.get(id) })
-  const photos = useItemPhotos(['service-orders', id, 'photos'], {
-    list: () => serviceOrdersApi.photos(id),
-    request: (itemId, mime, size) => serviceOrdersApi.requestPhotoUpload(id, itemId, mime, size),
-    confirm: (itemId, mediaId) => serviceOrdersApi.confirmPhoto(id, itemId, mediaId),
-    remove: (itemId, mediaId) => serviceOrdersApi.removePhoto(id, itemId, mediaId),
-  })
+  const photos = useItemPhotos(['service-orders', id, 'photos'], serviceOrdersPhotoApi(id))
 
   const apply = (data: ServiceOrder) => {
     queryClient.setQueryData(['service-orders', id], data)

@@ -2,6 +2,7 @@ import { http, type Paginated, type Wrapped } from '../../shared/lib/http'
 import type { QuoteStatus } from '../../shared/lib/status'
 import type { Item, ItemInput, ItemPhoto } from '../items/types'
 import type { UploadTicket } from '../../shared/upload/queue'
+import type { PhotoApi } from '../items/hooks/useItemPhotos'
 import type { VehicleSummary } from '../vehicles/api'
 
 export type Quote = {
@@ -43,3 +44,11 @@ export const quotesApi = {
   confirmPhoto: (id: string, itemId: string, mediaId: string) => http.post<void>(`/api/quotes/${id}/items/${itemId}/photos/${mediaId}/confirm`),
   removePhoto: (id: string, itemId: string, mediaId: string) => http.delete<void>(`/api/quotes/${id}/items/${itemId}/photos/${mediaId}`),
 }
+
+/** Fotos dos itens deste orçamento (lista, envio pela fila, remoção). */
+export const quotesPhotoApi = (id: string): PhotoApi => ({
+  list: () => quotesApi.photos(id),
+  request: (itemId, mime, size) => quotesApi.requestPhotoUpload(id, itemId, mime, size),
+  confirm: (itemId, mediaId) => quotesApi.confirmPhoto(id, itemId, mediaId),
+  remove: (itemId, mediaId) => quotesApi.removePhoto(id, itemId, mediaId),
+})

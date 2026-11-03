@@ -2,6 +2,7 @@ import { http, type Paginated, type Wrapped } from '../../shared/lib/http'
 import type { ServiceOrderStatus } from '../../shared/lib/status'
 import type { Item, ItemInput, ItemPhoto } from '../items/types'
 import type { UploadTicket } from '../../shared/upload/queue'
+import type { PhotoApi } from '../items/hooks/useItemPhotos'
 import type { VehicleSummary } from '../vehicles/api'
 
 export type ServiceOrderItem = Item & { quote_item_id: string | null; done_at: string | null; done_by: string | null }
@@ -52,3 +53,11 @@ export const serviceOrdersApi = {
   confirmPhoto: (id: string, itemId: string, mediaId: string) => http.post<void>(`/api/service-orders/${id}/items/${itemId}/photos/${mediaId}/confirm`),
   removePhoto: (id: string, itemId: string, mediaId: string) => http.delete<void>(`/api/service-orders/${id}/items/${itemId}/photos/${mediaId}`),
 }
+
+/** Fotos dos itens deste OS (lista, envio pela fila, remoção). */
+export const serviceOrdersPhotoApi = (id: string): PhotoApi => ({
+  list: () => serviceOrdersApi.photos(id),
+  request: (itemId, mime, size) => serviceOrdersApi.requestPhotoUpload(id, itemId, mime, size),
+  confirm: (itemId, mediaId) => serviceOrdersApi.confirmPhoto(id, itemId, mediaId),
+  remove: (itemId, mediaId) => serviceOrdersApi.removePhoto(id, itemId, mediaId),
+})

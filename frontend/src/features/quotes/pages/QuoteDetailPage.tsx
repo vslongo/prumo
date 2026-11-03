@@ -24,7 +24,7 @@ import { useItemPhotos } from '../../items/hooks/useItemPhotos'
 import { serviceOrdersApi } from '../../serviceOrders/api'
 import { useServiceTypes } from '../../serviceTypes/api'
 import { vehicleName } from '../../vehicles/api'
-import { quotesApi, type SentQuote } from '../api'
+import { quotesApi, quotesPhotoApi, type SentQuote } from '../api'
 
 const editable = ['draft', 'sent', 'viewed']
 const sendable = ['draft', 'sent', 'viewed', 'expired']
@@ -40,12 +40,7 @@ export function QuoteDetailPage() {
   const [actionError, setActionError] = useState<string | null>(null)
 
   const quote = useQuery({ queryKey: ['quotes', id], queryFn: () => quotesApi.get(id) })
-  const photos = useItemPhotos(['quotes', id, 'photos'], {
-    list: () => quotesApi.photos(id),
-    request: (itemId, mime, size) => quotesApi.requestPhotoUpload(id, itemId, mime, size),
-    confirm: (itemId, mediaId) => quotesApi.confirmPhoto(id, itemId, mediaId),
-    remove: (itemId, mediaId) => quotesApi.removePhoto(id, itemId, mediaId),
-  })
+  const photos = useItemPhotos(['quotes', id, 'photos'], quotesPhotoApi(id))
   const order = useQuery({
     queryKey: ['service-orders', 'by-quote', id],
     queryFn: async () => (await serviceOrdersApi.list({ quoteId: id })).data[0] ?? null,

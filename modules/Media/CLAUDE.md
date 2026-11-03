@@ -39,3 +39,4 @@ Cloudflare R2
 - 2026-10-27: mínimo implementado para a assinatura do orçamento. Disco `r2` (S3, bucket privado). Chave `<owner_type>/<uuid7>.<ext>` sem tenant_id (a URL vai para o cliente final). ConfirmUpload checa existência e tamanho no R2.
 - 2026-10-27: ConfirmUpload confere os bytes iniciais (PNG/JPEG/WebP/PDF) além do tamanho; arquivo inválido é apagado e vira `failed`.
 - 2026-11-03: fotos por item. Miniatura WebP de 320 px (GD) gerada em fila após o upload; leitura por URL assinada de 30 min; remoção apaga arquivo + miniatura; pending > 24 h limpo todo dia. Front: `shared/upload` comprime (≤1600 px, ~300 KB, WebP/JPEG) e sobe em fila local com retry (em memória; aviso ao sair da página com envio pendente).
+- 2026-11-03: foto já no rascunho (novo orçamento / nova OS): fica no navegador e entra na fila logo depois de salvar, ligada ao item pela posição. Salvar não espera a foto.

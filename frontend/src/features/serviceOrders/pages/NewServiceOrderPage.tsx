@@ -4,7 +4,8 @@ import { BackLink } from '../../../shared/ui/BackLink'
 import { PageHeader } from '../../../shared/ui/States'
 import { useToast } from '../../../shared/ui/Toast'
 import { DraftEditor } from '../../items/components/DraftEditor'
-import { serviceOrdersApi } from '../api'
+import { enqueueItemPhotos } from '../../items/hooks/useItemPhotos'
+import { serviceOrdersApi, serviceOrdersPhotoApi } from '../api'
 
 /** OS direta, sem orçamento. */
 export function NewServiceOrderPage() {
@@ -22,6 +23,9 @@ export function NewServiceOrderPage() {
         onSubmit={async (d) => {
           const order = await serviceOrdersApi.create({ customer_id: d.customerId, vehicle_id: d.vehicleId, mileage_in: d.mileage, notes: d.notes || undefined, items: d.items })
           queryClient.invalidateQueries({ queryKey: ['service-orders'] })
+          // Itens voltam na ordem enviada (posição 1..n): cada um leva as fotos tiradas no rascunho.
+          const items = [...(order.items ?? [])].sort((a, b) => a.position - b.position)
+          items.forEach((item, i) => enqueueItemPhotos(queryClient, ['service-orders', order.id, 'photos'], serviceOrdersPhotoApi(order.id), item.id, d.photos[i] ?? []))
           toast(`OS ${order.number} aberta.`)
           navigate(`/os/${order.id}`)
         }}
