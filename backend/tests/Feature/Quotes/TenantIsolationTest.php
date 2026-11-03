@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use App\Modules\Auth\Models\User;
+use App\Modules\Media\Actions\RequestUploadUrl;
 use App\Modules\Quotes\Models\Quote;
 use App\Modules\Quotes\Models\QuoteItem;
 use App\Modules\Tenancy\TenantContext;
+use Illuminate\Support\Facades\Storage;
 
 /** Orçamento com um item em outro tenant. */
 function foreignQuote(): Quote
@@ -53,4 +55,19 @@ it('não cria orçamento para cliente/veículo de outro tenant', function () {
 
     $this->postJson('/api/quotes', ['customer_id' => $foreign->customer_id, 'vehicle_id' => $foreign->id])
         ->assertUnprocessable()->assertJsonValidationErrors(['customer_id', 'vehicle_id']);
+});
+
+it('não lista, envia, confirma nem apaga foto de item de orçamento de outro tenant', function () {
+    Storage::fake('r2');
+    actingAsRole();
+    $foreign = foreignQuote();
+    $item = TenantContext::run($foreign->tenant_id, fn () => $foreign->items()->firstOrFail());
+    $mediaId = TenantContext::run($foreign->tenant_id, fn () => app(RequestUploadUrl::class)
+        ->handle('quote_item', $item->id, 'image/jpeg', 1000)['media']->id);
+    $base = "/api/quotes/{$foreign->id}/items/{$item->id}/photos";
+
+    $this->getJson("/api/quotes/{$foreign->id}/photos")->assertNotFound();
+    $this->postJson($base, ['mime' => 'image/jpeg', 'size' => 1000])->assertNotFound();
+    $this->postJson("{$base}/{$mediaId}/confirm")->assertNotFound();
+    $this->deleteJson("{$base}/{$mediaId}")->assertNotFound();
 });

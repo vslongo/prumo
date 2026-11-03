@@ -1,6 +1,7 @@
 import { http, type Paginated, type Wrapped } from '../../shared/lib/http'
 import type { ServiceOrderStatus } from '../../shared/lib/status'
-import type { Item, ItemInput } from '../items/types'
+import type { Item, ItemInput, ItemPhoto } from '../items/types'
+import type { UploadTicket } from '../../shared/upload/queue'
 import type { VehicleSummary } from '../vehicles/api'
 
 export type ServiceOrderItem = Item & { quote_item_id: string | null; done_at: string | null; done_by: string | null }
@@ -45,4 +46,9 @@ export const serviceOrdersApi = {
   markDone: async (id: string, itemId: string) => (await http.post<Wrapped<ServiceOrder>>(`/api/service-orders/${id}/items/${itemId}/done`)).data,
   transition: async (id: string, status: ServiceOrderStatus) => (await http.post<Wrapped<ServiceOrder>>(`/api/service-orders/${id}/transition`, { status })).data,
   close: async (id: string, mileageOut: number) => (await http.post<Wrapped<ServiceOrder>>(`/api/service-orders/${id}/close`, { mileage_out: mileageOut })).data,
+  photos: async (id: string) => (await http.get<Wrapped<ItemPhoto[]>>(`/api/service-orders/${id}/photos`)).data,
+  requestPhotoUpload: async (id: string, itemId: string, mime: string, size: number) =>
+    (await http.post<Wrapped<UploadTicket>>(`/api/service-orders/${id}/items/${itemId}/photos`, { mime, size })).data,
+  confirmPhoto: (id: string, itemId: string, mediaId: string) => http.post<void>(`/api/service-orders/${id}/items/${itemId}/photos/${mediaId}/confirm`),
+  removePhoto: (id: string, itemId: string, mediaId: string) => http.delete<void>(`/api/service-orders/${id}/items/${itemId}/photos/${mediaId}`),
 }

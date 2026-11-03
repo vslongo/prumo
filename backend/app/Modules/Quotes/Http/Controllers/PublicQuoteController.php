@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Quotes\Http\Controllers;
 
 use App\Modules\Quotes\Actions\ApproveQuote;
+use App\Modules\Quotes\Actions\ListQuotePhotos;
 use App\Modules\Quotes\Actions\OpenPublicQuote;
 use App\Modules\Quotes\Actions\RejectQuote;
 use App\Modules\Quotes\Actions\RequestSignatureUpload;
@@ -23,6 +24,11 @@ final class PublicQuoteController
     public function show(Request $request, OpenPublicQuote $open): PublicQuoteResource
     {
         return new PublicQuoteResource($open->handle($this->quote($request))->load(['items', 'customer', 'vehicle', 'tenant']));
+    }
+
+    public function photos(Request $request, ListQuotePhotos $list): JsonResponse
+    {
+        return response()->json(['data' => $list->handle($this->quote($request), public: true)]);
     }
 
     public function signatureUploadUrl(SignatureUploadRequest $request, RequestSignatureUpload $requestUpload): JsonResponse

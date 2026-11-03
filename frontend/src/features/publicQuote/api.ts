@@ -23,12 +23,15 @@ export type PublicQuote = {
   items: PublicQuoteItem[]
 }
 
+export type PublicQuotePhoto = { position: number; url: string; thumb_url: string }
+
 type UploadUrl = { url: string; headers: Record<string, string | string[]>; expires_at: string }
 
 const base = (token: string) => `/api/public/quotes/${token}`
 
 export const publicQuoteApi = {
   get: async (token: string) => (await http.get<Wrapped<PublicQuote>>(base(token))).data,
+  photos: async (token: string) => (await http.get<Wrapped<PublicQuotePhoto[]>>(`${base(token)}/photos`)).data,
 
   /** Assinatura vai direto para o storage pela URL pré-assinada; o backend só confere depois. */
   async uploadSignature(token: string, png: Blob): Promise<void> {
