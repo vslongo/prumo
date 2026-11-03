@@ -88,3 +88,27 @@ test('cliente vê a foto do item no link de aprovação', async ({ page, browser
   await expect(customer.getByRole('list', { name: 'Fotos de Disco de freio' }).getByRole('button', { name: 'Ver foto' })).toBeVisible()
   await customer.close()
 })
+
+test('tira a foto ainda montando o orçamento; sobe depois de salvar, no item certo', async ({ page }) => {
+  await page.goto('/orcamentos/novo')
+  await pickCustomerAndVehicle(page, 'Ana Paula Ribeiro', /QWE-1234/)
+  await addProduct(page, 'Pastilha dianteira', '1', '150', 'Rafael Souza')
+  await addProduct(page, 'Fluido de freio', '1', '40', 'Rafael Souza')
+
+  // Foto só no segundo item, antes de existir orçamento.
+  await page.getByLabel('Adicionar foto').nth(1).setInputFiles({ name: 'fluido.jpg', mimeType: 'image/jpeg', buffer: await cameraJpeg(page) })
+  await expect(page.getByRole('button', { name: 'Ver foto' })).toHaveCount(1)
+
+  await page.getByRole('button', { name: 'Salvar orçamento' }).click()
+  await expect(page).toHaveURL(/\/orcamentos\/[0-9a-f-]{36}$/)
+  // Já na tela do orçamento salvo (o rascunho fica visível um instante durante a navegação).
+  await expect(page.getByRole('button', { name: 'Gerar link de aprovação' })).toBeVisible()
+
+  const photos = page.getByRole('list', { name: 'Fotos do item' })
+  await expect(photos.nth(1).getByRole('button', { name: 'Ver foto' })).toBeVisible()
+  await expect(photos.nth(0).getByRole('button', { name: 'Ver foto' })).toHaveCount(0)
+  await expect(page.getByRole('listitem', { name: 'Enviando foto' })).toHaveCount(0)
+
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Ver foto' })).toHaveCount(1)
+})

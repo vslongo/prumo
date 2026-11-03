@@ -2,7 +2,7 @@ import Box from '@mui/material/Box'
 import Skeleton from '@mui/material/Skeleton'
 import Stack from '@mui/material/Stack'
 import { Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ApiError } from '../../../shared/lib/http'
 import { Button } from '../../../shared/ui/Button'
 import { TextAreaField, TextField } from '../../../shared/ui/Field'
@@ -14,8 +14,13 @@ import { useServiceTypes } from '../../serviceTypes/api'
 import type { ItemInput } from '../types'
 import { ItemForm } from './ItemForm'
 import { ItemList, ItemsTotal } from './ItemList'
+import { ItemPhotos } from './ItemPhotos'
 
-export type Draft = { customerId: string; vehicleId: string; mileage: number | null; notes: string; items: ItemInput[] }
+/** `photos[i]` são as fotos do `items[i]`: sobem depois de salvar, sem atrasar o salvamento. */
+export type Draft = { customerId: string; vehicleId: string; mileage: number | null; notes: string; items: ItemInput[]; photos: File[][] }
+
+type DraftPhoto = { key: string; file: File; url: string }
+type DraftItem = ItemInput & { photos: DraftPhoto[] }
 
 type Props = {
   mileageLabel: string
@@ -33,9 +38,28 @@ export function DraftEditor({ mileageLabel, submitLabel, submittingLabel, requir
   const [selection, setSelection] = useState<Selection | null>(null)
   const [mileage, setMileage] = useState('')
   const [notes, setNotes] = useState('')
-  const [items, setItems] = useState<ItemInput[]>([])
+  const [items, setItems] = useState<DraftItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  // Prévias locais (object URL): liberadas ao sair da tela.
+  const previews = useRef(new Set<string>())
+  useEffect(() => () => previews.current.forEach((u) => URL.revokeObjectURL(u)), [])
+
+  const addPhotos = (index: number, files: File[]) => {
+    const added = files.map((file) => {
+      const url = URL.createObjectURL(file)
+      previews.current.add(url)
+      return { key: url, file, url }
+    })
+    setItems((all) => all.map((it, i) => (i === index ? { ...it, photos: [...it.photos, ...added] } : it)))
+  }
+
+  const removePhoto = (index: number, key: string) => {
+    URL.revokeObjectURL(key)
+    previews.current.delete(key)
+    setItems((all) => all.map((it, i) => (i === index ? { ...it, photos: it.photos.filter((p) => p.key !== key) } : it)))
+  }
 
   const total = items.reduce((s, i) => s + Math.round(i.unit_price_cents * Number(i.quantity)), 0)
   const mileageNumber = mileage.trim() === '' ? null : Number(mileage.replace(/\D/g, ''))
@@ -46,7 +70,14 @@ export function DraftEditor({ mileageLabel, submitLabel, submittingLabel, requir
     if (requireItems && items.length === 0) return setError('Adicione ao menos um item.')
     setSaving(true)
     try {
-      await onSubmit({ customerId: selection.customer.id, vehicleId: selection.vehicle.id, mileage: mileageNumber, notes: notes.trim(), items })
+      await onSubmit({
+        customerId: selection.customer.id,
+        vehicleId: selection.vehicle.id,
+        mileage: mileageNumber,
+        notes: notes.trim(),
+        items: items.map(({ photos: _photos, ...item }) => item),
+        photos: items.map((it) => it.photos.map((p) => p.file)),
+      })
     } catch (e) {
       setError(e instanceof ApiError ? (Object.values(e.errors)[0]?.[0] ?? e.message) : 'Não deu para salvar. Tente de novo.')
       setSaving(false)
@@ -79,6 +110,16 @@ export function DraftEditor({ mileageLabel, submitLabel, submittingLabel, requir
                     Remover
                   </Button>
                 )}
+                extra={(item) => {
+                  const index = items.indexOf(item)
+                  return (
+                    <ItemPhotos
+                      photos={item.photos.map((p) => ({ key: p.key, url: p.url, thumb_url: p.url, removable: true }))}
+                      onAdd={(files) => addPhotos(index, files)}
+                      onRemove={(key) => removePhoto(index, key)}
+                    />
+                  )
+                }}
               />
             </Box>
           ) : null}
@@ -88,7 +129,7 @@ export function DraftEditor({ mileageLabel, submitLabel, submittingLabel, requir
             <ErrorBox message="Não deu para carregar técnicos e tipos de serviço." onRetry={() => (users.refetch(), types.refetch())} />
           ) : (
             <Box sx={items.length > 0 ? { borderTop: 1, borderColor: 'divider', pt: 2.5 } : undefined}>
-              <ItemForm serviceTypes={types.data ?? []} users={users.data ?? []} defaultTechnicianId={me?.id} onSubmit={(item) => setItems((all) => [...all, item])} />
+              <ItemForm serviceTypes={types.data ?? []} users={users.data ?? []} defaultTechnicianId={me?.id} onSubmit={(item) => setItems((all) => [...all, { ...item, photos: [] }])} />
             </Box>
           )}
         </Card>
