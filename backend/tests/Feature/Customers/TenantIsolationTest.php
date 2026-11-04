@@ -21,3 +21,14 @@ it('ignora tenant_id enviado no cadastro', function () {
 
     expect(Customer::findOrFail($id)->tenant_id)->toBe($me->tenant_id);
 });
+
+it('não edita, exporta nem anonimiza cliente de outro tenant', function () {
+    actingAsRole();
+    $other = inOtherTenant(fn () => Customer::factory()->create(['name' => 'Cliente da outra']));
+
+    $this->patchJson("/api/customers/{$other->id}", ['name' => 'X'])->assertNotFound();
+    $this->getJson("/api/customers/{$other->id}/export")->assertNotFound();
+    $this->postJson("/api/customers/{$other->id}/anonymize")->assertNotFound();
+
+    expect(inOtherTenant(fn () => Customer::query()->find($other->id)?->name, $other->tenant))->toBe('Cliente da outra');
+});

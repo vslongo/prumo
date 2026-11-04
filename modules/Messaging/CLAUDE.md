@@ -10,11 +10,11 @@ Envio e log de WhatsApp pela API oficial.
 messages (templates ficam no enum `MessageTemplate`; tabela própria só se precisar editar template sem deploy)
 
 ## API pública (outros módulos só usam isto)
-- Actions: QueueWhatsappMessage, HandleDeliveryStatus, ResolveWhatsappSender, FindConsentingRecipient
+- Actions: QueueWhatsappMessage, HandleDeliveryStatus, ResolveWhatsappSender, FindConsentingRecipient, ExportCustomerMessages
 - Rota: POST /api/internal/whatsapp/status (só o worker, HMAC `X-Signature: sha256=...`)
 - Fila para o worker: lista Redis `whatsapp:outbound` com `{tenant_id, message_id, template, language, to, params, sender_phone_number_id}`
 - Eventos emitidos: nenhum por enquanto
-- Eventos ouvidos: QuoteSent, ServiceOrderStatusChanged (ready)
+- Eventos ouvidos: QuoteSent, ServiceOrderStatusChanged (ready), CustomerAnonymized (apaga `to` e `params` das mensagens do cliente)
 
 ## Estados
 queued|sent|delivered|read|failed
@@ -41,4 +41,5 @@ WhatsApp Cloud API
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
 - 2026-10-28: módulo criado no backend: tabela messages, QueueWhatsappMessage, job para a fila do worker, callback de status assinado e listeners de QuoteSent e OS pronta. Worker Node e webhook da Meta ficam para o próximo PR.
+- 2026-11-04: ExportCustomerMessages (exportação LGPD) e listener ScrubAnonymizedCustomerMessages (CustomerAnonymized → `to` vazio e `params` vazios; linha e status ficam).
 - 2026-11-04: worker Node (`worker-whatsapp/`): consome a fila com lista de processamento, envia template pela Cloud API, repete erro temporário, recebe o webhook da Meta (status por `biz_opaque_callback_data` = `tenant_id:message_id`) e devolve tudo pelo callback assinado.
