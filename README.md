@@ -204,6 +204,12 @@ Backend:
 docker compose run --rm app php artisan test
 ```
 
+Cobertura de `Actions/` e `Enums/` (o CI exige 90%). Na primeira vez depois desta mudança, recrie a imagem com `docker compose build app`:
+
+```bash
+docker compose run --rm app php -d extension=pcov.so vendor/bin/pest --coverage --min=90
+```
+
 Frontend (dentro de `frontend/`):
 
 ```bash

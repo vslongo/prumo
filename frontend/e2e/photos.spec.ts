@@ -76,9 +76,13 @@ test('cliente vê a foto do item no link de aprovação', async ({ page, browser
   await addProduct(page, 'Disco de freio', '2', '180', 'Rafael Souza')
   await page.getByRole('button', { name: 'Salvar orçamento' }).click()
   await expect(page).toHaveURL(/\/orcamentos\/[0-9a-f-]{36}$/)
+  // Já na tela do orçamento salvo: a URL muda antes de o rascunho sair da tela, e a foto anexada
+  // nele seria descartada (mostra a prévia local como "Ver foto" e nunca sobe).
+  await expect(page.getByRole('button', { name: 'Gerar link de aprovação' })).toBeVisible()
 
   await page.getByLabel('Adicionar foto').setInputFiles({ name: 'disco.jpg', mimeType: 'image/jpeg', buffer: await cameraJpeg(page) })
   await expect(page.getByRole('button', { name: 'Ver foto' })).toBeVisible()
+  await expect(page.getByRole('listitem', { name: 'Enviando foto' })).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Gerar link de aprovação' }).click()
   const link = await page.getByLabel('Link de aprovação').inputValue()
