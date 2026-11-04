@@ -21,6 +21,8 @@ final class CustomerResource extends JsonResource
             'phone' => $this->phone,
             'document' => $this->document,
             'consent_whatsapp_at' => $this->consent_whatsapp_at?->toIso8601String(),
+            'consent_whatsapp_source' => $this->consent_whatsapp_source,
+            'anonymized_at' => $this->anonymized_at?->toIso8601String(),
         ];
     }
 }

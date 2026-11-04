@@ -9,12 +9,14 @@ use App\Modules\Auth\Models\User;
 use App\Modules\Auth\Models\UserInvitation;
 use App\Modules\Auth\Policies\UserInvitationPolicy;
 use App\Modules\Auth\Policies\UserPolicy;
+use App\Modules\Customers\Events\CustomerAnonymized;
 use App\Modules\Customers\Models\Customer;
 use App\Modules\Customers\Policies\CustomerPolicy;
 use App\Modules\Media\Events\MediaUploaded;
 use App\Modules\Media\Listeners\GenerateThumbnailOnUpload;
 use App\Modules\Messaging\Listeners\QueueQuoteLinkMessage;
 use App\Modules\Messaging\Listeners\QueueServiceOrderReadyMessage;
+use App\Modules\Messaging\Listeners\ScrubAnonymizedCustomerMessages;
 use App\Modules\Quotes\Events\QuoteApproved;
 use App\Modules\Quotes\Events\QuoteSent;
 use App\Modules\Quotes\Models\Quote;
@@ -61,6 +63,7 @@ final class AppServiceProvider extends ServiceProvider
         Event::listen(QuoteSent::class, QueueQuoteLinkMessage::class);
         Event::listen(ServiceOrderStatusChanged::class, QueueServiceOrderReadyMessage::class);
         Event::listen(MediaUploaded::class, GenerateThumbnailOnUpload::class);
+        Event::listen(CustomerAnonymized::class, ScrubAnonymizedCustomerMessages::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip()));
         // Cada cadastro cria um tenant: limite apertado por IP contra criação em massa.

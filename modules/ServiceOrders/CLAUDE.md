@@ -10,7 +10,7 @@ OS: centro dos dados (cliente, veículo, itens, valores, técnicos, dados do or�
 service_orders (origin from_quote|direct, quote_id), service_order_items (technician_id, service_type_id, fields jsonb, done_at)
 
 ## API pública (outros módulos só usam isto)
-- Actions: OpenServiceOrder (direta), ListServiceOrders, ConvertApprovedQuoteToServiceOrder, AddServiceOrderItem, MarkItemDone, TransitionServiceOrder, CloseServiceOrder, RequestServiceOrderItemPhotoUpload, ConfirmServiceOrderItemPhoto, RemoveServiceOrderItemPhoto, ListServiceOrderPhotos (interna: NextServiceOrderNumber)
+- Actions: OpenServiceOrder (direta), ListServiceOrders, ConvertApprovedQuoteToServiceOrder, AddServiceOrderItem, MarkItemDone, TransitionServiceOrder, CloseServiceOrder, RequestServiceOrderItemPhotoUpload, ConfirmServiceOrderItemPhoto, RemoveServiceOrderItemPhoto, ListServiceOrderPhotos, ExportCustomerServiceOrders (interna: NextServiceOrderNumber)
 - Eventos emitidos: ServiceOrderOpened, ServiceOrderStatusChanged, ServiceOrderClosed
 - Eventos ouvidos: QuoteApproved
 
@@ -38,3 +38,4 @@ Messaging (OS pronta), Media (fotos)
 - 2026-10-27: listener `CreateServiceOrderFromApprovedQuote` é `ShouldQueueAfterCommit`.
 - 2026-10-27: ListServiceOrders aceita `quote_id` (achar a OS gerada por um orçamento) e devolve resumo de cliente/veículo.
 - 2026-11-03: fotos por item (`service_order_item`), mesmas rotas do orçamento sob `service-orders/{serviceOrder}`. Aceita foto até `delivered` (`acceptsPhotos`: não closed/canceled). A lista inclui as fotos do item de orçamento de origem (via `quote_item_id`, `from_quote: true`), que não são removidas pela OS.
+- 2026-11-04: ExportCustomerServiceOrders para a exportação LGPD do cliente.
