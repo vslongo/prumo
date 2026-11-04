@@ -1,7 +1,38 @@
-# Prumo — gestão para oficinas mecânicas
+<!-- HEADER -->
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:111413,50:0a433b,100:0e5a4f&height=220&section=header&text=prumo&fontSize=72&fontColor=ebece8&animation=fadeIn&fontAlignY=36&desc=Sua%20oficina%20no%20prumo.&descAlignY=58&descSize=20" width="100%" alt="Prumo" />
+</p>
+
+<p align="center">
+  <img src="docs/brand/logo-mark.svg" width="56" alt="Símbolo do Prumo" />
+</p>
+
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=IBM+Plex+Sans&weight=600&size=22&pause=1200&color=F08A3A&center=true&vCenter=true&width=680&lines=Or%C3%A7amento+no+celular.;Aprova%C3%A7%C3%A3o+com+assinatura+no+WhatsApp.;OS+na+hora.;Feito+pra+oficina+de+2+a+10+pessoas." alt="Orçamento no celular. Aprovação com assinatura no WhatsApp. OS na hora." />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel_12-0e5a4f?style=for-the-badge&logo=laravel&logoColor=white" />
+  <img src="https://img.shields.io/badge/React_18-0e5a4f?style=for-the-badge&logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL_16-0e5a4f?style=for-the-badge&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/WhatsApp_Cloud_API-0e5a4f?style=for-the-badge&logo=whatsapp&logoColor=white" />
+  <img src="https://img.shields.io/badge/fase-core-e8690c?style=for-the-badge" />
+</p>
+
+<p align="center">
+  <img src="docs/brand/readme-flow.svg" width="100%" alt="Fluxo: orçamento, link no WhatsApp, cliente assina, OS criada" />
+</p>
 
 Oi! Este é o repositório do **Prumo**, nosso SaaS para oficinas mecânicas pequenas (2 a 10 pessoas).
 Este README explica, sem enrolação, **o que é o projeto** e **como colocar ele pra rodar no seu computador**.
+
+---
+
+## 🧰 Stack
+
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=php,laravel,postgres,redis,react,ts,vite,materialui,nodejs,docker,cloudflare,sentry&theme=dark" />
+</p>
 
 ---
 
@@ -261,3 +292,8 @@ docker compose logs -f app queue
 - [`frontend/README.md`](frontend/README.md) — estrutura do app.
 - [`modules/`](modules/) — explicação de cada módulo (Orçamentos, OS, Clientes...).
 - [`docs/brand/BRAND.md`](docs/brand/BRAND.md) — a marca Prumo (cores, voz, logo).
+
+<!-- FOOTER -->
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0e5a4f,50:0a433b,100:111413&height=120&section=footer" width="100%" />
+</p>
