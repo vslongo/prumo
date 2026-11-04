@@ -2,7 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import { ApiError, ensureCsrf, http, type Wrapped } from '../../shared/lib/http'
 
 export type Role = 'owner' | 'admin' | 'technician' | 'front'
-export type User = { id: string; name: string; email: string; role: Role; is_active: boolean; workshop?: string }
+/** `required_from`: desde quando o 2FA é obrigatório (só dono sem 2FA); `blocked`: passou do prazo, o app só deixa ativar. */
+export type TwoFactorState = { enabled: boolean; required_from: string | null; blocked: boolean }
+export type User = { id: string; name: string; email: string; role: Role; is_active: boolean; workshop?: string; two_factor: TwoFactorState }
+export type LoginResult = { twoFactor: true } | { twoFactor: false; user: User }
+export type TwoFactorSetup = { secret: string; otpauth_url: string }
 
 export type SignUpInput = { workshop_name: string; name: string; email: string; password: string }
 export type InvitableRole = Exclude<Role, 'owner'>
@@ -14,10 +18,16 @@ export type PendingInvitation = { id: string; name: string; role: InvitableRole;
 export const roleLabel: Record<Role, string> = { owner: 'Dono', admin: 'Administrador', technician: 'Técnico', front: 'Balcão' }
 
 export const authApi = {
-  async login(email: string, password: string) {
+  /** Com 2FA ativo a senha certa ainda não entra: devolve `twoFactor: true` e o login termina em `loginTwoFactor`. */
+  async login(email: string, password: string): Promise<LoginResult> {
     await ensureCsrf(true)
-    return (await http.post<Wrapped<User>>('/api/login', { email, password })).data
+    const res = await http.post<Wrapped<User> | { two_factor: true }>('/api/login', { email, password })
+    return 'two_factor' in res ? { twoFactor: true } : { twoFactor: false, user: res.data }
   },
+  loginTwoFactor: async (input: { code: string } | { recovery_code: string }) => (await http.post<Wrapped<User>>('/api/login/two-factor', input)).data,
+  startTwoFactor: async () => (await http.post<Wrapped<TwoFactorSetup>>('/api/two-factor')).data,
+  confirmTwoFactor: async (code: string) => (await http.post<Wrapped<{ recovery_codes: string[] }>>('/api/two-factor/confirm', { code })).data.recovery_codes,
+  disableTwoFactor: (password: string) => http.delete<void>('/api/two-factor', { password }),
   async signUp(input: SignUpInput) {
     await ensureCsrf(true)
     return (await http.post<Wrapped<User>>('/api/signup', input)).data

@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import { AcceptInvitationPage } from '../features/auth/pages/AcceptInvitationPage'
 import { LoginPage } from '../features/auth/pages/LoginPage'
+import { SecurityPage } from '../features/auth/pages/SecurityPage'
 import { SignUpPage } from '../features/auth/pages/SignUpPage'
 import { CustomerDetailPage } from '../features/customers/pages/CustomerDetailPage'
 import { CustomersPage } from '../features/customers/pages/CustomersPage'
@@ -36,6 +37,7 @@ export const routes = [
       { path: 'clientes', element: <CustomersPage /> },
       { path: 'clientes/:id', element: <CustomerDetailPage /> },
       { path: 'configuracoes', element: <SettingsPage /> },
+      { path: 'seguranca', element: <SecurityPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
