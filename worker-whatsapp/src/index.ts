@@ -2,10 +2,11 @@ import { Redis } from 'ioredis';
 import { createStatusReporter } from './api-callback.ts';
 import { loadConfig } from './config.ts';
 import { createMessageHandler, runConsumer } from './consumer.ts';
-import { log } from './log.ts';
+import { initSentry, log } from './log.ts';
 import { createMetaClient } from './meta-client.ts';
 import { createWebhookServer } from './webhook.ts';
 
+initSentry(process.env.SENTRY_DSN);
 const config = loadConfig();
 const report = createStatusReporter(config.apiUrl, config.workerSecret);
 
