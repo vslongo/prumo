@@ -8,6 +8,7 @@ import Skeleton from '@mui/material/Skeleton'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { ClipboardList, FileText, House, LogOut, Moon, Settings, Shield, Sun, Users, type LucideIcon } from 'lucide-react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { authApi, canManageSettings, roleLabel, useMe } from '../features/auth/api'
@@ -15,6 +16,7 @@ import { TwoFactorBanner } from '../features/auth/components/TwoFactorBanner'
 import { TwoFactorCard } from '../features/auth/components/TwoFactorCard'
 import { BillingBanner } from '../features/billing/components/BillingBanner'
 import { useTheme } from '../shared/hooks/useTheme'
+import { setSentryUser } from '../shared/lib/sentry'
 import { Logo } from '../shared/ui/Logo'
 
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean }
@@ -37,6 +39,9 @@ export function AppLayout() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+
+  // Erro no Sentry diz de qual usuário veio (só o id).
+  useEffect(() => setSentryUser(me?.id ?? null), [me?.id])
 
   if (isLoading) {
     return (
