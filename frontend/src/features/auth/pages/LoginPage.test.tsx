@@ -63,4 +63,33 @@ describe('LoginPage', () => {
 
     expect(await screen.findByText('Painel')).toBeInTheDocument()
   })
+
+  it('com 2FA pede o código do app e aceita código de recuperação', async () => {
+    const fetchMock = vi.fn((url: string, init: RequestInit = {}) => {
+      if (url === '/api/me') return json(401, {})
+      if (url === '/sanctum/csrf-cookie') return Promise.resolve(new Response(null, { status: 204 }))
+      if (url === '/api/login') return json(200, { two_factor: true })
+      const body = JSON.parse(String(init.body))
+      if (body.code) return json(422, { message: 'Código inválido.', errors: { code: ['Código inválido.'] } })
+      return json(200, { data: { id: 'u1', name: 'Carlos', email: 'dono@demo.test', role: 'owner' } })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    renderLogin()
+    const user = userEvent.setup()
+
+    await user.type(await screen.findByLabelText('E-mail'), 'dono@demo.test')
+    await user.type(screen.getByLabelText('Senha'), 'password')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+
+    await user.type(await screen.findByLabelText('Código do app'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    expect(await screen.findByText('Código inválido.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /usar código de recuperação/ }))
+    await user.type(screen.getByLabelText('Código de recuperação'), 'abcde-fghij')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+
+    expect(await screen.findByText('Painel')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/login/two-factor', expect.objectContaining({ body: JSON.stringify({ recovery_code: 'abcde-fghij' }) }))
+  })
 })

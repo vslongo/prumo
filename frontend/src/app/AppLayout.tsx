@@ -8,9 +8,11 @@ import Skeleton from '@mui/material/Skeleton'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
-import { ClipboardList, FileText, House, LogOut, Moon, Settings, Sun, Users, type LucideIcon } from 'lucide-react'
+import { ClipboardList, FileText, House, LogOut, Moon, Settings, Shield, Sun, Users, type LucideIcon } from 'lucide-react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { authApi, canManageSettings, roleLabel, useMe } from '../features/auth/api'
+import { TwoFactorBanner } from '../features/auth/components/TwoFactorBanner'
+import { TwoFactorCard } from '../features/auth/components/TwoFactorCard'
 import { BillingBanner } from '../features/billing/components/BillingBanner'
 import { useTheme } from '../shared/hooks/useTheme'
 import { Logo } from '../shared/ui/Logo'
@@ -70,6 +72,7 @@ export function AppLayout() {
             <SideLink key={item.to} {...item} />
           ))}
           <Box sx={{ flex: 1 }} />
+          <SideLink to="/seguranca" label="Segurança" icon={Shield} />
           {canManageSettings(me) ? <SideLink to="/configuracoes" label="Configurações" icon={Settings} /> : null}
         </Stack>
         <Box sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
@@ -101,6 +104,9 @@ export function AppLayout() {
             <IconButton onClick={toggleTheme} aria-label={theme === 'dark' ? 'Usar tema claro' : 'Usar tema escuro'} sx={{ width: 44, height: 44, color: 'text.secondary' }}>
               <ThemeIcon size={20} aria-hidden />
             </IconButton>
+            <IconButton component={NavLink} to="/seguranca" aria-label="Segurança" sx={{ width: 44, height: 44, color: 'text.secondary' }}>
+              <Shield size={20} aria-hidden />
+            </IconButton>
             {canManageSettings(me) ? (
               <IconButton component={NavLink} to="/configuracoes" aria-label="Configurações" sx={{ width: 44, height: 44, color: 'text.secondary' }}>
                 <Settings size={20} aria-hidden />
@@ -113,8 +119,24 @@ export function AppLayout() {
         </Box>
 
         <Box component="main" sx={{ mx: 'auto', width: '100%', maxWidth: 1024, flex: 1, px: { xs: 2, lg: 4 }, pt: { xs: 2.5, lg: 4 }, pb: { xs: 14, lg: 6 } }}>
-          <BillingBanner isOwner={me.role === 'owner'} />
-          <Outlet />
+          {me.two_factor.blocked ? (
+            // Dono passou do prazo sem 2FA: a API só libera a ativação, então o app mostra só ela.
+            <>
+              <Typography variant="h1" sx={{ fontSize: 24, mb: 1 }}>
+                Ative a verificação em duas etapas
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 2.5 }}>
+                Para proteger os dados da oficina e dos clientes, a conta do dono precisa do código do app autenticador além da senha. Leva um minuto.
+              </Typography>
+              <TwoFactorCard me={me} />
+            </>
+          ) : (
+            <>
+              <TwoFactorBanner me={me} />
+              <BillingBanner isOwner={me.role === 'owner'} />
+              <Outlet />
+            </>
+          )}
         </Box>
 
         {/* Mobile: navegação inferior */}
