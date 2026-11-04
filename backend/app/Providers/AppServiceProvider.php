@@ -66,6 +66,8 @@ final class AppServiceProvider extends ServiceProvider
         Event::listen(CustomerAnonymized::class, ScrubAnonymizedCustomerMessages::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip()));
+        // Código de 6 dígitos: por usuário (pendente no login ou logado ativando), não só por IP.
+        RateLimiter::for('two-factor', fn (Request $request) => Limit::perMinute(5)->by((string) ($request->user()?->getAuthIdentifier() ?? $request->session()->get('login.two_factor.user_id', $request->ip()))));
         // Cada cadastro cria um tenant: limite apertado por IP contra criação em massa.
         RateLimiter::for('signup', fn (Request $request) => Limit::perHour(5)->by((string) $request->ip()));
         RateLimiter::for('public-links', fn (Request $request) => Limit::perMinute(30)->by((string) $request->ip()));
