@@ -37,7 +37,7 @@ jobs:
         with:
           php-version: "8.3"
           extensions: pdo_pgsql, intl, bcmath, zip, gd
-          coverage: none
+          coverage: pcov
       - uses: actions/cache@v4
         with:
           path: ~/.composer/cache
@@ -48,9 +48,81 @@ jobs:
         run: vendor/bin/pint --test
       - name: PHPStan
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
-      - name: Pest
-        run: vendor/bin/pest
-      # ponytail: cobertura mínima de 90% em Actions/Enums (CLAUDE.md §8) fica pra quando ligarmos pcov aqui.
+      # Cobertura medida só em app/Modules/*/{Actions,Enums} (phpunit.xml); CLAUDE.md §8 exige 90%.
+      - name: Pest + cobertura
+        run: vendor/bin/pest --coverage --min=90
+
+  # E2E críticos (CLAUDE.md §8): orçamento → aprovação com assinatura → OS, OS direta, foto em segundo plano.
+  # Tudo no runner: Laravel no `artisan serve`, fila sync (sem Redis nem worker), R2 local e o Vite na frente.
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      pgsql:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: oficina
+          POSTGRES_USER: oficina
+          POSTGRES_PASSWORD: secret
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U oficina"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      APP_ENV: local
+      APP_URL: http://localhost:5173
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: oficina
+      DB_USERNAME: oficina
+      DB_PASSWORD: secret
+      CACHE_STORE: database
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: database
+      R2_DRIVER: local
+      E2E_ARTISAN: php backend/artisan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, intl, bcmath, zip, gd
+          coverage: none
+      - uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Backend
+        working-directory: backend
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          cp .env.example .env && php artisan key:generate
+          php artisan migrate --force
+          PHP_CLI_SERVER_WORKERS=4 php artisan serve --port=8000 > /tmp/laravel.log 2>&1 &
+      - name: Frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Playwright
+        working-directory: frontend
+        run: npm run e2e
+      - name: Relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
+      - name: Log do Laravel
+        if: failure()
+        run: cat /tmp/laravel.log backend/storage/logs/laravel.log || true
 
   frontend:
     runs-on: ubuntu-latest

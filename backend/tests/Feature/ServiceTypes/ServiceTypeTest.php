@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use App\Modules\Auth\Enums\UserRole;
+use App\Modules\ServiceTypes\Actions\UpdateServiceType;
+use App\Modules\ServiceTypes\Data\ServiceTypeData;
 use App\Modules\ServiceTypes\Models\ServiceType;
+use Illuminate\Auth\Access\AuthorizationException;
 
 $gasket = [
     'name' => 'Troca de junta',
@@ -49,4 +52,24 @@ it('tipo padrão do sistema é somente leitura', function () use ($gasket) {
 
     $this->putJson("/api/service-types/{$system->id}", $gasket)->assertForbidden();
     $this->getJson('/api/service-types')->assertJsonFragment(['name' => 'Padrão', 'is_system_default' => true]);
+});
+
+it('owner edita tipo da oficina; técnico não edita', function () use ($gasket) {
+    actingAsRole(UserRole::Owner);
+    $id = $this->postJson('/api/service-types', $gasket)->assertCreated()->json('data.id');
+
+    $this->putJson("/api/service-types/{$id}", [...$gasket, 'name' => 'Junta do cabeçote', 'default_price_cents' => 30000])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Junta do cabeçote')
+        ->assertJsonPath('data.default_price_cents', 30000);
+
+    actingAsRole(UserRole::Technician, ServiceType::findOrFail($id)->tenant);
+    $this->putJson("/api/service-types/{$id}", $gasket)->assertForbidden();
+});
+
+it('a Action recusa alterar tipo padrão mesmo sem passar pela policy', function () use ($gasket) {
+    $system = ServiceType::factory()->create();
+
+    expect(fn () => app(UpdateServiceType::class)->handle($system, ServiceTypeData::fromArray($gasket)))
+        ->toThrow(AuthorizationException::class);
 });
