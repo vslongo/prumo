@@ -10,7 +10,7 @@ Usuários, papéis e 2FA.
 users, user_invitations
 
 ## API pública (outros módulos só usam isto)
-- Actions: SignUp (cria oficina via Tenancy CreateTenant + owner). InviteUser, AcceptInvitation, ListPendingInvitations, RevokeInvitation, ChangeUserRole, DeactivateUser, ReactivateUser. Rotas: GET /api/users (inclui desativados com is_active), PATCH /api/users/{user}/role, POST /api/users/{user}/deactivate|reactivate, GET /api/user-invitations, DELETE /api/user-invitations/{id}, POST /api/signup, POST /api/user-invitations, GET /api/public/invitations/{token}, POST /api/public/invitations/{token}/accept, POST /api/login, POST /api/logout, GET /api/me
+- Actions: SignUp (cria oficina via Tenancy CreateTenant + owner). InviteUser, AcceptInvitation, ListPendingInvitations, RevokeInvitation, ChangeUserRole, DeactivateUser, ReactivateUser, EnableTwoFactor, ConfirmTwoFactor, DisableTwoFactor, VerifyTwoFactorChallenge, ResolveTwoFactorRequirement. Rotas: GET /api/users (inclui desativados com is_active), PATCH /api/users/{user}/role, POST /api/users/{user}/deactivate|reactivate, GET /api/user-invitations, DELETE /api/user-invitations/{id}, POST /api/signup, POST /api/user-invitations, GET /api/public/invitations/{token}, POST /api/public/invitations/{token}/accept, POST /api/login, POST /api/login/two-factor, POST /api/logout, GET /api/me, POST /api/two-factor, POST /api/two-factor/confirm, DELETE /api/two-factor
 - Eventos emitidos: UserInvited
 - Eventos ouvidos: –
 
@@ -18,7 +18,8 @@ users, user_invitations
 –
 
 ## Regras de negócio
-Papéis owner/admin/technician/front. Técnico cria e envia orçamento, executa OS e marca itens feitos; sem acesso a configurações e financeiro. Owner exige 2FA.
+Papéis owner/admin/technician/front. Técnico cria e envia orçamento, executa OS e marca itens feitos; sem acesso a configurações e financeiro.
+- 2FA (ADR 0006): app autenticador (TOTP) + 8 códigos de recuperação de uso único. Obrigatório só para o dono, depois de 7 dias de conta (`ResolveTwoFactorRequirement::GRACE_DAYS`); passado o prazo, o middleware `EnsureTwoFactorEnabled` (grupo `tenant`) responde 403 `two_factor_required` em tudo menos me, logout e two-factor. Os outros papéis ativam se quiserem. Código TOTP não pode ser reusado (`two_factor_last_step`).
 
 ## Estrutura
 `backend/app/Modules/Auth/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
@@ -34,7 +35,7 @@ nenhuma
 
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
-- 2026-10-27: login SPA (Sanctum cookie) com rate limit; usuário inativo não entra. `User` sem global scope de tenant (ADR 0001). 2FA do owner pendente.
+- 2026-10-27: login SPA (Sanctum cookie) com rate limit; usuário inativo não entra. `User` sem global scope de tenant (ADR 0001). 2FA do owner pendente (feito em 2026-11-04).
 - 2026-10-27: ListTenantUsers + GET /api/users (filtro de tenant explícito, ADR 0001); /api/me traz o nome da oficina.
 - 2026-10-28: cadastro por autoatendimento (SignUp + POST /api/signup, tela /cadastro): cria tenant em trial e o owner na mesma transação e já loga. Sem cartão. Rate limit 5/h por IP. E-mail normalizado em minúsculas no cadastro e no login.
 - 2026-10-28: convite de funcionário por link (owner/admin; papel technician|front|admin, nunca owner). Token de 32 bytes (só o hash no banco), 7 dias, uso único com lock. O convite não guarda e-mail nem telefone: o funcionário escolhe o acesso no aceite (hoje e-mail + senha; login por telefone entra no aceite depois). Tela /convite/:token e card Equipe em Configurações com wa.me sem número.
@@ -43,3 +44,4 @@ nenhuma
 - 2026-10-28: convite guarda também o token cru criptografado (`token`, cast encrypted, oculto no JSON do model) para o dono copiar o link de novo em "Convites pendentes"; a busca do link segue pelo `token_hash`.
 - 2026-10-28: convite de admin só aparece e só é cancelado pelo dono (o link dá o papel a quem abrir; ver o link = poder criar admin).
 - 2026-11-04: InviteUser, AcceptInvitation e ReactivateUser respeitam o limite de usuários do plano (Billing EnsureSeatAvailable). Convite pendente ocupa lugar; no trial não há limite.
+- 2026-11-04: 2FA. Login em duas etapas (senha → `two_factor: true` → POST /login/two-factor com `code` ou `recovery_code`, usuário pendente na sessão por 5 min, limite de 5 tentativas/min por usuário). Segredo e hashes dos códigos de recuperação com cast `encrypted`. Tela Segurança no app para todos os papéis; dono bloqueado vê só a ativação.

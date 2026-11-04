@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Auth\Http\Middleware\EnsureTwoFactorEnabled;
 use App\Modules\Billing\Http\Middleware\EnsureTenantCanWrite;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
@@ -16,8 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
-        // `tenant`: define a oficina do usuário logado e barra escrita em modo somente leitura (Billing).
-        $middleware->group('tenant', [ResolveTenant::class, EnsureTenantCanWrite::class]);
+        // `tenant`: define a oficina do usuário logado, exige o 2FA do dono passado o prazo (Auth)
+        // e barra escrita em modo somente leitura (Billing).
+        $middleware->group('tenant', [ResolveTenant::class, EnsureTwoFactorEnabled::class, EnsureTenantCanWrite::class]);
         // O tenant precisa estar no contexto antes do route model binding, senão o scope barra tudo.
         $middleware->prependToPriorityList(SubstituteBindings::class, ResolveTenant::class);
     })

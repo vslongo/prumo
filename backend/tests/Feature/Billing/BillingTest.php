@@ -284,7 +284,8 @@ describe('trocar de plano e cancelar', function () {
     });
 
     it('cancela: para a cobrança no Asaas e mantém o acesso até o fim do período pago', function () {
-        actingAsRole();
+        // Viaja além do prazo do 2FA do dono: aqui ele já ativou, para o teste olhar só o somente leitura.
+        actingAsRole()->forceFill(['two_factor_confirmed_at' => now()])->save();
         endTrial();
         activeSubscription(attributes: ['paid_until' => now()->addDays(10)]);
         fakeAsaas();
