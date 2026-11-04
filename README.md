@@ -27,6 +27,7 @@ Estoque, nota fiscal, lembretes etc. ficam para depois.
 |---|---|
 | `backend/` | A API (Laravel/PHP). Regras de negócio e banco de dados. |
 | `frontend/` | O app que a oficina e o cliente usam (React). Funciona no celular. |
+| `worker-whatsapp/` | Serviço Node que envia as mensagens de WhatsApp pela API oficial da Meta. Ver `worker-whatsapp/README.md`. |
 | `docker/` e `docker-compose.yml` | Configuração pra rodar banco e API sem instalar PHP/Postgres na máquina. |
 | `modules/` | Uma explicação de cada parte do sistema (orçamentos, OS, clientes...). |
 | `docs/` | Arquitetura, decisões técnicas (`adr/`) e a marca (`brand/`). |
@@ -217,6 +218,12 @@ npx playwright install chromium
 
 ```bash
 npm run e2e
+```
+
+Worker do WhatsApp (dentro de `worker-whatsapp/`):
+
+```bash
+npm test
 ```
 
 ---

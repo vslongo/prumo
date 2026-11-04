@@ -42,3 +42,4 @@ WhatsApp Cloud API
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
 - 2026-10-28: módulo criado no backend: tabela messages, QueueWhatsappMessage, job para a fila do worker, callback de status assinado e listeners de QuoteSent e OS pronta. Worker Node e webhook da Meta ficam para o próximo PR.
 - 2026-11-04: ExportCustomerMessages (exportação LGPD) e listener ScrubAnonymizedCustomerMessages (CustomerAnonymized → `to` vazio e `params` vazios; linha e status ficam).
+- 2026-11-04: worker Node (`worker-whatsapp/`): consome a fila com lista de processamento, envia template pela Cloud API, repete erro temporário, recebe o webhook da Meta (status por `biz_opaque_callback_data` = `tenant_id:message_id`) e devolve tudo pelo callback assinado.
