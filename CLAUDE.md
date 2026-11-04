@@ -49,7 +49,7 @@ backend/
 frontend/src/
   features/<feature>/{api.ts,hooks/,components/,pages/,types.ts}
   shared/{ui,lib,hooks}/   app/{router,providers}/
-worker-whatsapp/src/{consumer,meta-client,webhook,templates}/
+worker-whatsapp/src/{consumer,meta-client,webhook,api-callback}.ts
 docs/ (README.md, architecture.md, adr/NNNN-titulo.md)
 ```
 
