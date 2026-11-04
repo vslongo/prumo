@@ -102,7 +102,8 @@ jobs:
           composer install --no-interaction --prefer-dist --no-progress
           cp .env.example .env && php artisan key:generate
           php artisan migrate --force
-          PHP_CLI_SERVER_WORKERS=4 php artisan serve --port=8000 > /tmp/laravel.log 2>&1 &
+          # --no-reload: sem ele o artisan serve ignora os workers e um processo só trava atrás de uma conexão.
+          PHP_CLI_SERVER_WORKERS=4 php artisan serve --port=8000 --no-reload > /tmp/laravel.log 2>&1 &
       - name: Frontend
         working-directory: frontend
         run: |
