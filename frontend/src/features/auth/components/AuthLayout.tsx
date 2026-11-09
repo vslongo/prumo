@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography'
 import { Check } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Logo, LogoMark } from '../../../shared/ui/Logo'
+import { SupportLink } from '../../../shared/ui/SupportLink'
 
 /** Painel da marca (desktop) + coluna do formulário. Usado no login e no cadastro. */
 export function AuthLayout({ children }: { children: ReactNode }) {
@@ -41,6 +42,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             <Logo height={34} />
           </Box>
           {children}
+          <SupportLink sx={{ mt: 4, textAlign: 'center' }} />
         </Box>
       </Box>
     </Box>

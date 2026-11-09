@@ -20,7 +20,8 @@ users, user_invitations
 ## Regras de negócio
 Papéis owner/admin/technician/front. Técnico cria e envia orçamento, executa OS e marca itens feitos; sem acesso a configurações e financeiro.
 - 2FA (ADR 0006): app autenticador (TOTP) + 8 códigos de recuperação de uso único. Obrigatório só para o dono, depois de 7 dias de conta (`ResolveTwoFactorRequirement::GRACE_DAYS`); passado o prazo, o middleware `EnsureTwoFactorEnabled` (grupo `tenant`) responde 403 `two_factor_required` em tudo menos me, logout e two-factor. Os outros papéis ativam se quiserem. Código TOTP não pode ser reusado (`two_factor_last_step`).
-- Recuperar senha (ADR 0007): Actions RequestPasswordReset e ResetPassword; rotas `POST /api/password/forgot` e `POST /api/password/reset` (`throttle:password-reset`). Resposta igual com ou sem cadastro; token de uso único por 60 min; e-mail em fila (`Notifications/ResetPasswordNotification`), sem o e-mail na URL; a troca derruba sessões e tokens e não abre sessão (2FA continua valendo); desativado não recupera.
+- Recuperar senha (ADR 0007): Actions RequestPasswordReset e ResetPassword; rotas `POST /api/password/forgot` e `POST /api/password/reset` (`throttle:password-reset`). Resposta igual com ou sem cadastro; token de uso único por 60 min; e-mail em fila (`Notifications/ResetPasswordNotification`), sem o e-mail na URL; a troca derruba sessões e tokens e não abre sessão (2FA continua valendo); desativado não recupera.
+- Aceite dos termos (ADR 0008): `POST /api/signup` exige `accept_terms`; grava `terms_accepted_at` e `terms_version` (`SignUp::TERMS_VERSION`) no dono. Convidado não aceita termos.
 
 ## Estrutura
 `backend/app/Modules/Auth/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
@@ -47,3 +48,4 @@ nenhuma
 - 2026-11-04: InviteUser, AcceptInvitation e ReactivateUser respeitam o limite de usuários do plano (Billing EnsureSeatAvailable). Convite pendente ocupa lugar; no trial não há limite.
 - 2026-11-04: 2FA. Login em duas etapas (senha → `two_factor: true` → POST /login/two-factor com `code` ou `recovery_code`, usuário pendente na sessão por 5 min, limite de 5 tentativas/min por usuário). Segredo e hashes dos códigos de recuperação com cast `encrypted`. Tela Segurança no app para todos os papéis; dono bloqueado vê só a ativação.
 - 2026-11-09: recuperação de senha por e-mail (ADR 0007). `User` passa a usar `Notifiable`.
+- 2026-11-09: aceite dos termos de uso e da política de privacidade no cadastro (ADR 0008).

@@ -18,6 +18,7 @@ import { BillingBanner } from '../features/billing/components/BillingBanner'
 import { useTheme } from '../shared/hooks/useTheme'
 import { setSentryUser } from '../shared/lib/sentry'
 import { Logo } from '../shared/ui/Logo'
+import { SupportLink } from '../shared/ui/SupportLink'
 
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean }
 
@@ -142,6 +143,7 @@ export function AppLayout() {
               <Outlet />
             </>
           )}
+          <SupportLink sx={{ mt: 5, textAlign: 'center' }} />
         </Box>
 
         {/* Mobile: navegação inferior */}

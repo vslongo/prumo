@@ -30,12 +30,13 @@ function renderSignUp(signupResponse: () => Promise<Response>) {
   return fetchMock
 }
 
-async function fillForm(password = 'senha-forte-123') {
+async function fillForm(password = 'senha-forte-123', accept = true) {
   const user = userEvent.setup()
   await user.type(await screen.findByLabelText('Nome da oficina'), 'Auto Center Silva')
   await user.type(screen.getByLabelText('Seu nome'), 'Carlos')
   await user.type(screen.getByLabelText('E-mail'), 'carlos@silva.test')
   await user.type(screen.getByLabelText('Senha'), password)
+  if (accept) await user.click(screen.getByRole('checkbox', { name: /Li e aceito/ }))
   await user.click(screen.getByRole('button', { name: 'Criar conta' }))
 }
 
@@ -55,6 +56,14 @@ describe('SignUpPage', () => {
     await fillForm('123')
 
     expect(await screen.findByText('A senha precisa ter pelo menos 8 caracteres.')).toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/signup', expect.anything())
+  })
+
+  it('não cria a conta sem o aceite dos termos', async () => {
+    const fetchMock = renderSignUp(() => json(201, {}))
+    await fillForm('senha-forte-123', false)
+
+    expect(await screen.findByText('Marque que você leu e aceita os termos para criar a conta.')).toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalledWith('/api/signup', expect.anything())
   })
 

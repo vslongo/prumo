@@ -8,7 +8,7 @@ export type User = { id: string; name: string; email: string; role: Role; is_act
 export type LoginResult = { twoFactor: true } | { twoFactor: false; user: User }
 export type TwoFactorSetup = { secret: string; otpauth_url: string }
 
-export type SignUpInput = { workshop_name: string; name: string; email: string; password: string }
+export type SignUpInput = { workshop_name: string; name: string; email: string; password: string; accept_terms: boolean }
 export type InvitableRole = Exclude<Role, 'owner'>
 export type SentInvitation = { link: string; whatsapp_url: string; expires_at: string }
 export type PublicInvitation = { name: string; role: Role; workshop: string; usable: boolean }

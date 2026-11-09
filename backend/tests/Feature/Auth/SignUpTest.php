@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Auth\Actions\SignUp;
 use App\Modules\Auth\Enums\UserRole;
 use App\Modules\Auth\Models\User;
 use App\Modules\Tenancy\Enums\TenantStatus;
@@ -16,6 +17,7 @@ $payload = fn (array $overrides = []) => [
     'name' => 'Carlos Silva',
     'email' => 'Carlos@Silva.test',
     'password' => 'senha-forte-123',
+    'accept_terms' => true,
     ...$overrides,
 ];
 
@@ -35,7 +37,9 @@ it('cria a oficina em trial com o dono e já deixa logado', function () use ($pa
     $user = User::sole();
     expect($user->tenant_id)->toBe($tenant->id)
         ->and($user->role)->toBe(UserRole::Owner)
-        ->and($user->email)->toBe('carlos@silva.test');
+        ->and($user->email)->toBe('carlos@silva.test')
+        ->and($user->terms_accepted_at?->equalTo(now()))->toBeTrue()
+        ->and($user->terms_version)->toBe(SignUp::TERMS_VERSION);
 
     Event::assertDispatched(TenantCreated::class, fn ($e) => $e->tenantId === $tenant->id);
     $this->assertAuthenticatedAs($user, 'web');
@@ -46,7 +50,8 @@ it('recusa e-mail já cadastrado, senha curta e campos faltando sem criar nada',
 
     $this->postJson('/api/signup', $payload())->assertUnprocessable()->assertJsonValidationErrors('email');
     $this->postJson('/api/signup', $payload(['email' => 'novo@silva.test', 'password' => '123']))->assertUnprocessable()->assertJsonValidationErrors('password');
-    $this->postJson('/api/signup', [])->assertUnprocessable()->assertJsonValidationErrors(['workshop_name', 'name', 'email', 'password']);
+    $this->postJson('/api/signup', [])->assertUnprocessable()->assertJsonValidationErrors(['workshop_name', 'name', 'email', 'password', 'accept_terms']);
+    $this->postJson('/api/signup', $payload(['email' => 'novo@silva.test', 'accept_terms' => false]))->assertUnprocessable()->assertJsonValidationErrors('accept_terms');
 
     expect(Tenant::count())->toBe(1);
 });

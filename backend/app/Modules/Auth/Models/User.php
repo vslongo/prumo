@@ -32,6 +32,8 @@ use Laravel\Sanctum\HasApiTokens;
  * @property list<string>|null $two_factor_recovery_codes hashes sha256
  * @property Carbon|null $two_factor_confirmed_at
  * @property int|null $two_factor_last_step último passo TOTP aceito (barra reuso do código)
+ * @property Carbon|null $terms_accepted_at aceite dos termos no cadastro (ADR 0008)
+ * @property string|null $terms_version
  * @property Carbon|null $created_at
  */
 #[UseFactory(UserFactory::class)]
@@ -58,6 +60,7 @@ final class User extends Authenticatable
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_last_step' => 'integer',
+            'terms_accepted_at' => 'datetime',
         ];
     }
 
