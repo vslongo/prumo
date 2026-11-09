@@ -67,7 +67,7 @@ erDiagram
 ```
 Pós-core: inspections/inspection_items, parts/stock_movements, invoices, reminders, payments, audit_logs, vehicles global + tenant_vehicles + vehicle_ownerships + vehicle_history.
 
-Hospedagem: Hetzner CX33 + Laravel Forge + Postgres no mesmo VPS + Cloudflare R2 + Sentry. E-mail transacional (Resend) e Horizon ainda não estão instalados.
+Hospedagem: Hetzner CX33 + Laravel Forge + Postgres no mesmo VPS + Cloudflare R2 + Sentry. Filas em produção pelo Horizon; e-mail transacional por SMTP (Resend previsto), hoje só o de senha nova (ADR 0007); backup diário do banco no R2 (`backup:database`). Passo a passo em `docs/deploy.md`.
 
 ## Erros (Sentry)
 Os três apps mandam erro para o Sentry só quando o DSN está configurado (`SENTRY_LARAVEL_DSN`, `VITE_SENTRY_DSN`, `SENTRY_DSN` do worker). Em dev fica vazio e nada sai da máquina.
