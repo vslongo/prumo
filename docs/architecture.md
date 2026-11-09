@@ -67,7 +67,7 @@ erDiagram
 ```
 Pós-core: inspections/inspection_items, parts/stock_movements, invoices, reminders, payments, audit_logs, vehicles global + tenant_vehicles + vehicle_ownerships + vehicle_history.
 
-Hospedagem: Hetzner CX33 + Laravel Forge + Postgres no mesmo VPS + Cloudflare R2 + Resend + Sentry. Ver Page "Arquitetura técnica: SaaS pra oficinas".
+Hospedagem: Hetzner CX33 + Laravel Forge + Postgres no mesmo VPS + Cloudflare R2 + Sentry. E-mail transacional (Resend) e Horizon ainda não estão instalados.
 
 ## Erros (Sentry)
 Os três apps mandam erro para o Sentry só quando o DSN está configurado (`SENTRY_LARAVEL_DSN`, `VITE_SENTRY_DSN`, `SENTRY_DSN` do worker). Em dev fica vazio e nada sai da máquina.
