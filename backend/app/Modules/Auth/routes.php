@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Auth\Http\Controllers\InvitationController;
+use App\Modules\Auth\Http\Controllers\PasswordResetController;
 use App\Modules\Auth\Http\Controllers\SessionController;
 use App\Modules\Auth\Http\Controllers\SignUpController;
 use App\Modules\Auth\Http\Controllers\TwoFactorController;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('login', [SessionController::class, 'store'])->middleware('throttle:login');
 Route::post('login/two-factor', [SessionController::class, 'challenge'])->middleware('throttle:two-factor');
 Route::post('signup', [SignUpController::class, 'store'])->middleware('throttle:signup');
+Route::post('password/forgot', [PasswordResetController::class, 'store'])->middleware('throttle:password-reset');
+Route::post('password/reset', [PasswordResetController::class, 'update'])->middleware('throttle:password-reset');
 
 Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
     Route::get('me', [SessionController::class, 'show']);

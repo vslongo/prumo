@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router'
 import { AcceptInvitationPage } from '../features/auth/pages/AcceptInvitationPage'
+import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage'
 import { LoginPage } from '../features/auth/pages/LoginPage'
+import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage'
 import { SecurityPage } from '../features/auth/pages/SecurityPage'
 import { SignUpPage } from '../features/auth/pages/SignUpPage'
 import { CustomerDetailPage } from '../features/customers/pages/CustomerDetailPage'
@@ -20,6 +22,8 @@ export const routes = [
   { path: '/login', element: <LoginPage /> },
   { path: '/cadastro', element: <SignUpPage /> },
   { path: '/convite/:token', element: <AcceptInvitationPage /> },
+  { path: '/esqueci-senha', element: <ForgotPasswordPage /> },
+  { path: '/redefinir-senha/:token', element: <ResetPasswordPage /> },
   // Link que o cliente recebe no WhatsApp: sem login, sem navegação do app.
   // Carregado à parte: o cliente abre no 4G e não precisa do app inteiro.
   { path: '/o/:token', lazy: async () => ({ Component: (await import('../features/publicQuote/pages/PublicQuotePage')).PublicQuotePage }) },

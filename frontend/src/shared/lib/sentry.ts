@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react'
 
-/** Segmentos que carregam token de acesso (link do orçamento, convite) viram `[token]`. */
-const TOKEN_PATHS = /(\/(?:o|convite|public\/quotes|public\/invitations)\/)[^/?#]+/g
+/** Segmentos que carregam token de acesso (link do orçamento, convite, senha nova) viram `[token]`. */
+const TOKEN_PATHS = /(\/(?:o|convite|redefinir-senha|public\/quotes|public\/invitations)\/)[^/?#]+/g
 
 /** Sem query string (a busca de cliente leva telefone/CPF), sem hash e sem token de link público. */
 export function scrubUrl(url: string): string {

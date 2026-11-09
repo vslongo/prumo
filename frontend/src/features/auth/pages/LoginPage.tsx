@@ -64,6 +64,9 @@ export function LoginPage() {
             {error ? <ErrorBox message={error} /> : null}
             <TextField label="E-mail" type="email" autoComplete="username" inputMode="email" error={formState.errors.email?.message} {...register('email')} />
             <TextField label="Senha" type="password" autoComplete="current-password" error={formState.errors.password?.message} {...register('password')} />
+            <MuiLink component={Link} to="/esqueci-senha" sx={{ alignSelf: 'flex-end', mt: -1.5, fontSize: 14 }}>
+              Esqueci minha senha
+            </MuiLink>
             <Button type="submit" full loading={formState.isSubmitting} loadingText="Entrando…">
               Entrar
             </Button>
