@@ -9,7 +9,7 @@ import { Link, Navigate, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { ApiError } from '../../../shared/lib/http'
 import { Button } from '../../../shared/ui/Button'
-import { TextField } from '../../../shared/ui/Field'
+import { CheckboxField, TextField } from '../../../shared/ui/Field'
 import { ErrorBox } from '../../../shared/ui/States'
 import { authApi, useMe, type SignUpInput } from '../api'
 import { AuthLayout } from '../components/AuthLayout'
@@ -19,16 +19,17 @@ const schema = z.object({
   name: z.string().trim().min(1, 'Informe seu nome.').max(120),
   email: z.string().trim().min(1, 'Informe o e-mail.').email('E-mail inválido.'),
   password: z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres.'),
+  accept_terms: z.boolean().refine((v) => v, 'Marque que você leu e aceita os termos para criar a conta.'),
 })
 
-const fields = ['workshop_name', 'name', 'email', 'password'] as const
+const fields = ['workshop_name', 'name', 'email', 'password', 'accept_terms'] as const
 
 export function SignUpPage() {
   const { data: me } = useMe()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
-  const { register, handleSubmit, formState, setError: setFieldError } = useForm<SignUpInput>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState, setError: setFieldError } = useForm<SignUpInput>({ resolver: zodResolver(schema), defaultValues: { accept_terms: false } })
 
   if (me) return <Navigate to="/" replace />
 
@@ -61,6 +62,29 @@ export function SignUpPage() {
         <TextField label="Seu nome" autoComplete="name" error={formState.errors.name?.message} {...register('name')} />
         <TextField label="E-mail" type="email" autoComplete="username" inputMode="email" error={formState.errors.email?.message} {...register('email')} />
         <TextField label="Senha" type="password" autoComplete="new-password" hint="Pelo menos 8 caracteres." error={formState.errors.password?.message} {...register('password')} />
+        <div>
+          <CheckboxField
+            label={
+              <>
+                Li e aceito os{' '}
+                <MuiLink component={Link} to="/termos" target="_blank">
+                  termos de uso
+                </MuiLink>{' '}
+                e a{' '}
+                <MuiLink component={Link} to="/privacidade" target="_blank">
+                  política de privacidade
+                </MuiLink>
+                .
+              </>
+            }
+            {...register('accept_terms')}
+          />
+          {formState.errors.accept_terms ? (
+            <Typography role="alert" variant="body2" color="error">
+              {formState.errors.accept_terms.message}
+            </Typography>
+          ) : null}
+        </div>
         <Button type="submit" full loading={formState.isSubmitting} loadingText="Criando conta…">
           Criar conta
         </Button>

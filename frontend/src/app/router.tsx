@@ -7,6 +7,7 @@ import { SecurityPage } from '../features/auth/pages/SecurityPage'
 import { SignUpPage } from '../features/auth/pages/SignUpPage'
 import { CustomerDetailPage } from '../features/customers/pages/CustomerDetailPage'
 import { CustomersPage } from '../features/customers/pages/CustomersPage'
+import { PrivacyPage, TermsPage } from '../features/legal/pages/LegalPages'
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage'
 import { NewQuotePage } from '../features/quotes/pages/NewQuotePage'
 import { QuoteDetailPage } from '../features/quotes/pages/QuoteDetailPage'
@@ -24,6 +25,8 @@ export const routes = [
   { path: '/convite/:token', element: <AcceptInvitationPage /> },
   { path: '/esqueci-senha', element: <ForgotPasswordPage /> },
   { path: '/redefinir-senha/:token', element: <ResetPasswordPage /> },
+  { path: '/termos', element: <TermsPage /> },
+  { path: '/privacidade', element: <PrivacyPage /> },
   // Link que o cliente recebe no WhatsApp: sem login, sem navegação do app.
   // Carregado à parte: o cliente abre no 4G e não precisa do app inteiro.
   { path: '/o/:token', lazy: async () => ({ Component: (await import('../features/publicQuote/pages/PublicQuotePage')).PublicQuotePage }) },
