@@ -70,6 +70,8 @@ final class AppServiceProvider extends ServiceProvider
         RateLimiter::for('two-factor', fn (Request $request) => Limit::perMinute(5)->by((string) ($request->user()?->getAuthIdentifier() ?? $request->session()->get('login.two_factor.user_id', $request->ip()))));
         // Cada cadastro cria um tenant: limite apertado por IP contra criação em massa.
         RateLimiter::for('signup', fn (Request $request) => Limit::perHour(5)->by((string) $request->ip()));
+        // "Esqueci minha senha": por IP. Por e-mail, o broker já segura 1 pedido por minuto.
+        RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(5)->by((string) $request->ip()));
         RateLimiter::for('public-links', fn (Request $request) => Limit::perMinute(30)->by((string) $request->ip()));
         // Por link (não por IP): cada pedido cria um registro em media e uma URL de upload.
         RateLimiter::for('quote-signature', fn (Request $request) => Limit::perHour(10)->by(hash('sha256', (string) $request->route('token'))));

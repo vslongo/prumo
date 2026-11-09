@@ -32,6 +32,15 @@ export const authApi = {
     await ensureCsrf(true)
     return (await http.post<Wrapped<User>>('/api/signup', input)).data
   },
+  /** Sempre dá certo, tenha o e-mail cadastro ou não. */
+  async forgotPassword(email: string) {
+    await ensureCsrf(true)
+    await http.post<void>('/api/password/forgot', { email })
+  },
+  async resetPassword(input: { email: string; token: string; password: string }) {
+    await ensureCsrf(true)
+    await http.post<void>('/api/password/reset', input)
+  },
   logout: () => http.post<void>('/api/logout'),
   me: async () => (await http.get<Wrapped<User>>('/api/me')).data,
   users: async () => (await http.get<Wrapped<User[]>>('/api/users')).data,

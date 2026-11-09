@@ -6,6 +6,7 @@ describe('sentry scrubbing', () => {
     expect(scrubUrl('https://app.prumo.test/clientes?q=11988887777')).toBe('https://app.prumo.test/clientes')
     expect(scrubUrl('https://app.prumo.test/o/abc123secreto')).toBe('https://app.prumo.test/o/[token]')
     expect(scrubUrl('/convite/tok3n#x')).toBe('/convite/[token]')
+    expect(scrubUrl('/redefinir-senha/tok3n')).toBe('/redefinir-senha/[token]')
     expect(scrubUrl('/api/public/quotes/abc/approve')).toBe('/api/public/quotes/[token]/approve')
     expect(scrubUrl('/os/123')).toBe('/os/123')
   })

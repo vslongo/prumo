@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Auth\Models;
 
 use App\Modules\Auth\Enums\UserRole;
+use App\Modules\Auth\Notifications\ResetPasswordNotification;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -36,7 +38,7 @@ use Laravel\Sanctum\HasApiTokens;
 final class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasUuids;
+    use HasApiTokens, HasFactory, HasUuids, Notifiable;
 
     protected $fillable = ['name', 'email', 'password'];
 
@@ -57,6 +59,12 @@ final class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_last_step' => 'integer',
         ];
+    }
+
+    /** "Esqueci minha senha" (ADR 0007): e-mail em português, pela fila, com link para o app. */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /** @return BelongsTo<Tenant, $this> */
