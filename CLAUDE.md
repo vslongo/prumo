@@ -21,9 +21,9 @@ A marca vende sozinha (autoatendimento): todo fluxo precisa funcionar sem call d
 |---|---|
 | API / backend | Laravel 12 (PHP 8.3+), monolito modular |
 | Banco | PostgreSQL 16+ (jsonb, pg_trgm; RLS só no pós-core, opcional) |
-| Filas/cache | Redis + Laravel Horizon |
-| Frontend | React 18 + TypeScript + Vite, PWA, TanStack Query, React Hook Form + Zod, MUI (tema nos tokens da marca; ver `docs/adr/0002-frontend-com-mui.md`) |
-| Worker WhatsApp | Node 20+ + TypeScript, consome fila Redis, fala com WhatsApp Cloud API (oficial) |
+| Filas/cache | Redis; Laravel Horizon em produção (em dev, `queue:work`) |
+| Frontend | React 19 + TypeScript + Vite, PWA, TanStack Query, React Hook Form + Zod, MUI (tema nos tokens da marca; ver `docs/adr/0002-frontend-com-mui.md`) |
+| Worker WhatsApp | Node 22.18+ + TypeScript, consome fila Redis, fala com WhatsApp Cloud API (oficial) |
 | Storage | Cloudflare R2 (S3 compatível), bucket privado; navegador comprime (~300 KB) e sobe direto por URL pré-assinada |
 | Integrações | Core: Asaas (assinatura do SaaS), WhatsApp Cloud API. Pós-core: Focus NFe (NFS-e) |
 | Observabilidade | Sentry (back, front, worker), logs JSON |
@@ -44,13 +44,13 @@ backend/
         Actions/  Data/  Enums/  Events/  Listeners/  Jobs/  Models/  Policies/
         Http/{Controllers,Requests,Resources}/  routes.php
   # README.md e CLAUDE.md de cada módulo ficam em modules/<Modulo>/ na raiz do repo
-    Shared/ (Traits/BelongsToTenant, ValueObjects/{Money,Plate,Vin}, Support/JsonSchemaValidator)
+    Shared/ (Traits/BelongsToTenant, ValueObjects/{Money,Plate}, Support/JsonSchemaValidator)
   database/migrations/  tests/{Feature,Unit,Arch}/
 frontend/src/
   features/<feature>/{api.ts,hooks/,components/,pages/,types.ts}
   shared/{ui,lib,hooks}/   app/{router,providers}/
 worker-whatsapp/src/{consumer,meta-client,webhook,api-callback}.ts
-docs/ (README.md, architecture.md, adr/NNNN-titulo.md)
+docs/ (architecture.md, adr/NNNN-titulo.md, brand/)
 ```
 
 ## 4. Padrões de código
@@ -164,7 +164,7 @@ Máquina de estados:
 ## 11. Git, commits e PR
 - Conventional Commits em português: `feat(quotes): aprovação parcial por item`.
 - PR pequeno (< 400 linhas úteis), descrição: o quê, por quê, como testar, migrations, impacto em tenant/LGPD.
-- CI verde obrigatório: Pint, PHPStan, Pest, ESLint, tsc, Vitest. main protegida; merge → staging; tag `vX.Y.Z` → produção.
+- CI verde obrigatório: Pint, PHPStan, Pest, oxlint, tsc, Vitest, Playwright. main protegida; merge → staging; tag `vX.Y.Z` → produção.
 
 ## 12. Definition of Done
 - [ ] Regra de negócio em Action, com testes (inclui isolamento de tenant)

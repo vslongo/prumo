@@ -13,7 +13,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel_12-0e5a4f?style=for-the-badge&logo=laravel&logoColor=white" />
-  <img src="https://img.shields.io/badge/React_18-0e5a4f?style=for-the-badge&logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/React_19-0e5a4f?style=for-the-badge&logo=react&logoColor=white" />
   <img src="https://img.shields.io/badge/PostgreSQL_16-0e5a4f?style=for-the-badge&logo=postgresql&logoColor=white" />
   <img src="https://img.shields.io/badge/WhatsApp_Cloud_API-0e5a4f?style=for-the-badge&logo=whatsapp&logoColor=white" />
   <img src="https://img.shields.io/badge/fase-core-e8690c?style=for-the-badge" />
