@@ -19,6 +19,11 @@ final class VehiclePolicy
         return $user->is_active && $vehicle->tenant_id === $user->tenant_id;
     }
 
+    public function update(User $user, Vehicle $vehicle): bool
+    {
+        return $user->is_active && $vehicle->tenant_id === $user->tenant_id;
+    }
+
     public function create(User $user): bool
     {
         return $user->is_active;

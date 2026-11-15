@@ -1,3 +1,3 @@
 'use client'
 
-export { SignUpPage as default } from '../../features/auth/pages/SignUpPage'
+export { SignUpPage as default } from '../../section/auth/pages/SignUpPage'

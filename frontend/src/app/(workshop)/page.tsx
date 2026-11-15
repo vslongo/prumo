@@ -1,3 +1,3 @@
 'use client'
 
-export { DashboardPage as default } from '../../features/dashboard/pages/DashboardPage'
+export { DashboardPage as default } from '../../section/dashboard/pages/DashboardPage'

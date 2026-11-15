@@ -1,6 +1,9 @@
+import { ENDPOINTS } from '../../routes/paths'
+
+const endpoints = ENDPOINTS()
 /**
  * Único cliente HTTP do app. Sessão SPA do Sanctum: cookie de sessão + XSRF-TOKEN.
- * Chamadas HTTP só nos arquivos features/<feature>/api.ts.
+ * Chamadas HTTP dos módulos em section/<module>/api.ts; listagens globais usam components/ListItems.
  */
 
 export type FieldErrors = Record<string, string[]>
@@ -31,7 +34,7 @@ let csrfReady: Promise<void> | null = null
 /** Garante o cookie XSRF-TOKEN antes da primeira escrita. */
 export function ensureCsrf(force = false): Promise<void> {
   if (force || !csrfReady) {
-    csrfReady = fetch('/sanctum/csrf-cookie', { credentials: 'include' }).then(() => undefined)
+    csrfReady = fetch(endpoints.Auth.csrfCookie, { credentials: 'include' }).then(() => undefined)
   }
   return csrfReady
 }

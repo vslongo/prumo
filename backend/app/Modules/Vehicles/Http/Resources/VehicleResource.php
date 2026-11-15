@@ -22,6 +22,7 @@ final class VehicleResource extends JsonResource
             'brand' => $this->brand,
             'model' => $this->model,
             'year' => $this->year,
+            'mileage' => $this->mileage,
         ];
     }
 }

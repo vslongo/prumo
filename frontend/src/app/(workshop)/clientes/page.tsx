@@ -1,3 +1,3 @@
 'use client'
 
-export { CustomersPage as default } from '../../../features/customers/pages/CustomersPage'
+export { CustomersPage as default } from '../../../section/client/pages/CustomersPage'

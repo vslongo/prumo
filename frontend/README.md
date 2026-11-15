@@ -37,7 +37,8 @@ O manifest permite instalar o app. O service worker de produção substitui o an
 - `src/app`: rotas Next, layout raiz, providers MUI/React Query, erros e metadados.
 - `src/app/(workshop)`: painel, OS, orçamentos, clientes e configurações, com layout autenticado compartilhado.
 - `/login`, `/cadastro`, `/convite/[token]` e `/o/[token]`: rotas independentes do layout da oficina.
-- `src/features`: telas, formulários e chamadas à API, preservados na migração.
+- `src/section`: módulos da aplicação. Cada módulo reúne suas páginas, formulários, componentes, tipos, chamadas à API e testes.
+- `src/shared`: componentes, hooks e utilitários comuns aos módulos.
 - `src/shared/lib/navigation.tsx`: links e hooks com as APIs de navegação do Next. Não há React Router no runtime; ele é usado somente como histórico em memória nos testes unitários.
 
 A sessão continua sob responsabilidade do Laravel. O layout da oficina consulta `/api/me` e redireciona visitantes sem sessão para `/login`; a API mantém a autorização dos dados.
@@ -52,3 +53,53 @@ npm run e2e
 ```
 
 Os testes unitários usam Vitest. Vite e seu plugin React ficam somente como infraestrutura desses testes. Os testes E2E usam a API real e **recriam o banco de desenvolvimento** com a oficina demo; execute apenas em ambiente descartável. Primeira execução: `npx playwright install chromium`.
+
+## Organização dos módulos
+
+```text
+src/
+  app/                 # Rotas e layouts do Next.js
+  section/
+    auth/              # Login, cadastro, convites e equipe
+    cliente/           # Clientes e vínculo com veículos
+    dashboard/         # Painel inicial
+    items/             # Formulários e listagem de itens usados em OS e orçamentos
+    publicQuote/       # Aprovação pública e assinatura de orçamento
+    quotes/            # Criação, detalhes e listagem de orçamentos
+    serviceOrders/     # Criação, execução, detalhes e listagem de ordens de serviço
+    serviceTypes/      # Configurações, tipos de serviço e campos dinâmicos
+    vehicles/          # Cadastro e API de veículos
+  shared/              # Recursos reutilizáveis da aplicação
+```
+
+Dentro de cada módulo, `pages/` contém as telas e `components/` contém os formulários e outros componentes específicos. `api.ts` concentra o acesso à API; arquivos de tipos e testes ficam junto do código correspondente. As rotas em `app/` apontam para as telas em `section/`.
+
+Por exemplo, em `section/serviceOrders`, `pages/NewServiceOrderPage.tsx` cria a OS, `pages/ServiceOrderDetailPage.tsx` reúne os detalhes e a execução, `pages/ServiceOrdersPage.tsx` apresenta a listagem e `components/ServiceOrderList.tsx` renderiza a lista. Recursos usados por mais de um módulo são importados de seu módulo de origem ou de `shared/`.
+
+## Listagens globais
+
+As páginas principais de clientes, ordens de serviço e orçamentos usam `src/components/ListItems.tsx`. O componente busca uma resposta paginada `{ data, meta: { total, current_page, last_page } }` usando o cliente HTTP autenticado e React Query. Ele apresenta tabela, carregamento, erro com nova tentativa, estado vazio e paginação. Em telas pequenas, a tabela permite rolagem horizontal.
+
+Exemplo em um componente cliente, dentro dos providers da aplicação:
+
+```tsx
+import { ListItems } from '../../../components/ListItems'
+import type { Customer } from '../api'
+
+<ListItems<Customer>
+  url={`/api/customers?q=${encodeURIComponent(search)}`}
+  queryKey={['customers', 'search']}
+  columns={[
+    { id: 'name', header: 'Nome', cell: customer => customer.name },
+    { id: 'email', header: 'E-mail', cell: customer => customer.email || '—' },
+  ]}
+  getRowHref={customer => `/clientes/${customer.id}`}
+  label="Clientes"
+  emptyState={<p>Nenhum cliente encontrado.</p>}
+  errorMessage="Não deu para carregar os clientes."
+/>
+```
+
+`url` inclui os filtros; `ListItems` controla o parâmetro `page`, iniciando em 1 e reiniciando quando a URL muda. `queryKey` deve usar o prefixo do recurso já invalidado pelas mutações (`customers`, `service-orders/list` ou `quotes/list`). As colunas podem retornar texto, valores formatados e componentes, como badges. A primeira coluna oferece o link para os detalhes. Funções de renderização e links devem ser definidos no lado cliente.
+
+As páginas continuam responsáveis pelo cabeçalho, busca e filtros. Listas internas do painel e dos detalhes mantêm seus componentes específicos. Novas páginas de listagem devem utilizar `ListItems`.

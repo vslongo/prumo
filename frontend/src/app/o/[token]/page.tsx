@@ -1,3 +1,3 @@
 'use client'
 
-export { PublicQuotePage as default } from '../../../features/publicQuote/pages/PublicQuotePage'
+export { PublicQuotePage as default } from '../../../section/publicQuote/pages/PublicQuotePage'

@@ -1,3 +1,3 @@
 'use client'
 
-export { NewQuotePage as default } from '../../../../features/quotes/pages/NewQuotePage'
+export { NewQuotePage as default } from '../../../../section/quotes/pages/NewQuotePage'

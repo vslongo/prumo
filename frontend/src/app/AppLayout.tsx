@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
 import { ClipboardList, FileText, House, LogOut, Moon, Settings, Sun, Users, type LucideIcon } from 'lucide-react'
 import { Navigate, NavLink, useLocation, useNavigate } from '../shared/lib/navigation'
-import { authApi, canManageSettings, roleLabel, useMe } from '../features/auth/api'
+import { authApi, canManageSettings, roleLabel, useMe } from '../section/auth/api'
 import { useTheme } from '../shared/hooks/useTheme'
 import { Logo } from '../shared/ui/Logo'
 

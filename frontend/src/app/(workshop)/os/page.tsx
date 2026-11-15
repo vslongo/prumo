@@ -1,3 +1,3 @@
 'use client'
 
-export { ServiceOrdersPage as default } from '../../../features/serviceOrders/pages/ServiceOrdersPage'
+export { ServiceOrdersPage as default } from '../../../section/serviceOrders/pages/ServiceOrdersPage'

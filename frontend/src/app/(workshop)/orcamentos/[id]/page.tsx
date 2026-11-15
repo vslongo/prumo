@@ -1,3 +1,3 @@
 'use client'
 
-export { QuoteDetailPage as default } from '../../../../features/quotes/pages/QuoteDetailPage'
+export { QuoteDetailPage as default } from '../../../../section/quotes/pages/QuoteDetailPage'
