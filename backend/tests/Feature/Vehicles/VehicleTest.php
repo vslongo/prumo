@@ -35,7 +35,6 @@ it('permite a mesma placa em outro tenant', function () {
     expect($other->plate_normalized)->toBe('ABC1234');
 });
 
-
 it('salva e retorna a quilometragem no cadastro e nas consultas', function (?int $mileage) {
     actingAsRole();
     $customer = Customer::factory()->create();
@@ -63,7 +62,6 @@ it('recusa quilometragem inválida', function (mixed $mileage) {
         'mileage' => $mileage,
     ])->assertUnprocessable()->assertJsonValidationErrors('mileage');
 })->with([-1, 1.5, 'abc', 2147483648]);
-
 
 it('edita o veículo mantendo cliente e chassi e normalizando a placa', function () {
     actingAsRole();

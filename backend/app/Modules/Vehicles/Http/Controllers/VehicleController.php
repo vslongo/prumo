@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Vehicles\Http\Controllers;
 
 use App\Modules\Vehicles\Actions\CreateVehicle;
-use App\Modules\Vehicles\Actions\UpdateVehicle;
 use App\Modules\Vehicles\Actions\FindVehicleByPlate;
 use App\Modules\Vehicles\Actions\ListCustomerVehicles;
+use App\Modules\Vehicles\Actions\UpdateVehicle;
 use App\Modules\Vehicles\Data\VehicleData;
 use App\Modules\Vehicles\Http\Requests\FindVehicleByPlateRequest;
 use App\Modules\Vehicles\Http\Requests\StoreVehicleRequest;
