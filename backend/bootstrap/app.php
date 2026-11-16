@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        // Em dev o Next (localhost:5173) faz proxy para cá e troca o Host. Confiar no loopback e na rede do Docker faz o Laravel
+        // ler o X-Forwarded-Host e validar as URLs assinadas do R2 local com a origem do navegador (ADR 0009).
+        $middleware->trustProxies(at: ['127.0.0.1', '::1', '172.16.0.0/12']);
         // `tenant`: define a oficina do usuário logado, exige o 2FA do dono passado o prazo (Auth)
         // e barra escrita em modo somente leitura (Billing).
         $middleware->group('tenant', [ResolveTenant::class, EnsureTwoFactorEnabled::class, EnsureTenantCanWrite::class]);
