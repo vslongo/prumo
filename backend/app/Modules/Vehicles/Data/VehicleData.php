@@ -13,6 +13,7 @@ final readonly class VehicleData
         public ?string $brand = null,
         public ?string $model = null,
         public ?int $year = null,
+        public ?int $mileage = null,
     ) {}
 
     /** @param array<string, mixed> $input */
@@ -25,6 +26,7 @@ final readonly class VehicleData
             brand: $input['brand'] ?? null,
             model: $input['model'] ?? null,
             year: isset($input['year']) ? (int) $input['year'] : null,
+            mileage: isset($input['mileage']) ? (int) $input['mileage'] : null,
         );
     }
 }

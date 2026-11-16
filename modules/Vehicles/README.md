@@ -22,7 +22,7 @@ Placa normalizada única por tenant + VIN opcional. Histórico no core = lista d
 
 ## Estrutura
 `backend/app/Modules/Vehicles/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/vehicles/` (se tiver UI)
+`frontend/src/section/vehicles/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

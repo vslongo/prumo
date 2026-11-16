@@ -53,7 +53,7 @@ jobs:
         run: vendor/bin/pest --coverage --min=90
 
   # E2E críticos (CLAUDE.md §8): orçamento → aprovação com assinatura → OS, OS direta, foto em segundo plano.
-  # Tudo no runner: Laravel no `artisan serve`, fila sync (sem Redis nem worker), R2 local e o Vite na frente.
+  # Tudo no runner: Laravel no `artisan serve`, fila sync (sem Redis nem worker), R2 local e o Next na frente.
   e2e:
     runs-on: ubuntu-latest
     services:

@@ -22,7 +22,7 @@ Banco único com tenant_id; único lugar onde withoutGlobalScope é permitido.
 
 ## Estrutura
 `backend/app/Modules/Tenancy/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/tenancy/` (se tiver UI)
+`frontend/src/section/tenancy/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

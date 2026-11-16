@@ -22,7 +22,7 @@ Saldo = soma das movimentações.
 
 ## Estrutura
 `backend/app/Modules/Inventory/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/inventory/` (se tiver UI)
+`frontend/src/section/inventory/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

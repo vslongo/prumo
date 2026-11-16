@@ -7,9 +7,11 @@ namespace App\Modules\Vehicles\Http\Controllers;
 use App\Modules\Vehicles\Actions\CreateVehicle;
 use App\Modules\Vehicles\Actions\FindVehicleByPlate;
 use App\Modules\Vehicles\Actions\ListCustomerVehicles;
+use App\Modules\Vehicles\Actions\UpdateVehicle;
 use App\Modules\Vehicles\Data\VehicleData;
 use App\Modules\Vehicles\Http\Requests\FindVehicleByPlateRequest;
 use App\Modules\Vehicles\Http\Requests\StoreVehicleRequest;
+use App\Modules\Vehicles\Http\Requests\UpdateVehicleRequest;
 use App\Modules\Vehicles\Http\Resources\VehicleResource;
 use App\Modules\Vehicles\Models\Vehicle;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -43,6 +45,13 @@ final class VehicleController
         Gate::authorize('create', Vehicle::class);
 
         return new VehicleResource($create->handle(VehicleData::fromArray($request->validated())));
+    }
+
+    public function update(UpdateVehicleRequest $request, Vehicle $vehicle, UpdateVehicle $update): VehicleResource
+    {
+        Gate::authorize('update', $vehicle);
+
+        return new VehicleResource($update->handle($vehicle, $request->validated()));
     }
 
     public function show(Vehicle $vehicle): VehicleResource

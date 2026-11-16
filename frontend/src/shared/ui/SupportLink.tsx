@@ -3,7 +3,7 @@ import Typography from '@mui/material/Typography'
 import type { SxProps, Theme } from '@mui/material/styles'
 
 /** Só dígitos, com DDI (ex.: 5547999990000). Vazio = sem canal configurado, o link some. */
-const number = String(import.meta.env.VITE_SUPPORT_WHATSAPP ?? '').replace(/\D/g, '')
+const number = String(process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ?? '').replace(/\D/g, '')
 
 /** Canal de suporte: abre o WhatsApp do Prumo com a mensagem já começada. */
 export function SupportLink({ sx }: { sx?: SxProps<Theme> }) {

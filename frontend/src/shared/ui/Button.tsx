@@ -1,6 +1,7 @@
 import MuiButton, { type ButtonProps as MuiButtonProps } from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import type { ReactNode } from 'react'
+import { LinkBehavior } from './LinkBehavior'
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
 
@@ -49,7 +50,7 @@ export function Button({ variant, tone, full, loading, loadingText, icon, childr
   )
 }
 
-/** Botão que navega (href passa pelo react-router, ver LinkBehavior em app/theme). */
+/** Botão de navegação ligado explicitamente ao Next.js. */
 export function ButtonLink({ to, ...rest }: Omit<ButtonProps, 'href' | 'loading' | 'loadingText'> & { to: string }) {
-  return <Button href={to} {...rest} />
+  return <Button component={LinkBehavior} href={to} {...rest} />
 }

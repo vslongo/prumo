@@ -7,7 +7,7 @@ Não usamos banco por empresa: seriam centenas de bancos pra migrar, monitorar e
 ## Visão geral
 ```mermaid
 flowchart LR
-  PWA[React PWA] -->|HTTPS| API[Laravel API]
+  PWA[Next.js PWA] -->|HTTPS| API[Laravel API]
   PWA -->|upload direto, URL pré-assinada| R2[(Cloudflare R2)]
   PUB[Link público: aprovação + assinatura] --> API
   API --> PG[(PostgreSQL, tenant_id + global scope)]
@@ -70,7 +70,7 @@ Pós-core: inspections/inspection_items, parts/stock_movements, invoices, remind
 Hospedagem: Hetzner CX33 + Laravel Forge + Postgres no mesmo VPS + Cloudflare R2 + Sentry. Filas em produção pelo Horizon; e-mail transacional por SMTP (Resend previsto), hoje só o de senha nova (ADR 0007); backup diário do banco no R2 (`backup:database`). Passo a passo em `docs/deploy.md`.
 
 ## Erros (Sentry)
-Os três apps mandam erro para o Sentry só quando o DSN está configurado (`SENTRY_LARAVEL_DSN`, `VITE_SENTRY_DSN`, `SENTRY_DSN` do worker). Em dev fica vazio e nada sai da máquina.
+Os três apps mandam erro para o Sentry só quando o DSN está configurado (`SENTRY_LARAVEL_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN` do worker). Em dev fica vazio e nada sai da máquina.
 Regra de LGPD (CLAUDE.md §10): **nenhum dado pessoal vai para o Sentry**.
 - **Coleta automática desligada:** backend com `send_default_pii` falso e sem corpo da requisição; front e worker com `dataCollection` todo desligado. Sem replay nem tracing no front.
 - **Filtro antes do envio:** backend em `App\Shared\Support\SentryScrubber`, front em `src/shared/lib/sentry.ts`. Os dois filtros:

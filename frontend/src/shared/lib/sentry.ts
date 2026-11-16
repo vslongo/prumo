@@ -27,14 +27,14 @@ export function scrubBreadcrumb(breadcrumb: Sentry.Breadcrumb): Sentry.Breadcrum
   return breadcrumb
 }
 
-/** Liga o Sentry só com VITE_SENTRY_DSN (produção/staging). Sem replay e sem tracing. */
+/** Liga o Sentry só com NEXT_PUBLIC_SENTRY_DSN (produção/staging). Sem replay e sem tracing. */
 export function initSentry() {
-  const dsn = import.meta.env.VITE_SENTRY_DSN
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN
   if (!dsn) return
   Sentry.init({
     dsn,
-    environment: import.meta.env.VITE_SENTRY_ENVIRONMENT ?? import.meta.env.MODE,
-    release: import.meta.env.VITE_SENTRY_RELEASE,
+    environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
+    release: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
     // Coleta automática toda desligada (o padrão do SDK v11 é coletar); o scrub abaixo é a segunda barreira.
     dataCollection: { userInfo: false, cookies: false, httpHeaders: false, httpBodies: [], urlQueryParams: false },
     beforeSend: scrubEvent,

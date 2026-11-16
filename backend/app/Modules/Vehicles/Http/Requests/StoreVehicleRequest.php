@@ -25,6 +25,7 @@ final class StoreVehicleRequest extends FormRequest
             'vin' => ['nullable', 'string', 'regex:/^[A-HJ-NPR-Za-hj-npr-z0-9]{17}$/'],
             'brand' => ['nullable', 'string', 'max:60'],
             'model' => ['nullable', 'string', 'max:80'],
+            'mileage' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
             'year' => ['nullable', 'integer', 'between:1900,2100'],
         ];
     }

@@ -22,7 +22,7 @@ Token ≥32 bytes, expira em 7 dias; nova versão invalida token; aprovação ex
 
 ## Estrutura
 `backend/app/Modules/Quotes/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/quotes/` (se tiver UI)
+`frontend/src/section/quotes/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

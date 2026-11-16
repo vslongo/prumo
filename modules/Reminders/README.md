@@ -22,7 +22,7 @@ Só com consentimento; scheduler diário.
 
 ## Estrutura
 `backend/app/Modules/Reminders/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/reminders/` (se tiver UI)
+`frontend/src/section/reminders/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

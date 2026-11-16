@@ -1,3 +1,5 @@
+'use client'
+
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import Box from '@mui/material/Box'
@@ -10,11 +12,11 @@ import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { ClipboardList, FileText, House, LogOut, Moon, Settings, Shield, Sun, Users, type LucideIcon } from 'lucide-react'
-import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
-import { authApi, canManageSettings, roleLabel, useMe } from '../features/auth/api'
-import { TwoFactorBanner } from '../features/auth/components/TwoFactorBanner'
-import { TwoFactorCard } from '../features/auth/components/TwoFactorCard'
-import { BillingBanner } from '../features/billing/components/BillingBanner'
+import { Navigate, NavLink, useLocation, useNavigate } from '../shared/lib/navigation'
+import { authApi, canManageSettings, roleLabel, useMe } from '../section/auth/api'
+import { TwoFactorBanner } from '../section/auth/components/TwoFactorBanner'
+import { TwoFactorCard } from '../section/auth/components/TwoFactorCard'
+import { BillingBanner } from '../section/billing/components/BillingBanner'
 import { useTheme } from '../shared/hooks/useTheme'
 import { setSentryUser } from '../shared/lib/sentry'
 import { Logo } from '../shared/ui/Logo'
@@ -34,7 +36,7 @@ const isActive = (pathname: string, { to, end }: NavItem) => (end ? pathname ===
 // Fio laranja da marca marcando o item ativo.
 const accentBar = { content: '""', position: 'absolute', bgcolor: 'secondary.main' } as const
 
-export function AppLayout() {
+export function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: me, isLoading } = useMe()
   const [theme, toggleTheme] = useTheme()
   const queryClient = useQueryClient()
@@ -140,7 +142,7 @@ export function AppLayout() {
             <>
               <TwoFactorBanner me={me} />
               <BillingBanner isOwner={me.role === 'owner'} />
-              <Outlet />
+              {children}
             </>
           )}
           <SupportLink sx={{ mt: 5, textAlign: 'center' }} />

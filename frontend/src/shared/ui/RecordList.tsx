@@ -9,7 +9,7 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import { ChevronRight } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link } from '../lib/navigation'
 import { muted } from './styles'
 
 export type Column<T> = { header: string; cell: (row: T) => ReactNode; align?: 'right'; nowrap?: boolean }

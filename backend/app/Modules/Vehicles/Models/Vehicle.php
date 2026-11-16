@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $vin
  * @property string|null $brand
  * @property string|null $model
+ * @property int|null $mileage
  * @property int|null $year
  */
 #[UseFactory(VehicleFactory::class)]
@@ -31,6 +32,12 @@ final class Vehicle extends Model
     use BelongsToTenant, HasFactory, HasUuids, SoftDeletes;
 
     protected $guarded = ['id', 'tenant_id'];
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['mileage' => 'integer'];
+    }
 
     /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo

@@ -29,6 +29,7 @@ final class CreateVehicle
             'brand' => $data->brand,
             'model' => $data->model,
             'year' => $data->year,
+            'mileage' => $data->mileage,
         ]);
 
         VehicleCreated::dispatch($vehicle->tenant_id, $vehicle->id);

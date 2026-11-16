@@ -30,7 +30,7 @@ Acesso (calculado): trial | active | past_due (carência) | canceled (até paid_
 
 ## Estrutura
 `backend/app/Modules/Billing/` → Actions/ Data/ Enums/ Http/ Jobs/ Models/ Support/AsaasClient routes.php
-`frontend/src/features/billing/` → api.ts, components/BillingCard (Configurações › Assinatura, só dono), components/BillingBanner (aviso no topo)
+`frontend/src/section/billing/` → api.ts, components/BillingCard (Configurações › Assinatura, só dono), components/BillingBanner (aviso no topo)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

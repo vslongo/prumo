@@ -11,7 +11,7 @@ O frontend usava Tailwind v4, com os tokens da marca (`docs/brand/tokens.css`) r
 - **`docs/brand/tokens.css` continua sendo a fonte única da marca.** O tema (`frontend/src/app/theme.ts`) aponta a paleta para `var(--color-*)`, com `cssVariables: { nativeColor: true }`, para o MUI derivar hover e opacidade em CSS. Nenhum hex é copiado para o tema.
 - O claro/escuro continua sendo o atributo `data-theme` no `<html>` (script no `index.html` + `useTheme`). Não usamos o gerenciador de esquema de cores do MUI.
 - Os breakpoints do tema são os mesmos do layout anterior: `sm` 640 e `lg` 1024.
-- O `href` de `Button`, `Link` e `ListItemButton` passa pelo react-router (`shared/ui/LinkBehavior.tsx`, ligado no tema).
+- O `href` de `Button`, `Link` e `ListItemButton` passa pelo roteador (`shared/ui/LinkBehavior.tsx`, ligado no tema). Desde o ADR 0009, o roteador é o do Next.
 - Os selects são nativos (`NativeSelect`), por serem melhores no celular. Os ícones continuam no `lucide-react`.
 - Os componentes de `shared/ui` mantiveram a mesma API. As features estilizam só com `sx`.
 

@@ -25,7 +25,7 @@ Papéis owner/admin/technician/front. Técnico cria e envia orçamento, executa 
 
 ## Estrutura
 `backend/app/Modules/Auth/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/auth/` (se tiver UI)
+`frontend/src/section/auth/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)
