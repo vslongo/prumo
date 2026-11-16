@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Auth\Models\User;
+use App\Modules\Media\Actions\RequestUploadUrl;
 use App\Modules\ServiceOrders\Actions\OpenServiceOrder;
 use App\Modules\ServiceOrders\Data\OpenServiceOrderData;
 use App\Modules\ServiceOrders\Models\ServiceOrder;
 use App\Modules\ServiceOrders\Models\ServiceOrderItem;
 use App\Modules\Tenancy\TenantContext;
+use Illuminate\Support\Facades\Storage;
 
 /** OS com um item em outro tenant; devolve [OS, item]. */
 function foreignOrder(): array
@@ -66,4 +68,18 @@ it('não abre OS para veículo nem com técnico de outro tenant', function () {
         'vehicle_id' => $vehicle->id,
         'items' => [productItem($outsider)],
     ])->assertUnprocessable()->assertJsonValidationErrors('items.0.technician_id');
+});
+
+it('não lista, envia, confirma nem apaga foto de item de OS de outro tenant', function () {
+    Storage::fake('r2');
+    actingAsRole();
+    [$foreign, $item] = foreignOrder();
+    $mediaId = TenantContext::run($foreign->tenant_id, fn () => app(RequestUploadUrl::class)
+        ->handle('service_order_item', $item->id, 'image/jpeg', 1000)['media']->id);
+    $base = "/api/service-orders/{$foreign->id}/items/{$item->id}/photos";
+
+    $this->getJson("/api/service-orders/{$foreign->id}/photos")->assertNotFound();
+    $this->postJson($base, ['mime' => 'image/jpeg', 'size' => 1000])->assertNotFound();
+    $this->postJson("{$base}/{$mediaId}/confirm")->assertNotFound();
+    $this->deleteJson("{$base}/{$mediaId}")->assertNotFound();
 });

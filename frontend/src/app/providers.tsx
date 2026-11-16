@@ -6,9 +6,13 @@ import CssBaseline from '@mui/material/CssBaseline'
 import { ThemeProvider } from '@mui/material/styles'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ApiError } from '../shared/lib/http'
+import { initSentry } from '../shared/lib/sentry'
 import { ToastProvider } from '../shared/ui/Toast'
 import { theme } from './theme'
 import { ServiceWorker } from './ServiceWorker'
+
+// Só no navegador: este módulo é 'use client' e o Sentry é @sentry/react.
+if (typeof window !== 'undefined') initSentry()
 
 const createQueryClient = () => new QueryClient({
   defaultOptions: {

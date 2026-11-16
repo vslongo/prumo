@@ -12,7 +12,7 @@ vi.mock('./ItemForm', () => ({ ItemForm: () => null }))
 vi.mock('../../client/components/CustomerVehiclePicker', () => ({
   CustomerVehiclePicker: ({ onChange }: { onChange: (value: Selection | null) => void }) => {
     const choose = (id: string, mileage: number | null) => onChange({
-      customer: { id: 'c1', name: 'Ana', email: null, phone: null, document: null, consent_whatsapp_at: null },
+      customer: { id: 'c1', name: 'Ana', email: null, phone: null, document: null, consent_whatsapp_at: null, consent_whatsapp_source: null, anonymized_at: null },
       vehicle: { id, customer_id: 'c1', plate: 'ABC1234', vin: null, brand: null, model: null, year: null, mileage },
     })
     return <>

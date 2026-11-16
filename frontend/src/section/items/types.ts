@@ -21,3 +21,14 @@ export type Item = ItemInput & {
 }
 
 export const itemKindLabel: Record<ItemKind, string> = { service: 'Serviço', product: 'Peça/produto' }
+
+/** Foto de item (orçamento ou OS). URLs assinadas e curtas: a lista é buscada de novo antes de vencer. */
+export type ItemPhoto = {
+  id: string
+  item_id: string
+  url: string
+  thumb_url: string
+  created_at: string
+  /** Na OS: veio do item do orçamento de origem (não sai por aqui). */
+  from_quote?: boolean
+}

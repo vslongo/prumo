@@ -10,7 +10,7 @@ Clientes da oficina, consentimento e LGPD.
 customers
 
 ## API pública (outros módulos só usam isto)
-- Actions: CreateCustomer, SearchCustomers. Pendente: RecordWhatsappConsent, ExportCustomerData, AnonymizeCustomer
+- Actions: CreateCustomer, SearchCustomers, UpdateCustomer (inclui consentimento), ExportCustomerData, AnonymizeCustomer
 - Eventos emitidos: CustomerCreated, CustomerAnonymized
 - Eventos ouvidos: –
 
@@ -19,6 +19,8 @@ customers
 
 ## Regras de negócio
 CPF/telefone encrypted + hash; sem consentimento não recebe WhatsApp.
+- Consentimento: marcar grava data e origem (só se ainda não tinha); desmarcar revoga e apaga os dois.
+- Exportar e anonimizar: só owner/admin. Anonimizar é irreversível e idempotente (ADR 0005): apaga nome, e-mail, telefone, documento, hashes e consentimento; mantém o cadastro anônimo com veículos, orçamentos, OS e aprovações assinadas. Cliente anonimizado não pode ser editado.
 
 ## Estrutura
 `backend/app/Modules/Customers/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
@@ -35,3 +37,4 @@ nenhuma
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
 - 2026-10-27: CreateCustomer/SearchCustomers implementados. Telefone e CPF/CNPJ só dígitos, cast `encrypted` + `*_hash` (HMAC-SHA256 com APP_KEY) para busca exata. Consentimento de WhatsApp gravado com data e origem na criação.
+- 2026-11-04: UpdateCustomer (PATCH, com consentimento e revogação), ExportCustomerData (GET customers/{id}/export, JSON) e AnonymizeCustomer (POST customers/{id}/anonymize, coluna `anonymized_at`, evento CustomerAnonymized). Decisões na ADR 0005.

@@ -1,4 +1,4 @@
-import { centsToInput, formatKm, formatMoney, formatPlate, formatQuantity, formatWhen, parseMoneyToCents } from './format'
+import { centsToInput, formatDate, formatKm, formatMoney, formatPlate, formatQuantity, formatWhen, parseMoneyToCents } from './format'
 
 describe('dinheiro', () => {
   it('formata centavos em reais', () => {
@@ -48,5 +48,12 @@ describe('outros formatos', () => {
     expect(formatQuantity('4.500')).toBe('4,5')
     expect(formatPlate('ABC1234')).toBe('ABC-1234')
     expect(formatPlate('BRA2E19')).toBe('BRA2E19')
+  })
+})
+
+describe('data', () => {
+  it('data sem hora não volta um dia no fuso de Brasília', () => {
+    expect(formatDate('2026-12-10')).toBe('10/12/2026')
+    expect(formatDate(null)).toBe('—')
   })
 })

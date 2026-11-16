@@ -1,10 +1,13 @@
 <?php
 
+use App\Modules\Auth\Http\Middleware\EnsureTwoFactorEnabled;
+use App\Modules\Billing\Http\Middleware\EnsureTenantCanWrite;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,10 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
-        $middleware->alias(['tenant' => ResolveTenant::class]);
+        // `tenant`: define a oficina do usuário logado, exige o 2FA do dono passado o prazo (Auth)
+        // e barra escrita em modo somente leitura (Billing).
+        $middleware->group('tenant', [ResolveTenant::class, EnsureTwoFactorEnabled::class, EnsureTenantCanWrite::class]);
         // O tenant precisa estar no contexto antes do route model binding, senão o scope barra tudo.
         $middleware->prependToPriorityList(SubstituteBindings::class, ResolveTenant::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Sentry (sem DSN não envia nada); o filtro de dado pessoal está em config/sentry.php.
+        Integration::handles($exceptions);
         $exceptions->shouldRenderJsonWhen(fn ($request) => $request->is('api/*'));
     })->create();

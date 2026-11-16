@@ -30,4 +30,10 @@ enum ServiceOrderStatus: string
     {
         return in_array($this, [self::Open, self::InProgress], true);
     }
+
+    /** Fotos (antes, durante, serviço pronto, entrega) até a OS ser fechada ou cancelada. */
+    public function acceptsPhotos(): bool
+    {
+        return ! in_array($this, [self::Closed, self::Canceled], true);
+    }
 }

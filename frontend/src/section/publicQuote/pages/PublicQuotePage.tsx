@@ -17,6 +17,7 @@ import { ErrorBox } from '../../../shared/ui/States'
 import { muted } from '../../../shared/ui/styles'
 import { publicQuoteApi, type PublicQuote } from '../api'
 import { SignaturePad, type SignaturePadHandle } from '../components/SignaturePad'
+import { ItemPhotos } from '../../items/components/ItemPhotos'
 
 const column = { mx: 'auto', maxWidth: 672, px: 2 } as const
 
@@ -108,6 +109,7 @@ function Decision({ quote: q, token, onDone }: { quote: PublicQuote; token: stri
   const [nameError, setNameError] = useState<string | undefined>()
   const pad = useRef<SignaturePadHandle>(null)
   const onSignChange = useCallback((empty: boolean) => setSigned(!empty), [])
+  const photos = useQuery({ queryKey: ['public-quote', token, 'photos'], queryFn: () => publicQuoteApi.photos(token), staleTime: 10 * 60_000 })
 
   const total = q.items.filter((i) => selected.has(i.position)).reduce((s, i) => s + i.total_cents, 0)
 
@@ -196,6 +198,13 @@ function Decision({ quote: q, token, onDone }: { quote: PublicQuote; token: stri
                     </Box>
                   ) : null}
                 </Box>
+              </Box>
+              {/* Fora do label: tocar na foto abre a foto, não marca/desmarca o item. */}
+              <Box sx={{ px: 2, pb: 2, mt: -1, pl: 6.5, '&:empty': { display: 'none' } }}>
+                <ItemPhotos
+                  label={`Fotos de ${item.description}`}
+                  photos={(photos.data ?? []).filter((p) => p.position === item.position).map((p, i) => ({ key: `${item.position}-${i}`, url: p.url, thumb_url: p.thumb_url }))}
+                />
               </Box>
             </li>
           ))}

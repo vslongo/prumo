@@ -23,12 +23,16 @@ final class SignUpRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', Password::min(8)],
+            'accept_terms' => ['accepted'],
         ];
     }
 
     /** @return array<string, string> */
     public function messages(): array
     {
-        return ['email.unique' => 'Este e-mail já tem cadastro. Entre com ele ou use outro.'];
+        return [
+            'email.unique' => 'Este e-mail já tem cadastro. Entre com ele ou use outro.',
+            'accept_terms.accepted' => 'Para criar a conta é preciso aceitar os termos de uso e a política de privacidade.',
+        ];
     }
 }

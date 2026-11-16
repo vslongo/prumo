@@ -4,10 +4,11 @@ import type { User } from '../../auth/api'
 import type { ServiceType } from '../../serviceTypes/api'
 import { ItemForm } from './ItemForm'
 
+const two_factor = { enabled: false, required_from: null, blocked: false }
 const users: User[] = [
-  { id: 'u1', name: 'Carlos Mendes', email: 'c@x.test', role: 'owner', is_active: true },
-  { id: 'u2', name: 'Rafael Souza', email: 'r@x.test', role: 'technician', is_active: true },
-  { id: 'u3', name: 'Saiu da Oficina', email: 's@x.test', role: 'technician', is_active: false },
+  { id: 'u1', name: 'Carlos Mendes', email: 'c@x.test', role: 'owner', is_active: true, two_factor },
+  { id: 'u2', name: 'Rafael Souza', email: 'r@x.test', role: 'technician', is_active: true, two_factor },
+  { id: 'u3', name: 'Saiu da Oficina', email: 's@x.test', role: 'technician', is_active: false, two_factor },
 ]
 
 const types: ServiceType[] = [

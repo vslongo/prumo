@@ -18,6 +18,19 @@ services:
     working_dir: /app/backend
     depends_on: [pgsql, redis]
     command: php artisan queue:work --tries=5
+  # Worker WhatsApp. Só sobe com `docker compose --profile whatsapp up`, porque precisa das credenciais
+  # da Meta em worker-whatsapp/.env (sem WHATSAPP_PHONE_NUMBER_ID no backend nada é enfileirado mesmo).
+  worker-whatsapp:
+    image: node:24-alpine
+    profiles: [whatsapp]
+    volumes: ["./worker-whatsapp:/app", "worker_node_modules:/app/node_modules"]
+    working_dir: /app
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      API_URL: http://app:8000
+    ports: ["3001:3001"]
+    depends_on: [redis, app]
+    command: sh -c "npm ci --omit=dev && npm start"
   pgsql:
     image: postgres:16-alpine
     environment:
@@ -31,3 +44,4 @@ services:
 volumes:
   pgdata:
   vendor:
+  worker_node_modules:

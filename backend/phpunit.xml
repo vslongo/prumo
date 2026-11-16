@@ -15,9 +15,11 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+    <!-- Cobertura medida só onde o CLAUDE.md §8 exige mínimo de 90% (o CI roda o Pest com coverage e min=90). -->
     <source>
         <include>
-            <directory>app</directory>
+            <directory>app/Modules/*/Actions</directory>
+            <directory>app/Modules/*/Enums</directory>
         </include>
     </source>
     <php>

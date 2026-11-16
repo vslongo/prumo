@@ -1,7 +1,9 @@
 import { ENDPOINTS } from '../../routes/paths'
 import { http, type Paginated, type Wrapped } from '../../shared/lib/http'
 import type { QuoteStatus } from '../../shared/lib/status'
-import type { Item, ItemInput } from '../items/types'
+import type { Item, ItemInput, ItemPhoto } from '../items/types'
+import type { UploadTicket } from '../../shared/upload/queue'
+import type { PhotoApi } from '../items/hooks/useItemPhotos'
 import type { VehicleSummary } from '../vehicles/api'
 
 const endpoints = ENDPOINTS()
@@ -39,4 +41,17 @@ export const quotesApi = {
   addItem: async (id: string, item: ItemInput) => (await http.post<Wrapped<Quote>>(endpoints.Quotes.addItem(id), item)).data,
   removeItem: async (id: string, itemId: string) => (await http.delete<Wrapped<Quote>>(endpoints.Quotes.removeItem(id, itemId))).data,
   send: (id: string) => http.post<SentQuote>(endpoints.Quotes.send(id)),
+  photos: async (id: string) => (await http.get<Wrapped<ItemPhoto[]>>(`/api/quotes/${id}/photos`)).data,
+  requestPhotoUpload: async (id: string, itemId: string, mime: string, size: number) =>
+    (await http.post<Wrapped<UploadTicket>>(`/api/quotes/${id}/items/${itemId}/photos`, { mime, size })).data,
+  confirmPhoto: (id: string, itemId: string, mediaId: string) => http.post<void>(`/api/quotes/${id}/items/${itemId}/photos/${mediaId}/confirm`),
+  removePhoto: (id: string, itemId: string, mediaId: string) => http.delete<void>(`/api/quotes/${id}/items/${itemId}/photos/${mediaId}`),
 }
+
+/** Fotos dos itens deste orçamento (lista, envio pela fila, remoção). */
+export const quotesPhotoApi = (id: string): PhotoApi => ({
+  list: () => quotesApi.photos(id),
+  request: (itemId, mime, size) => quotesApi.requestPhotoUpload(id, itemId, mime, size),
+  confirm: (itemId, mediaId) => quotesApi.confirmPhoto(id, itemId, mediaId),
+  remove: (itemId, mediaId) => quotesApi.removePhoto(id, itemId, mediaId),
+})

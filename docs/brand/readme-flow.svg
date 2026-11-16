@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 170" width="860" height="170" role="img" aria-label="Orçamento, link no WhatsApp, assinatura do cliente, OS criada">
+  <style>
+    .card { fill: #191d1c; stroke: #323a37; stroke-width: 1.5; }
+    .t { font: 600 15px "IBM Plex Sans", "Segoe UI", sans-serif; fill: #ebece8; }
+    .s { font: 400 12px "IBM Plex Sans", "Segoe UI", sans-serif; fill: #a2a9a5; }
+    .n { font: 700 13px "IBM Plex Sans", "Segoe UI", sans-serif; fill: #0b1715; }
+    .line { stroke: #323a37; stroke-width: 3; }
+    .run { stroke: #f08a3a; stroke-width: 3; stroke-dasharray: 10 300; animation: run 4s linear infinite; }
+    .step { animation: glow 4s ease-in-out infinite; }
+    .step:nth-of-type(2) { animation-delay: 1s; }
+    .step:nth-of-type(3) { animation-delay: 2s; }
+    .step:nth-of-type(4) { animation-delay: 3s; }
+    .dot { fill: #3fae99; }
+    @keyframes run { from { stroke-dashoffset: 310; } to { stroke-dashoffset: -310; } }
+    @keyframes glow { 0%, 30%, 100% { opacity: .55; } 10%, 20% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .run, .step { animation: none; opacity: 1; } }
+  </style>
+  <rect width="860" height="170" rx="16" fill="#111413"/>
+  <line class="line" x1="140" y1="85" x2="720" y2="85"/>
+  <line class="run" x1="140" y1="85" x2="720" y2="85"/>
+  <g>
+    <g class="step" transform="translate(30 35)">
+      <rect class="card" width="170" height="100" rx="12"/>
+      <circle class="dot" cx="26" cy="28" r="12"/><text class="n" x="26" y="33" text-anchor="middle">1</text>
+      <text class="t" x="18" y="66">Orçamento</text><text class="s" x="18" y="85">técnico monta no celular</text>
+    </g>
+    <g class="step" transform="translate(240 35)">
+      <rect class="card" width="170" height="100" rx="12"/>
+      <circle class="dot" cx="26" cy="28" r="12"/><text class="n" x="26" y="33" text-anchor="middle">2</text>
+      <text class="t" x="18" y="66">Link no WhatsApp</text><text class="s" x="18" y="85">API oficial da Meta</text>
+    </g>
+    <g class="step" transform="translate(450 35)">
+      <rect class="card" width="170" height="100" rx="12"/>
+      <circle class="dot" cx="26" cy="28" r="12"/><text class="n" x="26" y="33" text-anchor="middle">3</text>
+      <text class="t" x="18" y="66">Cliente assina</text><text class="s" x="18" y="85">aprova item por item</text>
+    </g>
+    <g class="step" transform="translate(660 35)">
+      <rect class="card" width="170" height="100" rx="12" stroke="#f08a3a"/>
+      <circle cx="26" cy="28" r="12" fill="#f08a3a"/><text class="n" x="26" y="33" text-anchor="middle">4</text>
+      <text class="t" x="18" y="66">OS criada</text><text class="s" x="18" y="85">na hora, com os itens</text>
+    </g>
+  </g>
+</svg>

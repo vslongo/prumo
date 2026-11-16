@@ -1,7 +1,9 @@
 import { ENDPOINTS } from '../../routes/paths'
 import { http, type Paginated, type Wrapped } from '../../shared/lib/http'
 import type { ServiceOrderStatus } from '../../shared/lib/status'
-import type { Item, ItemInput } from '../items/types'
+import type { Item, ItemInput, ItemPhoto } from '../items/types'
+import type { UploadTicket } from '../../shared/upload/queue'
+import type { PhotoApi } from '../items/hooks/useItemPhotos'
 import type { VehicleSummary } from '../vehicles/api'
 
 const endpoints = ENDPOINTS()
@@ -48,4 +50,17 @@ export const serviceOrdersApi = {
   markDone: async (id: string, itemId: string) => (await http.post<Wrapped<ServiceOrder>>(endpoints.ServiceOrders.markItemDone(id, itemId))).data,
   transition: async (id: string, status: ServiceOrderStatus) => (await http.post<Wrapped<ServiceOrder>>(endpoints.ServiceOrders.transition(id), { status })).data,
   close: async (id: string, mileageOut: number) => (await http.post<Wrapped<ServiceOrder>>(endpoints.ServiceOrders.close(id), { mileage_out: mileageOut })).data,
+  photos: async (id: string) => (await http.get<Wrapped<ItemPhoto[]>>(`/api/service-orders/${id}/photos`)).data,
+  requestPhotoUpload: async (id: string, itemId: string, mime: string, size: number) =>
+    (await http.post<Wrapped<UploadTicket>>(`/api/service-orders/${id}/items/${itemId}/photos`, { mime, size })).data,
+  confirmPhoto: (id: string, itemId: string, mediaId: string) => http.post<void>(`/api/service-orders/${id}/items/${itemId}/photos/${mediaId}/confirm`),
+  removePhoto: (id: string, itemId: string, mediaId: string) => http.delete<void>(`/api/service-orders/${id}/items/${itemId}/photos/${mediaId}`),
 }
+
+/** Fotos dos itens deste OS (lista, envio pela fila, remoção). */
+export const serviceOrdersPhotoApi = (id: string): PhotoApi => ({
+  list: () => serviceOrdersApi.photos(id),
+  request: (itemId, mime, size) => serviceOrdersApi.requestPhotoUpload(id, itemId, mime, size),
+  confirm: (itemId, mediaId) => serviceOrdersApi.confirmPhoto(id, itemId, mediaId),
+  remove: (itemId, mediaId) => serviceOrdersApi.removePhoto(id, itemId, mediaId),
+})

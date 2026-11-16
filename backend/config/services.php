@@ -34,6 +34,14 @@ return [
         'worker_secret' => env('WHATSAPP_WORKER_SECRET'),
     ],
 
+    // Asaas (assinatura do SaaS). Sandbox por padrão; produção: https://api.asaas.com/v3.
+    'asaas' => [
+        'base_url' => env('ASAAS_BASE_URL', 'https://api-sandbox.asaas.com/v3'),
+        'api_key' => env('ASAAS_API_KEY'),
+        // Token que o Asaas manda no header `asaas-access-token` de cada webhook.
+        'webhook_token' => env('ASAAS_WEBHOOK_TOKEN'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

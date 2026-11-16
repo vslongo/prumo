@@ -6,6 +6,9 @@ namespace Database\Seeders;
 
 use App\Modules\Auth\Enums\UserRole;
 use App\Modules\Auth\Models\User;
+use App\Modules\Billing\Enums\Plan;
+use App\Modules\Billing\Enums\SubscriptionStatus;
+use App\Modules\Billing\Models\Subscription;
 use App\Modules\Customers\Actions\CreateCustomer;
 use App\Modules\Customers\Data\CustomerData;
 use App\Modules\Tenancy\Enums\TenantStatus;
@@ -43,6 +46,11 @@ final class DemoSeeder extends Seeder
         }
 
         TenantContext::run($tenant->id, function () {
+            // Assinatura Pro paga: a demo nunca cai em somente leitura (sem Asaas no dev).
+            Subscription::query()->exists() || Subscription::create([
+                'plan' => Plan::Pro, 'status' => SubscriptionStatus::Active, 'paid_until' => now()->addYears(10),
+            ]);
+
             if (Vehicle::query()->exists()) {
                 return;
             }

@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $document
  * @property Carbon|null $consent_whatsapp_at
  * @property string|null $consent_whatsapp_source
+ * @property Carbon|null $anonymized_at
  */
 #[UseFactory(CustomerFactory::class)]
 final class Customer extends Model
@@ -39,6 +40,7 @@ final class Customer extends Model
             'phone' => 'encrypted',
             'document' => 'encrypted',
             'consent_whatsapp_at' => 'datetime',
+            'anonymized_at' => 'datetime',
         ];
     }
 }

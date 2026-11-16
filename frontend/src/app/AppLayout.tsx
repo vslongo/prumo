@@ -10,11 +10,17 @@ import Skeleton from '@mui/material/Skeleton'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { useQueryClient } from '@tanstack/react-query'
-import { ClipboardList, FileText, House, LogOut, Moon, Settings, Sun, Users, type LucideIcon } from 'lucide-react'
+import { useEffect } from 'react'
+import { ClipboardList, FileText, House, LogOut, Moon, Settings, Shield, Sun, Users, type LucideIcon } from 'lucide-react'
 import { Navigate, NavLink, useLocation, useNavigate } from '../shared/lib/navigation'
 import { authApi, canManageSettings, roleLabel, useMe } from '../section/auth/api'
+import { TwoFactorBanner } from '../section/auth/components/TwoFactorBanner'
+import { TwoFactorCard } from '../section/auth/components/TwoFactorCard'
+import { BillingBanner } from '../section/billing/components/BillingBanner'
 import { useTheme } from '../shared/hooks/useTheme'
+import { setSentryUser } from '../shared/lib/sentry'
 import { Logo } from '../shared/ui/Logo'
+import { SupportLink } from '../shared/ui/SupportLink'
 
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean }
 
@@ -36,6 +42,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+
+  // Erro no Sentry diz de qual usuário veio (só o id).
+  useEffect(() => setSentryUser(me?.id ?? null), [me?.id])
 
   if (isLoading) {
     return (
@@ -71,6 +80,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <SideLink key={item.to} {...item} />
           ))}
           <Box sx={{ flex: 1 }} />
+          <SideLink to="/seguranca" label="Segurança" icon={Shield} />
           {canManageSettings(me) ? <SideLink to="/configuracoes" label="Configurações" icon={Settings} /> : null}
         </Stack>
         <Box sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
@@ -102,6 +112,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <IconButton onClick={toggleTheme} aria-label={theme === 'dark' ? 'Usar tema claro' : 'Usar tema escuro'} sx={{ width: 44, height: 44, color: 'text.secondary' }}>
               <ThemeIcon size={20} aria-hidden />
             </IconButton>
+            <IconButton component={NavLink} to="/seguranca" aria-label="Segurança" sx={{ width: 44, height: 44, color: 'text.secondary' }}>
+              <Shield size={20} aria-hidden />
+            </IconButton>
             {canManageSettings(me) ? (
               <IconButton component={NavLink} to="/configuracoes" aria-label="Configurações" sx={{ width: 44, height: 44, color: 'text.secondary' }}>
                 <Settings size={20} aria-hidden />
@@ -114,7 +127,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </Box>
 
         <Box component="main" sx={{ mx: 'auto', width: '100%', maxWidth: 1024, flex: 1, px: { xs: 2, lg: 4 }, pt: { xs: 2.5, lg: 4 }, pb: { xs: 14, lg: 6 } }}>
-          {children}
+          {me.two_factor.blocked ? (
+            // Dono passou do prazo sem 2FA: a API só libera a ativação, então o app mostra só ela.
+            <>
+              <Typography variant="h1" sx={{ fontSize: 24, mb: 1 }}>
+                Ative a verificação em duas etapas
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 2.5 }}>
+                Para proteger os dados da oficina e dos clientes, a conta do dono precisa do código do app autenticador além da senha. Leva um minuto.
+              </Typography>
+              <TwoFactorCard me={me} />
+            </>
+          ) : (
+            <>
+              <TwoFactorBanner me={me} />
+              <BillingBanner isOwner={me.role === 'owner'} />
+              {children}
+            </>
+          )}
+          <SupportLink sx={{ mt: 5, textAlign: 'center' }} />
         </Box>
 
         {/* Mobile: navegação inferior */}

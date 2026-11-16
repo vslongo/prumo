@@ -28,10 +28,12 @@ type Props<T extends Displayable> = {
   schemaFor?: (item: T) => FieldSchema[]
   actions?: (item: T, index: number) => ReactNode
   aside?: (item: T) => ReactNode
+  /** Abaixo das ações (ex.: fotos do item). */
+  extra?: (item: T) => ReactNode
 }
 
 /** Itens de orçamento/OS: o que é, quem faz, quanto custa. */
-export function ItemList<T extends Displayable>({ items, users, schemaFor, actions, aside }: Props<T>) {
+export function ItemList<T extends Displayable>({ items, users, schemaFor, actions, aside, extra }: Props<T>) {
   const technician = (id: string) => users.find((u) => u.id === id)?.name ?? 'Técnico'
 
   return (
@@ -59,6 +61,7 @@ export function ItemList<T extends Displayable>({ items, users, schemaFor, actio
                 </Typography>
               ) : null}
               {actions ? <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>{actions(item, index)}</Stack> : null}
+              {extra?.(item)}
             </Box>
           </Stack>
         )

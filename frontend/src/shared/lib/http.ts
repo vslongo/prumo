@@ -41,7 +41,7 @@ export function ensureCsrf(force = false): Promise<void> {
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-async function request<T>(method: Method, url: string, body?: unknown): Promise<T> {
+async function request<T>(method: Method, url: string, body?: unknown, retried = false): Promise<T> {
   if (method !== 'GET') {
     await ensureCsrf()
   }
@@ -56,6 +56,13 @@ async function request<T>(method: Method, url: string, body?: unknown): Promise<
     response = await fetch(url, { method, headers, credentials: 'include', body: body === undefined ? undefined : JSON.stringify(body) })
   } catch {
     throw new ApiError(0, 'Sem conexão. Confira a internet e tente de novo.')
+  }
+
+  // 419 = token CSRF não bate com a sessão (sessão venceu, ou outra resposta trocou o cookie no meio do caminho).
+  // A API recusa antes de executar qualquer coisa, então repetir uma vez com token novo é seguro.
+  if (response.status === 419 && !retried) {
+    await ensureCsrf(true)
+    return request<T>(method, url, body, true)
   }
 
   if (response.status === 204) return undefined as T
@@ -76,7 +83,7 @@ export const http = {
   post: <T>(url: string, body?: unknown) => request<T>('POST', url, body ?? {}),
   put: <T>(url: string, body?: unknown) => request<T>('PUT', url, body ?? {}),
   patch: <T>(url: string, body?: unknown) => request<T>('PATCH', url, body ?? {}),
-  delete: <T>(url: string) => request<T>('DELETE', url),
+  delete: <T>(url: string, body?: unknown) => request<T>('DELETE', url, body),
 }
 
 export type Paginated<T> = { data: T[]; meta: { total: number; current_page: number; last_page: number } }

@@ -7,23 +7,28 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Car, ClipboardList, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from '../../../shared/lib/navigation'
-import { formatPlate } from '../../../shared/lib/format'
+import { formatDate, formatPlate } from '../../../shared/lib/format'
 import { BackLink } from '../../../shared/ui/BackLink'
 import { Button, ButtonLink } from '../../../shared/ui/Button'
 import { Card, CardTitle, Detail, DetailGrid, EmptyState, ErrorBox, ListSkeleton, PageHeader } from '../../../shared/ui/States'
 import { muted, optionRowSx } from '../../../shared/ui/styles'
 import { useToast } from '../../../shared/ui/Toast'
+import { canManageSettings, useMe } from '../../auth/api'
 import { serviceOrdersApi } from '../../serviceOrders/api'
 import { ServiceOrderList } from '../../serviceOrders/components/ServiceOrderList'
 import { vehicleName, vehiclesApi, type Vehicle } from '../../vehicles/api'
 import { VehicleForm } from '../../vehicles/components/VehicleForm'
 import { customersApi, formatPhone } from '../api'
+import { CustomerEditForm } from '../components/CustomerEditForm'
+import { CustomerPrivacyCard } from '../components/CustomerPrivacyCard'
 
 export function CustomerDetailPage() {
   const { id = '' } = useParams()
-  const [editing, setEditing] = useState<Vehicle | null>(null)
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [adding, setAdding] = useState(false)
   const [vehicleId, setVehicleId] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
+  const { data: me } = useMe()
   const queryClient = useQueryClient()
   const toast = useToast()
 
@@ -43,22 +48,60 @@ export function CustomerDetailPage() {
 
   return (
     <>
-      <PageHeader back={<BackLink to="/clientes" label="Clientes" />} title={c.name} subtitle={formatPhone(c.phone)} />
+      <PageHeader back={<BackLink to="/clientes" label="Clientes" />} title={c.name} subtitle={c.anonymized_at ? undefined : formatPhone(c.phone)} />
 
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: '340px minmax(0, 1fr)' }, alignItems: { lg: 'start' } }}>
         <Stack sx={{ gap: 2 }}>
           <Card>
-            <DetailGrid columns={1}>
-              <Detail label="Celular">{formatPhone(c.phone)}</Detail>
-              {c.email ? <Detail label="E-mail">{c.email}</Detail> : null}
-              <Detail label="WhatsApp">{c.consent_whatsapp_at ? 'Aceita receber' : 'Sem autorização'}</Detail>
-            </DetailGrid>
+            <CardTitle
+              action={
+                editing || c.anonymized_at ? null : (
+                  <Button variant="ghost" icon={<Pencil size={18} aria-hidden />} onClick={() => setEditing(true)}>
+                    Editar
+                  </Button>
+                )
+              }
+            >
+              Dados do cliente
+            </CardTitle>
+            {c.anonymized_at ? (
+              <Typography sx={muted}>Cliente anonimizado em {formatDate(c.anonymized_at)}. Os dados pessoais foram apagados.</Typography>
+            ) : editing ? (
+              <CustomerEditForm
+                customer={c}
+                onCancel={() => setEditing(false)}
+                onSaved={(updated) => {
+                  queryClient.setQueryData(['customers', id], updated)
+                  queryClient.invalidateQueries({ queryKey: ['customers'] })
+                  setEditing(false)
+                  toast('Cliente atualizado.')
+                }}
+              />
+            ) : (
+              <DetailGrid columns={1}>
+                <Detail label="Celular">{formatPhone(c.phone)}</Detail>
+                {c.email ? <Detail label="E-mail">{c.email}</Detail> : null}
+                {c.document ? <Detail label="CPF/CNPJ">{c.document}</Detail> : null}
+                <Detail label="WhatsApp">{c.consent_whatsapp_at ? `Aceita receber desde ${formatDate(c.consent_whatsapp_at)}` : 'Sem autorização'}</Detail>
+              </DetailGrid>
+            )}
           </Card>
+
+          {canManageSettings(me) ? (
+            <CustomerPrivacyCard
+              customer={c}
+              onAnonymized={(updated) => {
+                queryClient.setQueryData(['customers', id], updated)
+                queryClient.invalidateQueries({ queryKey: ['customers'] })
+                setEditing(false)
+              }}
+            />
+          ) : null}
 
           <Card>
             <CardTitle
               action={
-                adding || editing ? null : (
+                adding || editingVehicle || c.anonymized_at ? null : (
                   <Button variant="ghost" icon={<Plus size={18} aria-hidden />} onClick={() => setAdding(true)}>
                     Veículo
                   </Button>
@@ -67,20 +110,20 @@ export function CustomerDetailPage() {
             >
               Veículos
             </CardTitle>
-            {adding || editing ? (
+            {adding || editingVehicle ? (
               <Box sx={{ mb: 1.5 }}>
                 <VehicleForm
-                  key={editing?.id ?? 'new'}
-                  vehicle={editing ?? undefined}
+                  key={editingVehicle?.id ?? 'new'}
+                  vehicle={editingVehicle ?? undefined}
                   customerId={id}
-                  onCancel={() => { setAdding(false); setEditing(null) }}
+                  onCancel={() => { setAdding(false); setEditingVehicle(null) }}
                   onCreated={(v) => {
                     queryClient.invalidateQueries({ queryKey: ['customers', id, 'vehicles'] })
                     queryClient.invalidateQueries({ queryKey: ['vehicles', v.id] })
                     setAdding(false)
-                    setEditing(null)
+                    setEditingVehicle(null)
                     setVehicleId(v.id)
-                    toast(editing ? 'Veículo atualizado.' : 'Veículo cadastrado.')
+                    toast(editingVehicle ? 'Veículo atualizado.' : 'Veículo cadastrado.')
                   }}
                 />
               </Box>
@@ -100,7 +143,7 @@ export function CustomerDetailPage() {
                         {vehicleName(v)} {v.year ?? ''}
                       </Box>
                     </ButtonBase>
-                    <Button variant="ghost" aria-label={`Editar veículo ${formatPlate(v.plate)}`} icon={<Pencil size={16} aria-hidden />} onClick={() => { setAdding(false); setEditing(v) }}>
+                    <Button variant="ghost" aria-label={`Editar veículo ${formatPlate(v.plate)}`} icon={<Pencil size={16} aria-hidden />} onClick={() => { setAdding(false); setEditingVehicle(v) }}>
                       Editar
                     </Button>
                   </Stack>
