@@ -35,7 +35,7 @@ Verificado no código. Em ordem de prioridade.
 Situação em 2026-11-09: o código dos cinco itens está pronto. O que sobra em cada um é configuração ou decisão que depende de você.
 
 - [x] **Recuperar senha** (ADR 0007): telas, rotas e e-mail em fila prontos. **Falta:** contratar o provedor de e-mail e verificar o domínio (`docs/deploy.md`, item 6).
-- [x] **Termos de uso e política de privacidade** com aceite no cadastro, data e versão gravadas (ADR 0008). **Falta:** revisão de advogado, preencher `frontend/src/features/legal/company.ts` e confirmar os prazos que o texto promete (tabela no ADR 0008). Não publique antes disso.
+- [x] **Termos de uso e política de privacidade** com aceite no cadastro, data e versão gravadas (ADR 0008). **Falta:** revisão de advogado, preencher `frontend/src/section/legal/company.ts` e confirmar os prazos que o texto promete (tabela no ADR 0008). Não publique antes disso.
 - [ ] **Produção no ar**: Horizon instalado, backup diário do banco no R2 e guia em `docs/deploy.md` prontos. **Falta:** contratar o VPS e o Forge, domínio, e seguir o guia.
 - [ ] **Asaas em produção**: o código é o mesmo do sandbox. **Falta:** conta aprovada, chave e webhook de produção e um ciclo completo testado (`docs/deploy.md`, item 7).
 - [x] **Canal de suporte**: link "Fale com o suporte no WhatsApp" no login e em todas as telas do app. **Falta:** pôr o número em `NEXT_PUBLIC_SUPPORT_WHATSAPP`; vazio, o link não aparece.

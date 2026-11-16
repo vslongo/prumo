@@ -7,7 +7,7 @@
 O Prumo é operador dos dados pessoais que a oficina cadastra (CLAUDE.md §10) e cobra assinatura. Não havia termos de uso, política de privacidade nem registro de aceite.
 
 ## Decisão
-- **Páginas públicas** `/termos` e `/privacidade` no app (`frontend/src/features/legal`). Os dados da empresa ficam em `features/legal/company.ts`.
+- **Páginas públicas** `/termos` e `/privacidade` no app (`frontend/src/section/legal`). Os dados da empresa ficam em `section/legal/company.ts`.
 - **Aceite obrigatório no cadastro da oficina:** `POST /api/signup` exige `accept_terms`. O backend grava no usuário dono `terms_accepted_at` e `terms_version`.
 - **Versão** = data do texto, em `SignUp::TERMS_VERSION` (backend) e `company.version` (front). Mudou o texto, mudam as duas.
 - **Funcionário convidado não aceita termos:** quem contrata é a oficina, pelo dono. Contas antigas ficam com os campos nulos.

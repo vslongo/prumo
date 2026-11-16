@@ -22,7 +22,7 @@
 
 ## Estrutura
 `backend/app/Modules/_TEMPLATE/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/_TEMPLATE/` (se tiver UI)
+`frontend/src/section/_TEMPLATE/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

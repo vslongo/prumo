@@ -22,7 +22,7 @@ Imutável após signed; usa Media (upload direto); itens attention/critical vira
 
 ## Estrutura
 `backend/app/Modules/Inspections/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/inspections/` (se tiver UI)
+`frontend/src/section/inspections/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

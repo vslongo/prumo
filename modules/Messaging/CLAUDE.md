@@ -28,7 +28,7 @@ Somente Cloud API oficial; templates utility; fallback wa.me; worker Node sem re
 
 ## Estrutura
 `backend/app/Modules/Messaging/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/messaging/` (se tiver UI)
+`frontend/src/section/messaging/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

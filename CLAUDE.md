@@ -22,7 +22,7 @@ A marca vende sozinha (autoatendimento): todo fluxo precisa funcionar sem call d
 | API / backend | Laravel 12 (PHP 8.3+), monolito modular |
 | Banco | PostgreSQL 16+ (jsonb, pg_trgm; RLS só no pós-core, opcional) |
 | Filas/cache | Redis; Laravel Horizon em produção (em dev, `queue:work`) |
-| Frontend | React 19 + TypeScript + Vite, PWA, TanStack Query, React Hook Form + Zod, MUI (tema nos tokens da marca; ver `docs/adr/0002-frontend-com-mui.md`) |
+| Frontend | React 19 + TypeScript + Next.js 16 (App Router, telas client-side; ver `docs/adr/0009-frontend-em-nextjs.md`), PWA, TanStack Query, React Hook Form + Zod, MUI (tema nos tokens da marca; ver `docs/adr/0002-frontend-com-mui.md`) |
 | Worker WhatsApp | Node 22.18+ + TypeScript, consome fila Redis, fala com WhatsApp Cloud API (oficial) |
 | Storage | Cloudflare R2 (S3 compatível), bucket privado; navegador comprime (~300 KB) e sobe direto por URL pré-assinada |
 | Integrações | Core: Asaas (assinatura do SaaS), WhatsApp Cloud API. Pós-core: Focus NFe (NFS-e) |
@@ -47,8 +47,9 @@ backend/
     Shared/ (Traits/BelongsToTenant, ValueObjects/{Money,Plate}, Support/JsonSchemaValidator)
   database/migrations/  tests/{Feature,Unit,Arch}/
 frontend/src/
-  features/<feature>/{api.ts,hooks/,components/,pages/,types.ts}
-  shared/{ui,lib,hooks}/   app/{router,providers}/
+  section/<modulo>/{api.ts,hooks/,components/,pages/,types.ts}
+  app/<rota>/page.tsx (só reexporta a página do módulo)   app/(workshop)/ (layout autenticado)
+  routes/paths.ts (endpoints da API)   shared/{ui,lib,hooks}/
 worker-whatsapp/src/{consumer,meta-client,webhook,api-callback}.ts
 docs/ (architecture.md, adr/NNNN-titulo.md, brand/)
 ```
@@ -64,7 +65,8 @@ docs/ (architecture.md, adr/NNNN-titulo.md, brand/)
 - Datas em UTC no banco, exibidas em America/Sao_Paulo.
 - `declare(strict_types=1);`, PHPStan nível 8 (Larastan), Pint.
 ### React
-- Uma pasta por feature; chamadas HTTP só em `features/*/api.ts`; estado de servidor só com TanStack Query.
+- Uma pasta por módulo em `section/`; chamadas HTTP só em `section/*/api.ts` (URLs em `routes/paths.ts`); estado de servidor só com TanStack Query.
+- Navegação só por `shared/lib/navigation` (nunca `next/navigation` direto nas páginas). Página nova = página no módulo + `src/app/<rota>/page.tsx` com `'use client'`. Variável pública do navegador = `NEXT_PUBLIC_*`.
 - Formulários: React Hook Form + Zod; tipos gerados/espelhados dos Resources.
 - Mobile-first (técnico usa celular), funciona com conexão ruim: otimista + retry.
 - Formulário de item gerado a partir do `fields_schema` do `service_type` (componente `DynamicFields`).

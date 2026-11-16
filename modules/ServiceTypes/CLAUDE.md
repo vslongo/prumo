@@ -22,7 +22,7 @@ fields_schema = [{key,label,type: text|number|select|boolean|date, required, opt
 
 ## Estrutura
 `backend/app/Modules/ServiceTypes/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/serviceTypes/` (se tiver UI)
+`frontend/src/section/serviceTypes/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

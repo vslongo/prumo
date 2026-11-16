@@ -7,7 +7,7 @@ Não usamos banco por empresa: seriam centenas de bancos pra migrar, monitorar e
 ## Visão geral
 ```mermaid
 flowchart LR
-  PWA[React PWA] -->|HTTPS| API[Laravel API]
+  PWA[Next.js PWA] -->|HTTPS| API[Laravel API]
   PWA -->|upload direto, URL pré-assinada| R2[(Cloudflare R2)]
   PUB[Link público: aprovação + assinatura] --> API
   API --> PG[(PostgreSQL, tenant_id + global scope)]

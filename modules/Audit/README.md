@@ -22,7 +22,7 @@ Append-only; sem dado pessoal sensível em claro.
 
 ## Estrutura
 `backend/app/Modules/Audit/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/audit/` (se tiver UI)
+`frontend/src/section/audit/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)

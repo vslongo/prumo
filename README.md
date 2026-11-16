@@ -31,7 +31,7 @@ Este README explica, sem enrolação, **o que é o projeto** e **como colocar el
 ## 🧰 Stack
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=php,laravel,postgres,redis,react,ts,vite,materialui,nodejs,docker,cloudflare,sentry&theme=dark" />
+  <img src="https://skillicons.dev/icons?i=php,laravel,postgres,redis,react,nextjs,ts,materialui,nodejs,docker,cloudflare,sentry&theme=dark" />
 </p>
 
 ---

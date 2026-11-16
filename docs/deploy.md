@@ -30,14 +30,17 @@ npm ci
 npm run build
 ```
 
-- Nginx: o app (arquivos de `frontend/dist`) responde em `/`; `/api`, `/sanctum` e `/horizon` vão para o Laravel. No bloco `server` do site:
+Depois do build, reinicie o daemon do front (Forge › Daemons): `npm start` em `frontend/`, porta 5173 (ADR 0009). O Next precisa de Node 20.9+ e lê `API_URL` e `NEXT_PUBLIC_*` no build.
+
+- Nginx: `/` vai para o Next (proxy na porta 5173); `/api`, `/sanctum` e `/horizon` vão direto para o Laravel. No bloco `server` do site:
 
 ```nginx
-root /home/forge/SEU_SITE/frontend/dist;
-index index.html;
-
 location / {
-    try_files $uri /index.html;
+    proxy_pass http://127.0.0.1:5173;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
 }
 
 location ~ ^/(api|sanctum|horizon|vendor/horizon) {
@@ -114,7 +117,7 @@ Sem isso o sistema já funciona: o técnico manda o link pelo botão `wa.me`.
 - [ ] `WHATSAPP_PHONE_NUMBER_ID` e `WHATSAPP_WORKER_SECRET` no backend, worker no ar e webhook configurado (`worker-whatsapp/README.md`).
 
 ## 9. Antes de divulgar
-- [ ] `frontend/src/features/legal/company.ts` preenchido e termos revisados por advogado (ADR 0008).
+- [ ] `frontend/src/section/legal/company.ts` preenchido e termos revisados por advogado (ADR 0008).
 - [ ] Cadastro, primeiro orçamento, aprovação com assinatura e OS feitos pelo celular, em produção.
 - [ ] "Esqueci minha senha" testado de ponta a ponta.
 - [ ] Erro de teste aparecendo no Sentry dos três projetos, sem dado pessoal.

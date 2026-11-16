@@ -24,7 +24,7 @@ Navegador comprime (~1600 px, ~300 KB); URL pré-assinada curta; upload nunca pa
 
 ## Estrutura
 `backend/app/Modules/Media/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Http/ routes.php
-`frontend/src/features/media/` (se tiver UI)
+`frontend/src/section/media/` (se tiver UI)
 
 ## Testes obrigatórios
 - Feature test por Action (feliz, regra violada, sem permissão)
