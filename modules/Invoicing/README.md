@@ -11,7 +11,7 @@ NFS-e emitida direto na API Nacional (Sefin Nacional/ADN), com o certificado A1 
 - invoices: uma por emissão da OS; série/número da DPS, chave de acesso, número da NFS-e, valor, XML/PDF no R2, erro, datas. Sem soft delete; nunca apagar nota emitida.
 
 ## API pública (outros módulos só usam isto)
-- Actions: UpdateFiscalProfile, RequestCertificateUpload, ConfirmFiscalCertificate, RemoveFiscalCertificate, IssueServiceInvoice; interna: TransmitDps (job `TransmitDpsJob`, fila `fiscal`)
+- Actions: UpdateFiscalProfile, RequestCertificateUpload, ConfirmFiscalCertificate, RemoveFiscalCertificate, IssueServiceInvoice; internas: TransmitDps (job `TransmitDpsJob`, fila `fiscal`), GenerateDanfse (listener de InvoiceAuthorized; PDF no R2)
 - Eventos emitidos: InvoiceAuthorized, InvoiceFailed
 - Eventos ouvidos: nenhum (emissão por botão na OS)
 
@@ -20,7 +20,7 @@ NFS-e emitida direto na API Nacional (Sefin Nacional/ADN), com o certificado A1 
 
 ## Regras de negócio
 - Emite só para OS `delivered|closed`. No máximo uma nota não cancelada por OS (índice parcial). Emitem dono, admin e balcão (Gate `issue-invoice`); técnico só vê.
-- Endpoints: `POST/GET /api/service-orders/{id}/invoices`, `GET /api/invoices/{id}`.
+- Endpoints: `POST/GET /api/service-orders/{id}/invoices`, `GET /api/invoices/{id}`, `GET /api/invoices/{id}/files/{xml|pdf}` (URL assinada de 5 min).
 - Leiaute da DPS isolado em `Support/DpsXmlBuilder`; montado sem os XSD oficiais: conferir com `docs/nfse/` e na homologação (pAliq/totTrib do Simples, cNBS, IBSCBS).
 - Entram todos os itens da OS; com `include_products` desligado, só os de serviço. Sem item faturável → recusa.
 - Tomador precisa de CPF/CNPJ válido.

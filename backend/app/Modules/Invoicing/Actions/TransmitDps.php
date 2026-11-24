@@ -114,7 +114,7 @@ final class TransmitDps
         $lines = ['OS nº '.$order->number.($order->vehicle !== null ? ' · Placa '.$order->vehicle->plate_normalized : '')];
         foreach (IssueServiceInvoice::billableItems($order, $includeProducts) as $item) {
             /** @var ServiceOrderItem $item */
-            $qty = rtrim(rtrim($item->quantity, '0'), '.');
+            $qty = str_replace('.', ',', rtrim(rtrim($item->quantity, '0'), '.'));
             $lines[] = "{$qty} x {$item->description}: R$ ".number_format(intdiv($item->total_cents, 100), 0, ',', '.').','.sprintf('%02d', $item->total_cents % 100);
         }
 
