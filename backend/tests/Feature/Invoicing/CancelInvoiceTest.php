@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
-const CANCEL_KEY = '42054072211222333000181000000000004211234567890';
+const CANCEL_KEY = '42054072211222333000181000000000004211234567890123';
 
 const CANCEL_EVENT_URL = SEFIN.'/nfse/'.CANCEL_KEY.'/eventos';
 

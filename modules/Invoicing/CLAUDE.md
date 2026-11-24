@@ -29,6 +29,10 @@ NFS-e emitida direto na API Nacional (Sefin Nacional/ADN), com o certificado A1 
 - Número da DPS reservado (lock por tenant) antes do envio e reaproveitado; antes de reenviar, consulta a DPS na Sefin.
 - Certificado: CNPJ tem que bater com o perfil e a validade tem que ser futura. Só owner/admin. Aberto pelo binário `openssl` com tempo máximo (aceita A1 legado com `-legacy`); guarda o sha256 dos bytes validados, que a emissão confere. Pode ser removido (arquivo e senha apagados). Trocar o CNPJ descarta o certificado.
 - XML, documento do tomador, certificado e senha nunca vão para log, Sentry ou resposta da API.
+- Chave privada do A1 nunca vai para disco: mTLS por blob do cURL (`CURLOPT_SSL*_BLOB`).
+- DPS duplicada/recuperada só vira a nota da OS se tomador e valor batem; senão `error` com `NUMERO_EM_USO`. O perfil fiscal tem `dps_next_number` para quem já emitiu na série por outro sistema.
+- Transição de estado atômica (só muda se o estado ainda é o lido); jobs com `WithoutOverlapping` por nota; supervisor `supervisor-fiscal` no Horizon; `retry_after` 300 s.
+- XML e PDF: só dono, admin e balcão baixam (técnico vê só o status). Ficam guardados mesmo depois de anonimizar o cliente: documento fiscal tem guarda obrigatória (ver ADR 0005/0010).
 
 ## Estrutura
 `backend/app/Modules/Invoicing/` → Actions/ Data/ Enums/ Events/ Listeners/ Jobs/ Models/ Policies/ Support/ Http/ routes.php

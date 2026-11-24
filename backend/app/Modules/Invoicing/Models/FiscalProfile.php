@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $municipal_tax_code
  * @property int|null $iss_rate_bp
  * @property string $dps_series
+ * @property int|null $dps_next_number
  * @property bool $include_products
  * @property FiscalEnvironment $environment
  * @property string|null $certificate_media_id
@@ -36,7 +37,7 @@ final class FiscalProfile extends Model
     /** Só os campos do formulário. Certificado muda só por ConfirmFiscalCertificate/RemoveFiscalCertificate (forceFill). */
     protected $fillable = [
         'cnpj', 'municipal_registration', 'city_ibge_code', 'tax_regime', 'national_tax_code',
-        'municipal_tax_code', 'iss_rate_bp', 'dps_series', 'include_products', 'environment',
+        'municipal_tax_code', 'iss_rate_bp', 'dps_series', 'dps_next_number', 'include_products', 'environment',
     ];
 
     protected $hidden = ['certificate_password', 'certificate_media_id', 'certificate_sha256'];
@@ -54,6 +55,7 @@ final class FiscalProfile extends Model
             'tax_regime' => TaxRegime::class,
             'environment' => FiscalEnvironment::class,
             'iss_rate_bp' => 'integer',
+            'dps_next_number' => 'integer',
             'include_products' => 'boolean',
             'certificate_password' => 'encrypted',
             'certificate_expires_at' => 'datetime',

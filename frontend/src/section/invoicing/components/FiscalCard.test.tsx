@@ -11,7 +11,7 @@ function json(status: number, body: unknown) {
 
 const profile = (over: Partial<FiscalProfile> = {}): FiscalProfile => ({
   cnpj: '11222333000181', municipal_registration: null, city_ibge_code: '4205407', tax_regime: 'simples_me_epp', national_tax_code: '140101',
-  municipal_tax_code: null, iss_rate_bp: 300, dps_series: '1', include_products: true, environment: 'restricted', certificate: null, ...over,
+  municipal_tax_code: null, iss_rate_bp: 300, dps_series: '1', dps_next_number: null, include_products: true, environment: 'restricted', certificate: null, ...over,
 })
 
 function renderCard(first: FiscalProfile | null) {

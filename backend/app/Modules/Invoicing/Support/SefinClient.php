@@ -22,9 +22,11 @@ final class SefinClient
 
     public function __construct(
         private readonly FiscalEnvironment $environment,
-        private readonly string $certFile,
-        private readonly string $keyFile,
+        private readonly FiscalCertificate $certificate,
     ) {}
+
+    /** Teto do XML descompactado: resposta inflada não derruba o worker. */
+    private const MAX_XML_BYTES = 5 * 1024 * 1024;
 
     /** Envia a DPS assinada. */
     public function submit(string $signedXml): SefinResult
@@ -87,7 +89,7 @@ final class SefinClient
         if (! is_string($b64) || $b64 === '') {
             return null;
         }
-        $xml = @gzdecode((string) base64_decode($b64, true));
+        $xml = @gzdecode((string) base64_decode($b64, true), self::MAX_XML_BYTES);
 
         return $xml === false ? null : $xml;
     }
@@ -97,10 +99,16 @@ final class SefinClient
         $baseUrl = (string) config('services.nfse.'.$this->environment->value.'.sefin_url');
 
         return Http::baseUrl($baseUrl)
-            ->withOptions(['cert' => $this->certFile, 'ssl_key' => $this->keyFile])
+            ->withOptions(['curl' => [
+                CURLOPT_SSLCERTTYPE => 'PEM',
+                CURLOPT_SSLCERT_BLOB => $this->certificate->certPem,
+                CURLOPT_SSLKEYTYPE => 'PEM',
+                CURLOPT_SSLKEY_BLOB => $this->certificate->keyPem,
+            ]])
             ->acceptJson()
             ->asJson()
-            ->timeout(30);
+            ->connectTimeout(10)
+            ->timeout(20);
     }
 
     private function failOnServerError(Response $response): void

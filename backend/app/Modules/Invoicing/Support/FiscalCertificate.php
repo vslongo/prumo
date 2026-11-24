@@ -6,12 +6,11 @@ namespace App\Modules\Invoicing\Support;
 
 use App\Modules\Invoicing\Models\FiscalProfile;
 use App\Modules\Media\Models\Media;
-use Closure;
 use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 
 /**
  * Certificado A1 da oficina aberto em memória, para assinar a DPS e fazer o mTLS.
+ * Nunca vai para disco: o cURL recebe certificado e chave como blob (CURLOPT_SSL*_BLOB).
  * Confere o sha256 guardado no aceite: arquivo trocado no R2 depois disso não é usado.
  */
 final class FiscalCertificate
@@ -42,35 +41,5 @@ final class FiscalCertificate
         }
 
         return new self($cert[0], $key[0]);
-    }
-
-    /**
-     * Grava certificado e chave em arquivos temporários (0600) só durante `$callback` (o cURL do mTLS precisa de arquivo).
-     *
-     * @template T
-     *
-     * @param  Closure(string $certFile, string $keyFile): T  $callback
-     * @return T
-     */
-    public function withFiles(Closure $callback): mixed
-    {
-        $files = [];
-        try {
-            foreach ([$this->certPem, $this->keyPem] as $content) {
-                $path = tempnam(sys_get_temp_dir(), 'a1_');
-                if ($path === false) {
-                    throw new RuntimeException('Sem arquivo temporário para o certificado.');
-                }
-                $files[] = $path;
-                chmod($path, 0600);
-                file_put_contents($path, $content);
-            }
-
-            return $callback($files[0], $files[1]);
-        } finally {
-            foreach ($files as $path) {
-                @unlink($path);
-            }
-        }
     }
 }

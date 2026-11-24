@@ -27,6 +27,7 @@ final class FiscalProfileResource extends JsonResource
             'municipal_tax_code' => $this->municipal_tax_code,
             'iss_rate_bp' => $this->iss_rate_bp,
             'dps_series' => $this->dps_series,
+            'dps_next_number' => $this->dps_next_number,
             'include_products' => $this->include_products,
             'environment' => $this->environment->value,
             'certificate' => $this->certificate_media_id === null ? null : [

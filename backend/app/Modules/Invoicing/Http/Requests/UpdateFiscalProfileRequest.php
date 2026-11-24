@@ -42,6 +42,7 @@ final class UpdateFiscalProfileRequest extends FormRequest
             // Simples ME/EPP informa a alíquota do ISS; MEI não (recolhe valor fixo no DAS).
             'iss_rate_bp' => ['nullable', 'integer', 'between:200,500', Rule::requiredIf($this->input('tax_regime') === TaxRegime::SimplesMeEpp->value)],
             'dps_series' => ['required', 'digits_between:1,5'],
+            'dps_next_number' => ['nullable', 'integer', 'min:1', 'max:999999999999999'],
             'include_products' => ['required', 'boolean'],
             'environment' => ['required', Rule::enum(FiscalEnvironment::class)],
         ];

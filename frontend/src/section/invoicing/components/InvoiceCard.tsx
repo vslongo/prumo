@@ -121,12 +121,12 @@ export function InvoiceCard({ orderId, orderStatus }: { orderId: string; orderSt
             <Detail label="Emitida">{formatWhen(current.authorized_at)}</Detail>
             <Detail label="Peças">{current.include_products ? 'Incluídas' : 'Fora da nota'}</Detail>
           </DetailGrid>
-          <Stack direction="row" sx={{ gap: 1 }}>
+          {canAct ? (<Stack direction="row" sx={{ gap: 1 }}>
             <Button variant="secondary" icon={<Download size={16} aria-hidden />} disabled={!current.has_pdf} onClick={() => download(current, 'pdf')}>
               {current.has_pdf ? 'PDF' : 'Gerando PDF…'}
             </Button>
             <Button variant="secondary" icon={<Download size={16} aria-hidden />} onClick={() => download(current, 'xml')}>XML</Button>
-          </Stack>
+          </Stack>) : null}
           {canAct ? <Button variant="ghost" tone="danger" full onClick={() => setCancelOpen(true)}>Cancelar nota</Button> : null}
           <CancelDialog invoice={current} open={cancelOpen} onClose={() => setCancelOpen(false)} />
         </Stack>
@@ -153,7 +153,7 @@ export function InvoiceCard({ orderId, orderStatus }: { orderId: string; orderSt
           {canceled.map((i) => (
             <Stack key={i.id} direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
               <Typography variant="body2" sx={muted}>Nº {i.nfse_number ?? '—'} cancelada {formatWhen(i.canceled_at)}</Typography>
-              {i.has_pdf ? <Button variant="ghost" size="small" onClick={() => download(i, 'pdf')}>PDF</Button> : null}
+              {i.has_pdf && canAct ? <Button variant="ghost" size="small" onClick={() => download(i, 'pdf')}>PDF</Button> : null}
             </Stack>
           ))}
         </Stack>

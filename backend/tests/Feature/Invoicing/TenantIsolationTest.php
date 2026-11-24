@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Auth\Models\User;
 use App\Modules\Invoicing\Actions\RequestCertificateUpload;
+use App\Modules\Invoicing\Actions\TransmitDps;
 use App\Modules\Invoicing\Actions\UpdateFiscalProfile;
 use App\Modules\Invoicing\Enums\FiscalEnvironment;
 use App\Modules\Invoicing\Enums\TaxRegime;
@@ -68,6 +69,12 @@ it('não lê nem emite nota de OS de outro tenant', function () {
     $this->getJson("/api/invoices/{$invoiceId}")->assertNotFound();
     $this->getJson("/api/service-orders/{$order->id}/invoices")->assertOk()->assertJsonCount(0, 'data');
     $this->postJson("/api/service-orders/{$order->id}/invoices")->assertNotFound();
+    $this->postJson("/api/invoices/{$invoiceId}/cancel", ['reason' => '1', 'text' => 'Valor lançado errado na OS.'])->assertNotFound();
+    $this->getJson("/api/invoices/{$invoiceId}/files/xml")->assertNotFound();
     Http::assertNothingSent();
+
+    // Job com o tenant de A não acha a nota de B.
+    app(TransmitDps::class)->handle($invoiceId);
+    expect(TenantContext::run($order->tenant_id, fn () => Invoice::query()->findOrFail($invoiceId)->status->value))->toBe('pending');
     expect($owner)->not->toBeNull();
 });

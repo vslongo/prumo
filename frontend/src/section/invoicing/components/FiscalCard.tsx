@@ -33,6 +33,7 @@ const schema = z
     municipal_tax_code: z.string().max(20),
     iss_rate: z.string(),
     dps_series: z.string().regex(/^\d{1,5}$/, 'Série: de 1 a 5 dígitos.'),
+    dps_next_number: z.string().regex(/^\d{0,15}$/, 'Só números.'),
     include_products: z.boolean(),
     environment: z.enum(['restricted', 'production']),
   })
@@ -54,6 +55,7 @@ const toForm = (p: FiscalProfile | null): Form => ({
   municipal_tax_code: p?.municipal_tax_code ?? '',
   iss_rate: bpToPercent(p?.iss_rate_bp ?? null),
   dps_series: p?.dps_series ?? '1',
+  dps_next_number: p?.dps_next_number ? String(p.dps_next_number) : '',
   include_products: p?.include_products ?? true,
   environment: p?.environment ?? 'restricted',
 })
@@ -77,6 +79,7 @@ function ProfileForm({ profile }: { profile: FiscalProfile | null }) {
         municipal_tax_code: f.municipal_tax_code.trim() || null,
         iss_rate_bp: f.tax_regime === 'mei' ? null : percentToBp(f.iss_rate),
         dps_series: f.dps_series,
+        dps_next_number: f.dps_next_number ? Number(f.dps_next_number) : null,
         include_products: f.include_products,
         environment: f.environment,
       })
@@ -105,6 +108,7 @@ function ProfileForm({ profile }: { profile: FiscalProfile | null }) {
       <TextField label="Código de tributação nacional" hint="Manutenção de veículos: 14.01.01." inputMode="numeric" error={e.national_tax_code?.message} {...register('national_tax_code')} />
       <TextField label="Código de tributação municipal" hint="Opcional." error={e.municipal_tax_code?.message} {...register('municipal_tax_code')} />
       <TextField label="Série da DPS" hint="Use uma série que nenhum outro sistema da oficina usa." inputMode="numeric" error={e.dps_series?.message} {...register('dps_series')} />
+      <TextField label="Próximo número da DPS" hint="Só se a oficina já emitiu notas nesta série por outro sistema: informe o número seguinte ao último usado." inputMode="numeric" error={e.dps_next_number?.message} {...register('dps_next_number')} />
       <CheckboxField label="Incluir peças na nota de serviço" defaultChecked={profile?.include_products ?? true} {...register('include_products')} />
       <Typography variant="body2" sx={muted}>
         Peças costumam pagar ICMS (nota de produto), e alguns municípios recusam peças na NFS-e. Confirme com seu contador.

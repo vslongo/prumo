@@ -159,7 +159,7 @@ function fakeSefin(array $routes): void
     Http::fake(array_merge($routes, [SEFIN.'/*' => Http::response(['erros' => [['codigo' => 'X', 'descricao' => 'rota não simulada']]], 400)]));
 }
 
-function sefinAccepted(string $key = '42054072211222333000181000000000004211234567890'): array
+function sefinAccepted(string $key = '42054072211222333000181000000000004211234567890123'): array
 {
     return [SEFIN.'/nfse' => Http::response(['chaveAcesso' => $key, 'nfseXmlGZipB64' => SefinClient::pack(NFSE_XML)], 201)];
 }

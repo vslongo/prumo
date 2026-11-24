@@ -13,7 +13,6 @@ use App\Modules\Invoicing\Support\FiscalCertificate;
 use App\Modules\Invoicing\Support\InvalidCertificate;
 use App\Modules\Invoicing\Support\SefinClient;
 use App\Modules\Invoicing\Support\XmlSigner;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Uso interno (TransmitCancellationJob). Registra o evento de cancelamento na Sefin. Idempotente: consulta antes
@@ -43,38 +42,32 @@ final class TransmitCancellation
             return;
         }
 
-        $certificate->withFiles(function (string $certFile, string $keyFile) use ($invoice, $profile, $certificate) {
-            $sefin = new SefinClient($invoice->environment, $certFile, $keyFile);
-            $key = (string) $invoice->access_key;
+        $sefin = new SefinClient($invoice->environment, $certificate);
+        $key = (string) $invoice->access_key;
 
-            if ($sefin->hasEvent($key, CancelEventXmlBuilder::EVENT)) {
-                $this->cancel($invoice);
+        if ($sefin->hasEvent($key, CancelEventXmlBuilder::EVENT)) {
+            $this->cancel($invoice);
 
-                return;
-            }
+            return;
+        }
 
-            [$code, $text] = explode(': ', (string) $invoice->cancel_reason, 2) + [1 => ''];
-            $doc = $this->builder->build($profile, $invoice, CancelReason::from($code), $text, now());
-            $xml = (string) $this->signer->sign($doc, 'infPedReg', $certificate->certPem, $certificate->keyPem)->saveXML();
-            $result = $sefin->registerEvent($key, $xml);
+        [$code, $text] = explode(': ', (string) $invoice->cancel_reason, 2) + [1 => ''];
+        $doc = $this->builder->build($profile, $invoice, CancelReason::from($code), $text, now());
+        $xml = (string) $this->signer->sign($doc, 'infPedReg', $certificate->certPem, $certificate->keyPem)->saveXML();
+        $result = $sefin->registerEvent($key, $xml);
 
-            if ($result->accepted) {
-                $this->cancel($invoice);
-            } else {
-                $this->refuse($invoice, (string) $result->errorCode, (string) $result->errorMessage);
-            }
-        });
+        if ($result->accepted) {
+            $this->cancel($invoice);
+        } else {
+            $this->refuse($invoice, (string) $result->errorCode, (string) $result->errorMessage);
+        }
     }
 
     private function cancel(Invoice $invoice): void
     {
-        $oldPdf = $invoice->pdf_key;
-        $invoice->transitionTo(InvoiceStatus::Canceled, ['canceled_at' => now(), 'pdf_key' => null]);
-        if ($oldPdf !== null) {
-            Storage::disk('r2')->delete($oldPdf);
-        }
-        // PDF de novo, agora com a marca de cancelada.
-        $this->danfse->handle($invoice->id);
+        $invoice->transitionTo(InvoiceStatus::Canceled, ['canceled_at' => now()]);
+        // PDF de novo, agora com a marca de cancelada; o antigo só sai depois que o novo existe.
+        $this->danfse->handle($invoice->id, replace: true);
     }
 
     private function refuse(Invoice $invoice, string $code, string $message): void
