@@ -11,15 +11,17 @@ NFS-e emitida direto na API Nacional (Sefin Nacional/ADN), com o certificado A1 
 - invoices: uma por emissão da OS; série/número da DPS, chave de acesso, número da NFS-e, valor, XML/PDF no R2, erro, datas. Sem soft delete; nunca apagar nota emitida.
 
 ## API pública (outros módulos só usam isto)
-- Actions: UpdateFiscalProfile, RequestCertificateUpload, ConfirmFiscalCertificate, RemoveFiscalCertificate (prontas); IssueServiceInvoice, CancelServiceInvoice (a fazer)
+- Actions: UpdateFiscalProfile, RequestCertificateUpload, ConfirmFiscalCertificate, RemoveFiscalCertificate, IssueServiceInvoice; interna: TransmitDps (job `TransmitDpsJob`, fila `fiscal`)
 - Eventos emitidos: InvoiceAuthorized, InvoiceFailed
 - Eventos ouvidos: nenhum (emissão por botão na OS)
 
 ## Estados
-`pending → processing → authorized → canceled`; `processing → error → processing` (nova tentativa com o mesmo número de DPS).
+`pending → processing → authorized → cancel_requested → canceled`; `processing → error → processing` (nova tentativa com o mesmo número de DPS); `cancel_requested → authorized` se a Sefin recusar o cancelamento. Transição só por `Invoice::transitionTo()`.
 
 ## Regras de negócio
-- Emite só para OS `delivered|closed`. No máximo uma nota não cancelada por OS.
+- Emite só para OS `delivered|closed`. No máximo uma nota não cancelada por OS (índice parcial). Emitem dono, admin e balcão (Gate `issue-invoice`); técnico só vê.
+- Endpoints: `POST/GET /api/service-orders/{id}/invoices`, `GET /api/invoices/{id}`.
+- Leiaute da DPS isolado em `Support/DpsXmlBuilder`; montado sem os XSD oficiais: conferir com `docs/nfse/` e na homologação (pAliq/totTrib do Simples, cNBS, IBSCBS).
 - Entram todos os itens da OS; com `include_products` desligado, só os de serviço. Sem item faturável → recusa.
 - Tomador precisa de CPF/CNPJ válido.
 - Só Simples ME/EPP e MEI, ISS não retido.
@@ -43,3 +45,4 @@ Sefin Nacional (emissão, consulta, eventos), fila `fiscal`.
 ## Changelog do módulo
 - 2026-10-27: criado/atualizado com decisões de core primeiro, técnicos, service_types e upload direto.
 - 2026-11-23: troca Focus NFe pela API Nacional direta (ADR 0010); define perfil fiscal, certificado A1, itens, regimes e estados.
+- 2026-11-24: emissão da NFS-e (DPS assinada, mTLS, idempotência pela consulta da DPS), estados com cancelamento em duas etapas.
