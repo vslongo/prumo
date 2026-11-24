@@ -18,7 +18,7 @@ flowchart LR
   META -. webhook .-> WK
   API --> ASAAS[Asaas - assinatura do SaaS]
   ASAAS -. webhook .-> API
-  HZ -.pós-core.-> FOCUS[Focus NFe]
+  HZ -->|fila fiscal, mTLS A1| SEFIN[Sefin Nacional - NFS-e]
 ```
 
 ## Fluxo do core
@@ -65,7 +65,8 @@ erDiagram
   USERS ||--o{ QUOTE_ITEMS : technician
   SERVICE_ORDERS ||--o{ MEDIA : photos
 ```
-Pós-core: inspections/inspection_items, parts/stock_movements, invoices, reminders, payments, audit_logs, vehicles global + tenant_vehicles + vehicle_ownerships + vehicle_history.
+Logo após o core: fiscal_profiles e invoices (NFS-e, ADR 0010).
+Pós-core: inspections/inspection_items, parts/stock_movements, reminders, payments, audit_logs, vehicles global + tenant_vehicles + vehicle_ownerships + vehicle_history.
 
 Hospedagem: Hetzner CX33 + Laravel Forge + Postgres no mesmo VPS + Cloudflare R2 + Sentry. Filas em produção pelo Horizon; e-mail transacional por SMTP (Resend previsto), hoje só o de senha nova (ADR 0007); backup diário do banco no R2 (`backup:database`). Passo a passo em `docs/deploy.md`.
 

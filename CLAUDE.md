@@ -12,7 +12,8 @@ O MVP é **só o core**:
 1. Orçamento criado pelo técnico → enviado ao cliente → cliente aprova e **assina** no link → **OS gerada automaticamente** com os dados do orçamento.
 2. Criação de **OS direta**, sem orçamento.
 A **OS é o ponto central dos dados**: cliente, veículo, itens (produtos e serviços) com valores, técnico que executou cada item, campos específicos do tipo de serviço e vínculo com o orçamento de origem.
-Tudo o resto (estoque, NFS-e, lembretes, inspeção, histórico global/compartilhado do veículo, RLS) é **pós-core**, entra uma feature por vez. Não implemente módulo pós-core sem pedido explícito.
+A NFS-e (módulo Invoicing) entrou depois do core, por pedido explícito (`docs/adr/0010-nfse-nacional-direto-na-sefin.md`).
+Tudo o resto (estoque, lembretes, inspeção, histórico global/compartilhado do veículo, RLS) é **pós-core**, entra uma feature por vez. Não implemente módulo pós-core sem pedido explícito.
 Planos: Solo R$ 49, Oficina R$ 79, Pro R$ 149 (limites em `config/plans.php`, nunca hardcode).
 A marca vende sozinha (autoatendimento): todo fluxo precisa funcionar sem call de onboarding.
 
@@ -25,7 +26,7 @@ A marca vende sozinha (autoatendimento): todo fluxo precisa funcionar sem call d
 | Frontend | React 19 + TypeScript + Next.js 16 (App Router, telas client-side; ver `docs/adr/0009-frontend-em-nextjs.md`), PWA, TanStack Query, React Hook Form + Zod, MUI (tema nos tokens da marca; ver `docs/adr/0002-frontend-com-mui.md`) |
 | Worker WhatsApp | Node 22.18+ + TypeScript, consome fila Redis, fala com WhatsApp Cloud API (oficial) |
 | Storage | Cloudflare R2 (S3 compatível), bucket privado; navegador comprime (~300 KB) e sobe direto por URL pré-assinada |
-| Integrações | Core: Asaas (assinatura do SaaS), WhatsApp Cloud API. Pós-core: Focus NFe (NFS-e) |
+| Integrações | Core: Asaas (assinatura do SaaS), WhatsApp Cloud API. NFS-e: direto na API Nacional (Sefin/ADN) com certificado A1 da oficina, sem intermediário |
 | Observabilidade | Sentry (back, front, worker), logs JSON |
 | Infra | VPS Hetzner + Laravel Forge; Cloudflare DNS/CDN |
 | Testes | Pest (PHP), Vitest + Testing Library (front), Playwright (E2E críticos), Vitest (worker) |
@@ -129,8 +130,12 @@ Máquina de estados:
 - Assinatura do SaaS (Billing) é **core**. Pagamento da oficina (cliente final): `pending|paid|canceled|refunded`, métodos `cash|pix|card|boleto`. Pix/boleto via Asaas opcional.
 - Assinatura do SaaS (módulo **Billing**): Asaas subscription; trial 14 dias; status do tenant `trialing|active|past_due|suspended|canceled`. `past_due` > 7 dias → somente leitura. Nunca apagar dados de tenant suspenso.
 - Webhooks Asaas validados pelo token de acesso configurado; processamento idempotente pelo id do evento.
-### NFS-e (Focus NFe) (pós-core)
-- Emitida por job na fila `fiscal`. Estados: `pending|processing|authorized|error|canceled`. Guardar referência, número, XML e PDF no R2. Nunca reenviar sem checar status na API (idempotência por `ref`).
+### NFS-e (API Nacional, módulo Invoicing; ver ADR 0010)
+- Emitida direto na Sefin Nacional, mTLS com o certificado A1 da oficina e DPS assinada. **Proibido** intermediário (Focus NFe etc.).
+- Botão na OS `delivered|closed`; nunca automática. Entram todos os itens da OS, ou só serviços se `fiscal_profiles.include_products` estiver desligado.
+- Só Simples ME/EPP e MEI com ISS não retido; outro regime é recusado.
+- Emitida por job na fila `fiscal`. Estados: `pending|processing|authorized|error|canceled`. Número da DPS reservado antes do envio e reaproveitado nas novas tentativas; nunca reenviar sem consultar a DPS na Sefin.
+- XML e PDF (DANFSe gerado por nós) no R2. Certificado .pfx no R2 via upload direto; senha com cast `encrypted`; nada disso em log/Sentry/resposta.
 ### Lembretes (pós-core)
 - Tipos: `oil_change|revision|inspection_item|custom`, por data e/ou km. Scheduler diário cria jobs; só envia se o cliente tem `consent_whatsapp_at`. Status `scheduled|sent|failed|canceled`.
 ### WhatsApp
@@ -214,5 +219,5 @@ Máquina de estados:
 | Audit | Logo após | Log de auditoria |
 | Inspections | Pós-core | Relatório de entrada |
 | Inventory | Pós-core | Peças e estoque |
-| Invoicing | Pós-core | NFS-e via Focus NFe |
+| Invoicing | Logo após | NFS-e direto na API Nacional (Sefin) com A1 da oficina |
 | Reminders | Pós-core | Lembretes por data/km |
