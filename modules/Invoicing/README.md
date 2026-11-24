@@ -11,7 +11,7 @@ NFS-e emitida direto na API Nacional (Sefin Nacional/ADN), com o certificado A1 
 - invoices: uma por emissão da OS; série/número da DPS, chave de acesso, número da NFS-e, valor, XML/PDF no R2, erro, datas. Sem soft delete; nunca apagar nota emitida.
 
 ## API pública (outros módulos só usam isto)
-- Actions: UpdateFiscalProfile, RequestCertificateUpload, ConfirmFiscalCertificate, IssueServiceInvoice, CancelServiceInvoice
+- Actions: UpdateFiscalProfile, RequestCertificateUpload, ConfirmFiscalCertificate, RemoveFiscalCertificate (prontas); IssueServiceInvoice, CancelServiceInvoice (a fazer)
 - Eventos emitidos: InvoiceAuthorized, InvoiceFailed
 - Eventos ouvidos: nenhum (emissão por botão na OS)
 
@@ -24,7 +24,7 @@ NFS-e emitida direto na API Nacional (Sefin Nacional/ADN), com o certificado A1 
 - Tomador precisa de CPF/CNPJ válido.
 - Só Simples ME/EPP e MEI, ISS não retido.
 - Número da DPS reservado (lock por tenant) antes do envio e reaproveitado; antes de reenviar, consulta a DPS na Sefin.
-- Certificado: CNPJ tem que bater com o perfil e a validade tem que ser futura. Só owner/admin.
+- Certificado: CNPJ tem que bater com o perfil e a validade tem que ser futura. Só owner/admin. Aberto pelo binário `openssl` com tempo máximo (aceita A1 legado com `-legacy`); guarda o sha256 dos bytes validados, que a emissão confere. Pode ser removido (arquivo e senha apagados). Trocar o CNPJ descarta o certificado.
 - XML, documento do tomador, certificado e senha nunca vão para log, Sentry ou resposta da API.
 
 ## Estrutura

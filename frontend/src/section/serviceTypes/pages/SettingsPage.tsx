@@ -17,10 +17,11 @@ import { useToast } from '../../../shared/ui/Toast'
 import { canManageSettings, useMe } from '../../auth/api'
 import { TeamCard } from '../../auth/components/TeamCard'
 import { BillingCard } from '../../billing/components/BillingCard'
+import { FiscalCard } from '../../invoicing/components/FiscalCard'
 import { fieldTypeLabel, serviceTypesApi, useServiceTypes, type FieldSchema, type FieldType } from '../api'
 
 type DraftField = FieldSchema & { optionsText: string }
-type SettingsTab = 'equipe' | 'servicos' | 'assinatura'
+type SettingsTab = 'equipe' | 'servicos' | 'fiscal' | 'assinatura'
 
 const slug = (label: string) =>
   label
@@ -45,7 +46,7 @@ export function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const isOwner = me?.role === 'owner'
   const requested = searchParams.get('aba')
-  const tab: SettingsTab = requested === 'servicos' ? 'servicos' : requested === 'assinatura' && isOwner ? 'assinatura' : 'equipe'
+  const tab: SettingsTab = requested === 'servicos' ? 'servicos' : requested === 'fiscal' ? 'fiscal' : requested === 'assinatura' && isOwner ? 'assinatura' : 'equipe'
   const [saving, setSaving] = useState(false)
 
   if (me && !canManageSettings(me)) return <Navigate to="/" replace />
@@ -85,12 +86,13 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Configurações" subtitle={tab === 'equipe' ? 'Quem trabalha na oficina e o convite para novos funcionários.' : tab === 'assinatura' ? 'Plano do Prumo, fatura e cancelamento.' : 'Tipos de serviço e os campos que o técnico preenche em cada um.'} />
+      <PageHeader title="Configurações" subtitle={tab === 'equipe' ? 'Quem trabalha na oficina e o convite para novos funcionários.' : tab === 'assinatura' ? 'Plano do Prumo, fatura e cancelamento.' : tab === 'fiscal' ? 'Dados da oficina e certificado digital para emitir NFS-e.' : 'Tipos de serviço e os campos que o técnico preenche em cada um.'} />
 
       {/* Aba na URL (?aba=servicos): dá para mandar o link direto para a aba. */}
       <Tabs value={tab} onChange={(_, value: SettingsTab) => setSearchParams(value === 'equipe' ? {} : { aba: value }, { replace: true })} variant="scrollable" allowScrollButtonsMobile sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Tab value="equipe" label="Equipe" />
         <Tab value="servicos" label="Tipos de serviço" />
+        <Tab value="fiscal" label="Nota fiscal" />
         {isOwner ? <Tab value="assinatura" label="Assinatura" /> : null}
       </Tabs>
 
@@ -99,6 +101,8 @@ export function SettingsPage() {
           <TeamCard />
         ) : tab === 'assinatura' ? (
           <BillingCard />
+        ) : tab === 'fiscal' ? (
+          <FiscalCard />
         ) : (
           <>
             <Card>

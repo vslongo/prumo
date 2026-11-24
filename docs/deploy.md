@@ -8,6 +8,8 @@ Tudo num domínio só (ex.: `app.seudominio.com.br`): o cookie de sessão do San
 - VPS Ubuntu LTS com **4 GB de RAM ou mais**, de preferência em São Paulo.
 - No Forge: servidor do tipo "App Server" com **PHP 8.3, PostgreSQL 16, Redis e Node 22+**. Em provedor sem integração, use "Custom VPS".
 - Extensões do PHP: `pdo_pgsql`, `redis`, `gd` (com WebP), `intl`, `bcmath`, `zip`, `pcntl`.
+- Binário `openssl` (3.x) no servidor: abre o certificado A1 da NFS-e com tempo máximo (ADR 0010).
+- `zend.exception_ignore_args = On` no php.ini (FPM e CLI): argumento de função (ex.: senha do certificado) não vai para stack trace, log nem Sentry.
 - Firewall: só 22, 80 e 443 abertos. Postgres e Redis não ficam expostos.
 
 ## 2. Site e código

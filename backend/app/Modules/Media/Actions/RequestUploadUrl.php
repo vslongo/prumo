@@ -24,10 +24,14 @@ final class RequestUploadUrl
         'image/webp' => 'webp',
         'image/png' => 'png',
         'application/pdf' => 'pdf',
+        self::CERTIFICATE_MIME => 'pfx',
     ];
 
     /** Fotos de item (orçamento/OS): só imagem. */
     public const PHOTO_MIMES = ['image/jpeg', 'image/webp', 'image/png'];
+
+    /** Certificado A1 da oficina (NFS-e). Só vale para quem pede explicitamente em `$allowedMimes`. */
+    public const CERTIFICATE_MIME = 'application/x-pkcs12';
 
     /**
      * @param  list<string>|null  $allowedMimes  restringe além da lista padrão (ex.: assinatura só PNG)
@@ -35,7 +39,7 @@ final class RequestUploadUrl
      */
     public function handle(string $ownerType, string $ownerId, string $mime, int $size, ?array $allowedMimes = null): array
     {
-        $allowed = $allowedMimes ?? array_keys(self::MIMES);
+        $allowed = $allowedMimes ?? array_diff(array_keys(self::MIMES), [self::CERTIFICATE_MIME]);
 
         if (! isset(self::MIMES[$mime]) || ! in_array($mime, $allowed, true)) {
             throw ValidationException::withMessages(['mime' => 'Tipo de arquivo não permitido.']);
