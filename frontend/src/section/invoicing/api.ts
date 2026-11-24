@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ENDPOINTS } from '../../routes/paths'
 import { http, type Wrapped } from '../../shared/lib/http'
+import type { InvoiceStatus } from '../../shared/lib/status'
 import { putUpload, type UploadTicket } from '../../shared/upload/queue'
 
 export type TaxRegime = 'mei' | 'simples_me_epp'
@@ -52,6 +53,53 @@ export const invoicingApi = {
 }
 
 export const removeCertificate = async () => (await http.delete<Wrapped<FiscalProfile | null>>(E.certificate)).data
+
+export type Invoice = {
+  id: string
+  service_order_id: string
+  status: InvoiceStatus
+  environment: FiscalEnvironment
+  dps_series: string
+  dps_number: number
+  access_key: string | null
+  nfse_number: string | null
+  amount_cents: number
+  include_products: boolean
+  error_code: string | null
+  error_message: string | null
+  has_xml: boolean
+  has_pdf: boolean
+  authorized_at: string | null
+  canceled_at: string | null
+  cancel_reason: string | null
+  created_at: string
+}
+
+export type CancelReason = '1' | '2' | '9'
+
+export const cancelReasonLabel: Record<CancelReason, string> = {
+  '1': 'Erro na emissão',
+  '2': 'Serviço não prestado',
+  '9': 'Outro motivo',
+}
+
+export const invoiceApi = {
+  list: async (orderId: string) => (await http.get<Wrapped<Invoice[]>>(E.orderInvoices(orderId))).data,
+  issue: async (orderId: string) => (await http.post<Wrapped<Invoice>>(E.orderInvoices(orderId))).data,
+  cancel: async (id: string, reason: CancelReason, text: string) => (await http.post<Wrapped<Invoice>>(E.cancel(id), { reason, text })).data,
+  fileUrl: async (id: string, type: 'xml' | 'pdf') => (await http.get<Wrapped<{ url: string }>>(E.file(id, type))).data.url,
+}
+
+/** Em andamento na fila: a tela confere de novo até terminar. */
+export const invoiceInFlight = (s: InvoiceStatus) => s === 'pending' || s === 'processing' || s === 'cancel_requested'
+
+export function useOrderInvoices(orderId: string) {
+  return useQuery({
+    queryKey: ['invoices', orderId],
+    queryFn: () => invoiceApi.list(orderId),
+    refetchInterval: (q) => (q.state.data?.some((i) => invoiceInFlight(i.status)) ? 3000 : false),
+  })
+}
 
 export function useFiscalProfile() {
   return useQuery({ queryKey: ['fiscal-profile'], queryFn: invoicingApi.profile })

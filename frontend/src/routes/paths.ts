@@ -77,6 +77,9 @@ export const ENDPOINTS = () => ({
     fiscalProfile: '/api/fiscal-profile', // GET, PUT
     certificateUploadUrl: '/api/fiscal-profile/certificate/upload-url', // POST
     certificate: '/api/fiscal-profile/certificate', // POST, DELETE
+    orderInvoices: (orderId: RouteId) => `/api/service-orders/${segment(orderId)}/invoices`, // GET, POST
+    cancel: (id: RouteId) => `/api/invoices/${segment(id)}/cancel`, // POST
+    file: (id: RouteId, type: 'xml' | 'pdf') => `/api/invoices/${segment(id)}/files/${type}`, // GET
   },
   Messaging: {
     // Callback interno do worker: exige assinatura VerifyWorkerSignature.

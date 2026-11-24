@@ -19,6 +19,7 @@ import { muted } from '../../../shared/ui/styles'
 import { ServiceOrderStatusBadge } from '../../../shared/ui/StatusBadge'
 import { useToast } from '../../../shared/ui/Toast'
 import { useUsers } from '../../auth/api'
+import { InvoiceCard } from '../../invoicing/components/InvoiceCard'
 import { ItemForm } from '../../items/components/ItemForm'
 import { ItemList, ItemsTotal } from '../../items/components/ItemList'
 import { ItemPhotos } from '../../items/components/ItemPhotos'
@@ -243,6 +244,8 @@ export function ServiceOrderDetailPage() {
               ) : null}
             </Card>
           ) : null}
+
+          <InvoiceCard orderId={o.id} orderStatus={o.status} />
 
           <Card>
             <DetailGrid>
