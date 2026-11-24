@@ -12,6 +12,8 @@ use App\Modules\Auth\Policies\UserPolicy;
 use App\Modules\Customers\Events\CustomerAnonymized;
 use App\Modules\Customers\Models\Customer;
 use App\Modules\Customers\Policies\CustomerPolicy;
+use App\Modules\Invoicing\Events\InvoiceAuthorized;
+use App\Modules\Invoicing\Listeners\GenerateDanfseOnAuthorized;
 use App\Modules\Media\Events\MediaUploaded;
 use App\Modules\Media\Listeners\GenerateThumbnailOnUpload;
 use App\Modules\Messaging\Listeners\QueueQuoteLinkMessage;
@@ -66,6 +68,7 @@ final class AppServiceProvider extends ServiceProvider
         Event::listen(QuoteSent::class, QueueQuoteLinkMessage::class);
         Event::listen(ServiceOrderStatusChanged::class, QueueServiceOrderReadyMessage::class);
         Event::listen(MediaUploaded::class, GenerateThumbnailOnUpload::class);
+        Event::listen(InvoiceAuthorized::class, GenerateDanfseOnAuthorized::class);
         Event::listen(CustomerAnonymized::class, ScrubAnonymizedCustomerMessages::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip()));

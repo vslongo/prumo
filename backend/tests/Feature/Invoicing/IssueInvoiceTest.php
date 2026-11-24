@@ -269,3 +269,20 @@ it('transições de estado da nota', function (InvoiceStatus $from, InvoiceStatu
     [InvoiceStatus::CancelRequested, InvoiceStatus::Authorized, true],
     [InvoiceStatus::Canceled, InvoiceStatus::Processing, false],
 ]);
+
+it('gera o PDF da nota autorizada e libera XML e PDF por URL assinada', function () {
+    $owner = actingAsRole();
+    fiscalReady();
+    $order = deliveredOrder($owner);
+    fakeSefin(sefinAccepted());
+
+    $id = $this->postJson("/api/service-orders/{$order->id}/invoices")->assertStatus(202)->json('data.id');
+
+    $invoice = Invoice::query()->sole();
+    expect($invoice->pdf_key)->not->toBeNull()
+        ->and(Storage::disk('r2')->get((string) $invoice->pdf_key))->toStartWith('%PDF-');
+    $this->getJson("/api/invoices/{$id}")->assertJsonPath('data.has_pdf', true);
+    $this->getJson("/api/invoices/{$id}/files/pdf")->assertOk()->assertJsonStructure(['data' => ['url']]);
+    $this->getJson("/api/invoices/{$id}/files/xml")->assertOk()->assertJsonStructure(['data' => ['url']]);
+    $this->getJson("/api/invoices/{$id}/files/zip")->assertNotFound();
+});
