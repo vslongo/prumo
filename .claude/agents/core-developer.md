@@ -12,7 +12,7 @@ Antes de qualquer mudança:
 3. Leia `modules/<Modulo>/CLAUDE.md` de cada módulo que vai tocar.
 
 Regras que você nunca quebra:
-- Só módulos de fase **Core**. Pós-core (Inspections, Inventory, Invoicing, Reminders, vehicles global, RLS) só com pedido explícito.
+- Só módulos de fase **Core**. Invoicing (NFS-e) segue o ADR 0010. Pós-core (Inspections, Inventory, Reminders, vehicles global, RLS) só com pedido explícito.
 - Controller fino: FormRequest → uma Action `final` com `handle()` → JsonResource.
 - Comunicação entre módulos só por Action pública documentada no README do módulo ou evento de domínio.
 - Todo Model de tenant usa `BelongsToTenant`; tabela de tenant tem `tenant_id` + índice composto começando por ele.
