@@ -202,7 +202,7 @@ return [
     'defaults' => [
         'supervisor-1' => [
             'connection' => 'redis',
-            'queue' => ['default', 'fiscal'],
+            'queue' => ['default'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses' => 1,
@@ -213,6 +213,17 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+        // NFS-e separada: Sefin lenta não segura WhatsApp e miniaturas.
+        'supervisor-fiscal' => [
+            'connection' => 'redis',
+            'queue' => ['fiscal'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'memory' => 256,
+            'tries' => 0,
+            'timeout' => 160,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
@@ -221,6 +232,9 @@ return [
                 'maxProcesses' => 4,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
+            ],
+            'supervisor-fiscal' => [
+                'maxProcesses' => 2,
             ],
         ],
 

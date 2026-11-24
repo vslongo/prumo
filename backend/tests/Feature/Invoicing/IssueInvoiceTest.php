@@ -97,7 +97,7 @@ it('rejeição da Sefin deixa a nota em erro e nova tentativa usa o mesmo númer
     fakeSefin([
         SEFIN.'/nfse' => Http::sequence()
             ->push(['erros' => [['Codigo' => 'E0312', 'Descricao' => 'Código de tributação inválido.']]], 400)
-            ->push(['chaveAcesso' => '42054072211222333000181000000000004211234567890', 'nfseXmlGZipB64' => SefinClient::pack(NFSE_XML)], 201),
+            ->push(['chaveAcesso' => '42054072211222333000181000000000004211234567890123', 'nfseXmlGZipB64' => SefinClient::pack(NFSE_XML)], 201),
         SEFIN.'/dps/*' => Http::response([], 404),
     ]);
 
@@ -116,11 +116,15 @@ it('DPS já recebida pela Sefin é recuperada, não emitida de novo', function (
     $owner = actingAsRole();
     fiscalReady();
     $order = deliveredOrder($owner);
-    $key = '42054072211222333000181000000000004211234567890';
+    $key = '42054072211222333000181000000000004211234567890123';
     fakeSefin([
         SEFIN.'/nfse' => Http::response(['erros' => [['codigo' => SefinClient::DUPLICATE_DPS, 'descricao' => 'DPS já existe.']]], 400),
         SEFIN.'/dps/*' => Http::response(['chaveAcesso' => $key]),
-        SEFIN.'/nfse/'.$key => Http::response(['nfseXmlGZipB64' => SefinClient::pack(NFSE_XML)]),
+        // A NFS-e que a Sefin já tem é desta OS: mesmo tomador e mesmo valor.
+        SEFIN.'/nfse/'.$key => Http::response(['nfseXmlGZipB64' => SefinClient::pack(
+            '<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse"><infNFSe><nNFSe>42</nNFSe><DPS><infDPS><toma><CPF>52998224725</CPF></toma>'
+            .'<valores><vServPrest><vServ>259.96</vServ></vServPrest></valores></infDPS></DPS></infNFSe></NFSe>'
+        )]),
     ]);
 
     $this->postJson("/api/service-orders/{$order->id}/invoices")->assertStatus(202)->assertJsonPath('data.status', 'authorized');
@@ -188,9 +192,22 @@ it('técnico não emite nota; balcão emite', function () {
     $order = deliveredOrder($owner);
     fakeSefin(sefinAccepted());
 
+    actingAsRole(UserRole::Front, $owner->tenant);
+    $id = $this->postJson("/api/service-orders/{$order->id}/invoices")->assertStatus(202)->json('data.id');
+    $this->getJson("/api/invoices/{$id}/files/xml")->assertOk();
+
     actingAsRole(UserRole::Technician, $owner->tenant);
     $this->postJson("/api/service-orders/{$order->id}/invoices")->assertForbidden();
     $this->getJson("/api/service-orders/{$order->id}/invoices")->assertOk();
+    $this->getJson("/api/invoices/{$id}/files/xml")->assertForbidden();
+    $this->getJson("/api/invoices/{$id}/files/pdf")->assertForbidden();
+});
+
+it('balcão emite nota', function () {
+    $owner = actingAsRole();
+    fiscalReady();
+    $order = deliveredOrder($owner);
+    fakeSefin(sefinAccepted());
 
     actingAsRole(UserRole::Front, $owner->tenant);
     $this->postJson("/api/service-orders/{$order->id}/invoices")->assertStatus(202);
@@ -249,4 +266,48 @@ it('gera o PDF da nota autorizada e libera XML e PDF por URL assinada', function
     $this->getJson("/api/invoices/{$id}/files/pdf")->assertOk()->assertJsonStructure(['data' => ['url']]);
     $this->getJson("/api/invoices/{$id}/files/xml")->assertOk()->assertJsonStructure(['data' => ['url']]);
     $this->getJson("/api/invoices/{$id}/files/zip")->assertNotFound();
+});
+
+it('número de DPS já usado em outro sistema não vira a nota desta OS', function () {
+    $owner = actingAsRole();
+    fiscalReady();
+    $order = deliveredOrder($owner);
+    $key = '42054072211222333000181000000000004211234567890123';
+    $other = '<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse"><infNFSe><nNFSe>1</nNFSe><DPS><infDPS><toma><CPF>11144477735</CPF></toma>'
+        .'<valores><vServPrest><vServ>50.00</vServ></vServPrest></valores></infDPS></DPS></infNFSe></NFSe>';
+    fakeSefin([
+        SEFIN.'/nfse' => Http::response(['erros' => [['codigo' => SefinClient::DUPLICATE_DPS, 'descricao' => 'DPS já existe.']]], 400),
+        SEFIN.'/dps/*' => Http::response(['chaveAcesso' => $key]),
+        SEFIN.'/nfse/'.$key => Http::response(['nfseXmlGZipB64' => SefinClient::pack($other)]),
+    ]);
+
+    $this->postJson("/api/service-orders/{$order->id}/invoices")->assertStatus(202)
+        ->assertJsonPath('data.status', 'error')->assertJsonPath('data.error_code', 'NUMERO_EM_USO')
+        ->assertJsonPath('data.access_key', null);
+    expect(Storage::disk('r2')->allFiles('invoices'))->toBe([]);
+});
+
+it('começa no próximo número informado no perfil fiscal', function () {
+    $owner = actingAsRole();
+    fiscalReady(['dps_next_number' => 301]);
+    $order = deliveredOrder($owner);
+    fakeSefin(sefinAccepted());
+
+    $this->postJson("/api/service-orders/{$order->id}/invoices")->assertStatus(202);
+
+    expect(Invoice::query()->sole()->dps_number)->toBe(301);
+});
+
+it('transição concorrente não sobrescreve o estado gravado por outro worker', function () {
+    $owner = actingAsRole();
+    $order = deliveredOrder($owner);
+    $invoice = Invoice::create([
+        'service_order_id' => $order->id, 'requested_by' => $owner->id, 'environment' => 'restricted', 'dps_series' => '1',
+        'dps_number' => 1, 'dps_id' => str_repeat('0', 45), 'amount_cents' => 100, 'include_products' => true,
+    ])->refresh();
+    $stale = Invoice::query()->findOrFail($invoice->id);
+    $invoice->transitionTo(InvoiceStatus::Processing);
+
+    expect(fn () => $stale->transitionTo(InvoiceStatus::Processing))->toThrow(LogicException::class);
+    expect($invoice->refresh()->status)->toBe(InvoiceStatus::Processing);
 });

@@ -24,10 +24,11 @@ final class GenerateDanfse
 {
     public const PUBLIC_QUERY_URL = 'https://www.nfse.gov.br/ConsultaPublica/?tpc=1&chave=';
 
-    public function handle(string $invoiceId): void
+    /** `$replace`: gera de novo (ex.: nota cancelada) e só então apaga o PDF anterior. */
+    public function handle(string $invoiceId, bool $replace = false): void
     {
         $invoice = Invoice::query()->find($invoiceId);
-        if ($invoice === null || $invoice->pdf_key !== null || $invoice->access_key === null
+        if ($invoice === null || ($invoice->pdf_key !== null && ! $replace) || $invoice->access_key === null
             || ! in_array($invoice->status, [InvoiceStatus::Authorized, InvoiceStatus::CancelRequested, InvoiceStatus::Canceled], true)) {
             return;
         }
@@ -52,6 +53,10 @@ final class GenerateDanfse
 
         $key = 'invoices/'.Str::uuid7().'.pdf';
         Storage::disk('r2')->put($key, (string) $dompdf->output(), ['ContentType' => 'application/pdf']);
+        $old = $invoice->pdf_key;
         $invoice->forceFill(['pdf_key' => $key])->save();
+        if ($old !== null) {
+            Storage::disk('r2')->delete($old);
+        }
     }
 }

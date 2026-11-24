@@ -52,6 +52,8 @@ final class InvoiceController
     /** URL assinada curta para baixar o XML ou o PDF (bucket privado). */
     public function file(Invoice $invoice, string $type): JsonResponse
     {
+        // XML/PDF têm CPF do cliente e valores: técnico não baixa (não acessa financeiro).
+        Gate::authorize('issue-invoice');
         $key = $type === 'pdf' ? $invoice->pdf_key : $invoice->xml_key;
         abort_if($key === null, 404);
 

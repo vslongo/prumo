@@ -22,6 +22,8 @@ export type FiscalProfileInput = {
   /** Alíquota do ISS em pontos-base (2,5% = 250). MEI não informa. */
   iss_rate_bp: number | null
   dps_series: string
+  /** Próximo número da DPS; null = continua do último emitido pelo Prumo. */
+  dps_next_number: number | null
   include_products: boolean
   environment: FiscalEnvironment
 }

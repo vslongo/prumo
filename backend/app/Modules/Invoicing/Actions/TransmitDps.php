@@ -21,6 +21,7 @@ use App\Shared\Support\CpfCnpj;
 use DOMDocument;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * Uso interno (TransmitDpsJob). Envia a DPS à Sefin e grava o resultado. Idempotente:
@@ -53,41 +54,63 @@ final class TransmitDps
             return;
         }
 
-        $certificate->withFiles(function (string $certFile, string $keyFile) use ($invoice, $profile, $certificate) {
-            $sefin = new SefinClient($invoice->environment, $certFile, $keyFile);
+        $order = ServiceOrder::query()->with(['items', 'customer', 'vehicle'])->findOrFail($invoice->service_order_id);
+        $customer = $order->customer;
+        if ($customer === null || $customer->anonymized_at !== null) {
+            $this->fail($invoice, 'CLIENTE', 'O cliente da OS foi removido ou anonimizado.');
 
-            if ($invoice->submitted_at !== null && ($key = $sefin->findAccessKey($invoice->dps_id)) !== null) {
-                $this->authorize($invoice, $key, $sefin->fetchNfse($key));
+            return;
+        }
+        $taker = new Taker(CpfCnpj::normalize((string) $customer->document), $customer->name, $customer->email);
+        $sefin = new SefinClient($invoice->environment, $certificate);
 
-                return;
-            }
+        if ($invoice->submitted_at !== null && ($key = $sefin->findAccessKey($invoice->dps_id)) !== null) {
+            $this->recover($invoice, $taker, $key, $sefin);
 
-            $order = ServiceOrder::query()->with(['items', 'customer', 'vehicle'])->findOrFail($invoice->service_order_id);
-            $customer = $order->customer;
-            if ($customer === null) {
-                $this->fail($invoice, 'CLIENTE', 'O cliente da OS foi removido.');
+            return;
+        }
 
-                return;
-            }
-            $taker = new Taker(CpfCnpj::normalize((string) $customer->document), $customer->name, $customer->email);
-            $doc = $this->builder->build($profile, $invoice, $taker, self::description($order, $invoice->include_products), now());
-            $xml = (string) $this->signer->sign($doc, 'infDPS', $certificate->certPem, $certificate->keyPem)->saveXML();
+        $doc = $this->builder->build($profile, $invoice, $taker, self::description($order, $invoice->include_products), now());
+        $xml = (string) $this->signer->sign($doc, 'infDPS', $certificate->certPem, $certificate->keyPem)->saveXML();
 
-            $invoice->forceFill(['submitted_at' => now()])->save();
-            $result = $sefin->submit($xml);
+        $invoice->forceFill(['submitted_at' => now()])->save();
+        $result = $sefin->submit($xml);
 
-            if ($result->accepted && $result->accessKey !== null) {
-                $this->authorize($invoice, $result->accessKey, $result->xml ?? $sefin->fetchNfse($result->accessKey));
-            } elseif ($result->errorCode === SefinClient::DUPLICATE_DPS && ($key = $sefin->findAccessKey($invoice->dps_id)) !== null) {
-                $this->authorize($invoice, $key, $sefin->fetchNfse($key));
-            } else {
-                $this->fail($invoice, (string) $result->errorCode, (string) $result->errorMessage);
-            }
-        });
+        if ($result->accepted && $result->accessKey !== null) {
+            $this->authorize($invoice, $result->accessKey, $result->xml ?? $sefin->fetchNfse($result->accessKey));
+        } elseif ($result->errorCode === SefinClient::DUPLICATE_DPS && ($key = $sefin->findAccessKey($invoice->dps_id)) !== null) {
+            $this->recover($invoice, $taker, $key, $sefin);
+        } else {
+            $this->fail($invoice, (string) $result->errorCode, (string) $result->errorMessage);
+        }
+    }
+
+    /**
+     * A Sefin já tem uma NFS-e com este número de DPS. Só é desta OS se tomador e valor batem: a oficina pode ter
+     * usado o mesmo número em outro sistema (ou o Emissor Nacional) antes do Prumo.
+     */
+    private function recover(Invoice $invoice, Taker $taker, string $accessKey, SefinClient $sefin): void
+    {
+        $xml = $sefin->fetchNfse($accessKey);
+        $doc = new DOMDocument;
+        $toma = @$doc->loadXML($xml) ? $doc->getElementsByTagName('toma')->item(0) : null;
+        $value = $doc->getElementsByTagName('vServ')->item(0)?->textContent;
+
+        if ($toma === null || ! str_contains($toma->textContent, $taker->document) || $value !== DpsXmlBuilder::decimal($invoice->amount_cents)) {
+            $this->fail($invoice, 'NUMERO_EM_USO', "O número {$invoice->dps_number} da série {$invoice->dps_series} já foi usado em outra nota. "
+                .'Ajuste o próximo número da DPS em Configurações → Nota fiscal e emita de novo.');
+
+            return;
+        }
+
+        $this->authorize($invoice, $accessKey, $xml);
     }
 
     private function authorize(Invoice $invoice, string $accessKey, string $nfseXml): void
     {
+        if (preg_match('/^\d{50}$/', $accessKey) !== 1) {
+            throw new RuntimeException('Sefin devolveu chave de acesso inválida.');
+        }
         $xmlKey = 'invoices/'.Str::uuid7().'.xml';
         Storage::disk('r2')->put($xmlKey, $nfseXml, ['ContentType' => 'application/xml']);
 

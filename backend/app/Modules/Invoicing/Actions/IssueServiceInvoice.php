@@ -65,7 +65,8 @@ final class IssueServiceInvoice
                 return $current;
             }
 
-            $number = (int) Invoice::query()->where('dps_series', $profile->dps_series)->max('dps_number') + 1;
+            // Nunca abaixo do número que a oficina informou (já usou os anteriores em outro sistema).
+            $number = max((int) Invoice::query()->where('dps_series', $profile->dps_series)->max('dps_number') + 1, $profile->dps_next_number ?? 1);
 
             return Invoice::create([
                 'service_order_id' => $order->id,

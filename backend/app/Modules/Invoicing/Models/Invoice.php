@@ -40,7 +40,10 @@ final class Invoice extends Model
 {
     use BelongsToTenant, HasUuids;
 
-    protected $guarded = ['id', 'tenant_id', 'status'];
+    /** Só o que IssueServiceInvoice grava ao reservar; o resto muda por transitionTo/forceFill. */
+    protected $fillable = [
+        'service_order_id', 'requested_by', 'environment', 'dps_series', 'dps_number', 'dps_id', 'amount_cents', 'include_products',
+    ];
 
     protected function casts(): array
     {
@@ -63,10 +66,20 @@ final class Invoice extends Model
      */
     public function transitionTo(InvoiceStatus $to, array $attributes = []): void
     {
-        if (! $this->status->canTransitionTo($to)) {
-            throw new LogicException("Nota fiscal: transição inválida {$this->status->value} → {$to->value}.");
+        $from = $this->status;
+        if (! $from->canTransitionTo($to)) {
+            throw new LogicException("Nota fiscal: transição inválida {$from->value} → {$to->value}.");
         }
 
-        $this->forceFill(['status' => $to, ...$attributes])->save();
+        // Atômico: só muda se ainda estiver no estado lido (outro worker pode ter mudado antes).
+        $this->forceFill(['status' => $to, ...$attributes]);
+        $changed = self::query()->whereKey($this->id)->where('status', $from->value)
+            ->update([...$this->getDirty(), 'updated_at' => now()]);
+        if ($changed === 0) {
+            $this->refresh();
+
+            throw new LogicException("Nota fiscal: estado mudou durante {$from->value} → {$to->value}.");
+        }
+        $this->syncOriginal();
     }
 }

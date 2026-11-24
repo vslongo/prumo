@@ -11,6 +11,7 @@ use App\Modules\Tenancy\TenantContext;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Throwable;
 
 /** Fila `fiscal`. Esgotou as tentativas (Sefin fora do ar) → a nota volta a autorizada para pedir de novo. */
@@ -23,11 +24,19 @@ final class TransmitCancellationJob implements ShouldBeUnique, ShouldQueueAfterC
     /** @var list<int> */
     public array $backoff = [30, 120, 600, 1800];
 
-    public int $timeout = 120;
+    /** Acima da soma dos timeouts HTTP (até 4 chamadas de 20 s) + abrir o .pfx; abaixo do retry_after (300). */
+    public int $timeout = 150;
 
     public function __construct(public readonly string $tenantId, public readonly string $invoiceId)
     {
         $this->onQueue('fiscal');
+    }
+
+    /** @return list<object> */
+    public function middleware(): array
+    {
+        // Emissão e cancelamento da mesma nota nunca rodam ao mesmo tempo.
+        return [(new WithoutOverlapping('invoice:'.$this->invoiceId))->shared()->releaseAfter(30)->expireAfter(300)];
     }
 
     public function uniqueId(): string
