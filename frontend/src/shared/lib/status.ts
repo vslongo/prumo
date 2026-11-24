@@ -28,4 +28,15 @@ export const serviceOrderNextStep: Partial<Record<ServiceOrderStatus, { to: Serv
   ready: { to: 'delivered', label: 'Registrar entrega' },
 }
 
+export type InvoiceStatus = 'pending' | 'processing' | 'authorized' | 'error' | 'cancel_requested' | 'canceled'
+
+export const invoiceStatusLabel: Record<InvoiceStatus, string> = {
+  pending: 'Na fila',
+  processing: 'Emitindo',
+  authorized: 'Autorizada',
+  error: 'Com erro',
+  cancel_requested: 'Cancelando',
+  canceled: 'Cancelada',
+}
+
 export const serviceOrderCancelable: ServiceOrderStatus[] = ['open', 'in_progress', 'ready']
