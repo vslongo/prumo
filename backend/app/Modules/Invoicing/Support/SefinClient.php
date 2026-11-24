@@ -59,6 +59,18 @@ final class SefinClient
         return $xml;
     }
 
+    /** O evento (ex.: cancelamento) já está registrado nessa nota? */
+    public function hasEvent(string $accessKey, string $eventType, int $sequence = 1): bool
+    {
+        $response = $this->http()->get('/nfse/'.$accessKey.'/eventos/'.$eventType.'/'.$sequence);
+        if (in_array($response->status(), [400, 404], true)) {
+            return false;
+        }
+        $this->failOnServerError($response);
+
+        return true;
+    }
+
     /** Registra um evento (ex.: cancelamento) já assinado. */
     public function registerEvent(string $accessKey, string $signedXml): SefinResult
     {

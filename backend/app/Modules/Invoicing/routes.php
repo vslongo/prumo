@@ -18,5 +18,6 @@ Route::middleware(['auth:sanctum', 'tenant'])->controller(InvoiceController::cla
     Route::get('service-orders/{serviceOrder}/invoices', 'index')->whereUuid('serviceOrder');
     Route::post('service-orders/{serviceOrder}/invoices', 'store')->whereUuid('serviceOrder')->middleware('throttle:10,1');
     Route::get('invoices/{invoice}', 'show')->whereUuid('invoice');
+    Route::post('invoices/{invoice}/cancel', 'cancel')->whereUuid('invoice')->middleware('throttle:10,1');
     Route::get('invoices/{invoice}/files/{type}', 'file')->whereUuid('invoice')->whereIn('type', ['xml', 'pdf']);
 });
