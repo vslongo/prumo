@@ -42,6 +42,12 @@ return [
         'webhook_token' => env('ASAAS_WEBHOOK_TOKEN'),
     ],
 
+    // NFS-e Nacional (ADR 0010). O ambiente de cada oficina vem do perfil fiscal; mTLS com o A1 dela.
+    'nfse' => [
+        'restricted' => ['sefin_url' => env('NFSE_RESTRICTED_SEFIN_URL', 'https://sefin.producaorestrita.nfse.gov.br/SefinNacional')],
+        'production' => ['sefin_url' => env('NFSE_PRODUCTION_SEFIN_URL', 'https://sefin.nfse.gov.br/SefinNacional')],
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

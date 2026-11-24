@@ -17,7 +17,7 @@ services:
     volumes: [".:/app", "vendor:/app/backend/vendor"]
     working_dir: /app/backend
     depends_on: [pgsql, redis]
-    command: php artisan queue:work --tries=5
+    command: php artisan queue:work --queue=default,fiscal --tries=5
   # Worker WhatsApp. Só sobe com `docker compose --profile whatsapp up`, porque precisa das credenciais
   # da Meta em worker-whatsapp/.env (sem WHATSAPP_PHONE_NUMBER_ID no backend nada é enfileirado mesmo).
   worker-whatsapp:

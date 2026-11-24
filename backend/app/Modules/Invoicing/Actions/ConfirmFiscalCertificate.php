@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Invoicing\Actions;
 
 use App\Modules\Invoicing\Models\FiscalProfile;
+use App\Modules\Invoicing\Support\Pkcs12;
 use App\Modules\Media\Actions\ConfirmUpload;
 use App\Modules\Media\Actions\DeleteMedia;
 use App\Modules\Media\Actions\FindOwnerMedia;
@@ -12,7 +13,6 @@ use App\Modules\Media\Actions\RequestUploadUrl;
 use App\Modules\Media\Models\Media;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -23,9 +23,6 @@ use Illuminate\Validation\ValidationException;
  */
 final class ConfirmFiscalCertificate
 {
-    /** Teto para abrir o .pfx: a contagem de iterações vem do próprio arquivo (arquivo montado = CPU presa). */
-    private const OPEN_TIMEOUT_SECONDS = 10;
-
     public function __construct(
         private readonly FindOwnerMedia $findMedia,
         private readonly ConfirmUpload $confirmUpload,
@@ -94,26 +91,10 @@ final class ConfirmFiscalCertificate
         return $bytes;
     }
 
-    /**
-     * Abre o .pfx num processo `openssl` com tempo máximo (senha por variável de ambiente, nunca na linha de comando).
-     * Tenta de novo com `-legacy`: muito A1 brasileiro ainda vem cifrado com algoritmo antigo (RC2/3DES).
-     *
-     * @return array{0: string|null, 1: Carbon}
-     */
+    /** @return array{0: string|null, 1: Carbon} */
     private static function inspect(#[\SensitiveParameter] string $pfx, #[\SensitiveParameter] string $password): array
     {
-        $pem = null;
-        foreach ([[], ['-legacy']] as $extra) {
-            $result = Process::timeout(self::OPEN_TIMEOUT_SECONDS)
-                ->env(['PFX_PASS' => $password])
-                ->input($pfx)
-                ->run(['openssl', 'pkcs12', '-clcerts', '-nokeys', '-passin', 'env:PFX_PASS', ...$extra]);
-            if ($result->successful() && str_contains($result->output(), 'BEGIN CERTIFICATE')) {
-                $pem = $result->output();
-                break;
-            }
-        }
-
+        $pem = Pkcs12::toPem($pfx, $password);
         $x509 = $pem === null ? false : openssl_x509_parse($pem);
         if ($x509 === false) {
             throw ValidationException::withMessages(['password' => 'Não foi possível abrir o certificado: senha errada ou o arquivo não é um A1 (.pfx).']);
