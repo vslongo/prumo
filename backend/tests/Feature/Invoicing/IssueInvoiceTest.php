@@ -13,47 +13,11 @@ use App\Modules\Invoicing\Models\FiscalProfile;
 use App\Modules\Invoicing\Models\Invoice;
 use App\Modules\Invoicing\Support\DpsXmlBuilder;
 use App\Modules\Invoicing\Support\SefinClient;
-use App\Modules\ServiceOrders\Actions\OpenServiceOrder;
-use App\Modules\ServiceOrders\Data\OpenServiceOrderData;
-use App\Modules\ServiceOrders\Enums\ServiceOrderStatus;
-use App\Modules\ServiceOrders\Models\ServiceOrder;
-use App\Shared\ValueObjects\Money;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
-
-const SEFIN = 'https://sefin.test/restrita';
-
-const NFSE_XML = '<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse"><infNFSe><nNFSe>42</nNFSe></infNFSe></NFSe>';
-
-/** OS entregue com um serviço (R$ 80,00) e uma peça (R$ 179,96), cliente com CPF. */
-function deliveredOrder(User $tech, string $status = 'delivered'): ServiceOrder
-{
-    $vehicle = makeVehicle();
-    $vehicle->customer->update(['document' => '529.982.247-25']);
-    $order = app(OpenServiceOrder::class)->handle(new OpenServiceOrderData($vehicle->customer_id, $vehicle->id, $tech->id));
-    foreach ([['service', 'Troca de óleo', '1', 8000], ['product', 'Óleo 5W30 (litro)', '4.5', 3999]] as $i => [$kind, $desc, $qty, $unit]) {
-        $order->items()->create([
-            'position' => $i + 1, 'kind' => $kind, 'description' => $desc, 'technician_id' => $tech->id, 'quantity' => $qty,
-            'unit_price_cents' => $unit, 'total_cents' => (new Money($unit))->times($qty)->cents, 'fields' => [], 'fields_schema_snapshot' => [],
-        ]);
-    }
-    $order->forceFill(['status' => ServiceOrderStatus::from($status)])->save();
-
-    return $order;
-}
-
-function fakeSefin(array $routes): void
-{
-    Http::fake(array_merge($routes, [SEFIN.'/*' => Http::response(['erros' => [['codigo' => 'X', 'descricao' => 'rota não simulada']]], 400)]));
-}
-
-function sefinAccepted(string $key = '42054072211222333000181000000000004211234567890'): array
-{
-    return [SEFIN.'/nfse' => Http::response(['chaveAcesso' => $key, 'nfseXmlGZipB64' => SefinClient::pack(NFSE_XML)], 201)];
-}
 
 beforeEach(function () {
     Storage::fake('r2');
