@@ -60,13 +60,14 @@ function retryable(e: unknown): boolean {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-async function put(ticket: UploadTicket, blob: Blob): Promise<void> {
+/** PUT direto na URL pré-assinada (R2). Também usado pelo certificado A1, que não passa por compressão. */
+export async function putUpload(ticket: UploadTicket, blob: Blob): Promise<void> {
   const headers: Record<string, string> = { 'Content-Type': blob.type }
   for (const [k, v] of Object.entries(ticket.headers ?? {})) {
     if (k.toLowerCase() !== 'host') headers[k] = Array.isArray(v) ? v.join(',') : v
   }
   const res = await fetch(ticket.url, { method: 'PUT', headers, body: blob }).catch(() => null)
-  if (!res || !res.ok) throw Object.assign(new Error('Falha ao enviar a foto.'), { status: res?.status ?? 0 })
+  if (!res || !res.ok) throw Object.assign(new Error('Falha ao enviar o arquivo.'), { status: res?.status ?? 0 })
 }
 
 async function process(job: Job): Promise<void> {
@@ -80,7 +81,7 @@ async function process(job: Job): Promise<void> {
       try {
         // URL nova a cada tentativa: a pré-assinada vence em minutos.
         const ticket = await job.target.request(blob.type, blob.size)
-        await put(ticket, blob)
+        await putUpload(ticket, blob)
         await job.target.confirm(ticket.media_id)
         break
       } catch (e) {

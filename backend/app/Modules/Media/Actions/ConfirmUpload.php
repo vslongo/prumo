@@ -22,6 +22,8 @@ final class ConfirmUpload
         'image/jpeg' => "\xFF\xD8\xFF",
         'application/pdf' => '%PDF-',
         'image/webp' => 'RIFF',
+        // PKCS#12 é DER: começa por SEQUENCE (0x30). A senha e o conteúdo são conferidos por quem usa.
+        RequestUploadUrl::CERTIFICATE_MIME => "\x30",
     ];
 
     public function handle(Media $media): Media

@@ -73,6 +73,11 @@ export const ENDPOINTS = () => ({
     create: '/api/service-types', // POST
     update: (id: RouteId) => `/api/service-types/${segment(id)}`, // PUT ou PATCH
   },
+  Invoicing: {
+    fiscalProfile: '/api/fiscal-profile', // GET, PUT
+    certificateUploadUrl: '/api/fiscal-profile/certificate/upload-url', // POST
+    certificate: '/api/fiscal-profile/certificate', // POST, DELETE
+  },
   Messaging: {
     // Callback interno do worker: exige assinatura VerifyWorkerSignature.
     whatsappStatus: '/api/internal/whatsapp/status', // POST

@@ -58,6 +58,7 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(ServiceOrder::class, ServiceOrderPolicy::class);
         // Assinatura do SaaS: só o dono (assina, troca de plano, cancela).
         Gate::define('manage-billing', fn (User $user) => $user->is_active && $user->role === UserRole::Owner);
+        Gate::define('manage-fiscal', fn (User $user) => $user->is_active && $user->role->managesSettings());
 
         Event::listen(QuoteApproved::class, CreateServiceOrderFromApprovedQuote::class);
         Event::listen(QuoteSent::class, QueueQuoteLinkMessage::class);
